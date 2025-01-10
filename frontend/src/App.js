@@ -1,40 +1,43 @@
 import React, { useEffect, useState } from "react";
 import { getTestFirebase } from "./services/api"; // Funzione Axios ottimizzata
+import StayProDashboard from "./pages/StayProDashboard";
+
 import "./App.css";
 
 function App() {
-  const [message, setMessage] = useState(""); // Stato per il messaggio dal backend
-  const [isLoading, setIsLoading] = useState(true); // Stato per il caricamento
+  // Stato per il messaggio ricevuto dal backend
+  const [message, setMessage] = useState(""); 
+  // Stato per indicare il caricamento
+  const [isLoading, setIsLoading] = useState(true); 
 
+  // Effettua la chiamata al backend per testare la connessione
   useEffect(() => {
-    // Effettua una richiesta GET alla rotta "/test-firebase"
     getTestFirebase()
       .then((response) => {
-        setMessage(response.data.message); // Imposta il messaggio nello stato
+        setMessage(response.data.message); // Aggiorna il messaggio con la risposta
       })
       .catch((error) => {
         console.error("Errore durante la richiesta:", error);
-        setMessage("Errore nella connessione al backend");
+        setMessage("Errore nella connessione al backend"); // Mostra un errore se non riesce
       })
       .finally(() => {
-        setIsLoading(false); // Fine caricamento
+        setIsLoading(false); // Rimuove lo stato di caricamento
       });
-  }, []); // L'array vuoto esegue useEffect una sola volta
+  }, []);
 
   return (
     <div className="App">
       <header className="App-header">
         <h1>Test Connessione Backend</h1>
         {isLoading ? (
-          <p>Caricamento...</p>
+          <p>Caricamento...</p> // Mostra caricamento se in corso
         ) : (
-          <p>{message}</p>
+          <p>{message}</p> // Mostra il messaggio ricevuto dal backend
         )}
       </header>
+      <StayProDashboard /> {/* Mostra la Dashboard StayPro */}
     </div>
   );
 }
 
 export default App;
-
-
