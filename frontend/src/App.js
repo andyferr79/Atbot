@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom"; // Importa il Router
 import { getTestFirebase } from "./services/api"; // Funzione Axios ottimizzata
-import StayProDashboard from "./pages/StayProDashboard";
+import StayProDashboard from "./pages/StayProDashboard"; // Importa la Dashboard
+import Bookings from "./pages/Bookings"; // Importa la pagina delle prenotazioni
 
 import "./App.css";
 
@@ -26,18 +28,25 @@ function App() {
   }, []);
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Test Connessione Backend</h1>
-        {isLoading ? (
-          <p>Caricamento...</p> // Mostra caricamento se in corso
-        ) : (
-          <p>{message}</p> // Mostra il messaggio ricevuto dal backend
-        )}
-      </header>
-      <StayProDashboard /> {/* Mostra la Dashboard StayPro */}
-    </div>
+    <Router>
+      <div className="App">
+        <header className="App-header">
+          <h1>Test Connessione Backend</h1>
+          {isLoading ? (
+            <p>Caricamento...</p> // Mostra caricamento se in corso
+          ) : (
+            <p>{message}</p> // Mostra il messaggio ricevuto dal backend
+          )}
+        </header>
+        {/* Configurazione delle rotte */}
+        <Routes>
+          <Route path="/" element={<StayProDashboard />} />
+          <Route path="/bookings" element={<Bookings />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
 export default App;
+

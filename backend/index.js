@@ -1,6 +1,7 @@
 const express = require("express");
 const admin = require("firebase-admin");
 const dotenv = require("dotenv");
+const cors = require("cors"); // Importa cors
 
 // Carica le variabili d'ambiente
 dotenv.config();
@@ -16,6 +17,9 @@ admin.initializeApp({
 
 // Crea un'app Express
 const app = express();
+
+// Aggiungi il middleware CORS
+app.use(cors());
 
 // Middleware per parsing del corpo delle richieste JSON
 app.use(express.json());
@@ -34,4 +38,3 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server in ascolto sulla porta ${PORT}`);
 });
-
