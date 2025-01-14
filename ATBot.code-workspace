@@ -1,24 +1,54 @@
 {
-    "folders": [
-      {
-        "path": "."
-      }
-    ],
-    "settings": {
-      "editor.formatOnSave": true,
-      "files.exclude": {
-        "**/node_modules": true,
-        "**/dist": true
-      },
-      "terminal.integrated.defaultProfile.windows": "PowerShell"
-    },
-    "extensions": {
-      "recommendations": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "firebase.firebase-tools",
-        "ms-azuretools.vscode-docker"
-      ]
+  "folders": [
+    {
+      "path": "."
     }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/dist": true
+    },
+    "terminal.integrated.defaultProfile.windows": "PowerShell"
+  },
+  "extensions": {
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "firebase.firebase-tools",
+      "ms-azuretools.vscode-docker"
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Start Backend",
+        "type": "shell",
+        "command": "npm start",
+        "options": {
+          "cwd": "${workspaceFolder}/backend"
+        },
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Start Frontend",
+        "type": "shell",
+        "command": "npm start",
+        "options": {
+          "cwd": "${workspaceFolder}/frontend"
+        },
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "problemMatcher": []
+      }
+    ]
   }
-  
+}
