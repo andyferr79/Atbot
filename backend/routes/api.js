@@ -16,4 +16,32 @@ router.get("/test-firebase", async (req, res) => {
   }
 });
 
+// Recupera tutti gli ospiti
+router.get("/guests", async (req, res) => {
+  try {
+    const snapshot = await admin.firestore().collection("Guests").get();
+    const guests = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    res.json(guests);
+  } catch (error) {
+    console.error("Errore nel recupero degli ospiti:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nel recupero degli ospiti", error });
+  }
+});
+
+// Aggiungi un nuovo ospite
+router.post("/guests", async (req, res) => {
+  try {
+    const newGuest = req.body; // I dati dell'ospite vengono passati dal client
+    const docRef = await admin.firestore().collection("Guests").add(newGuest);
+    res.json({ id: docRef.id, ...newGuest });
+  } catch (error) {
+    console.error("Errore nell'aggiunta dell'ospite:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nell'aggiunta dell'ospite", error });
+  }
+});
+
 module.exports = router;

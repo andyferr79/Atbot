@@ -1,9 +1,9 @@
 import React from "react";
-import "../styles/staypro.css"; // File CSS per gli stili
+import "../styles/StayProDashboard.css"; // Stile specifico per la dashboard
 
-// Sezione: Statistiche chiave
+// Componenti per sezioni
 const KeyStats = () => (
-  <section id="key-stats">
+  <section className="key-stats">
     <div className="stat">
       <h2>Entrate</h2>
       <p>€12,000</p>
@@ -19,18 +19,20 @@ const KeyStats = () => (
   </section>
 );
 
-// Sezione: Grafici e tendenze
 const Charts = () => (
-  <section id="charts">
+  <section className="charts">
     <h2>Tendenze e Previsioni</h2>
-    <div className="chart-placeholder">[Grafico Occupazione]</div>
-    <div className="chart-placeholder">[Grafico Entrate]</div>
+    <div className="chart">
+      <p>Grafico Occupazione</p>
+    </div>
+    <div className="chart">
+      <p>Grafico Entrate</p>
+    </div>
   </section>
 );
 
-// Sezione: Collegamenti rapidi
 const QuickLinks = () => (
-  <section id="quick-links">
+  <section className="quick-links">
     <h2>Collegamenti Rapidi</h2>
     <button onClick={() => alert("Vai a Prenotazioni")}>Prenotazioni</button>
     <button onClick={() => alert("Vai a Ospiti")}>Ospiti</button>
@@ -39,10 +41,9 @@ const QuickLinks = () => (
   </section>
 );
 
-// Sezione principale: Dashboard
 const StayProDashboard = () => (
-  <div>
-    <header>
+  <div className="dashboard-container">
+    <header className="dashboard-header">
       <h1>Dashboard StayPro</h1>
     </header>
     <KeyStats />
@@ -52,4 +53,3 @@ const StayProDashboard = () => (
 );
 
 export default StayProDashboard;
-

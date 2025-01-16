@@ -1,0 +1,127 @@
+/* Contenitore principale */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 220px; /* Larghezza ridotta */
+  background: linear-gradient(
+    145deg,
+    rgba(40, 40, 40, 0.9),
+    rgba(20, 20, 20, 0.8)
+  );
+  backdrop-filter: blur(10px);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  overflow-y: auto; /* Scroll verticale per contenuti lunghi */
+}
+
+/* Header della sidebar */
+.sidebar-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.sidebar-logo {
+  width: 80px; /* Ridotta proporzionalmente */
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.sidebar-header h1 {
+  font-size: 1.4rem; /* Ridotta proporzionalmente */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #4caf50;
+}
+
+/* Menu */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1; /* Occupa lo spazio disponibile */
+}
+
+.sidebar-menu li {
+  display: flex;
+  align-items: center;
+  padding: 12px; /* Ridotto per adattarsi alla larghezza */
+  margin: 5px 0;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.sidebar-menu li:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.sidebar-menu .icon {
+  font-size: 1.3rem; /* Ridotta proporzionalmente */
+  margin-right: 8px; /* Ridotta proporzionalmente */
+  color: #4caf50;
+}
+
+.sidebar-menu span {
+  font-size: 1rem; /* Ridotta proporzionalmente */
+  font-weight: 500;
+}
+
+/* Footer della sidebar */
+.sidebar-footer {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 20px;
+}
+
+.sidebar-footer .icon {
+  font-size: 1.6rem; /* Ridotta proporzionalmente */
+  cursor: pointer;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.sidebar-footer .icon:hover {
+  color: #4caf50;
+  transform: scale(1.1);
+}
+
+/* Responsività */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 180px; /* Riduzione per dispositivi più piccoli */
+  }
+
+  .sidebar-menu li {
+    padding: 8px; /* Ridotto ulteriormente */
+  }
+
+  .sidebar-footer .icon {
+    font-size: 1.4rem;
+  }
+  .icon {
+    margin-right: 10px;
+    font-size: 1.2em;
+    color: white;
+    transition: color 0.3s ease;
+  }
+
+  .icon:hover {
+    color: #4caf50;
+  }
+}
+
+/* Contenuto principale */
+.main-content {
+  margin-left: 220px; /* Aggiornato per riflettere la nuova larghezza */
+  padding: 20px;
+  transition: margin-left 0.3s ease;
+}

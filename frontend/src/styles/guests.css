@@ -1,0 +1,100 @@
+/* Stile base della pagina */
+.guests-page {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+  background-color: #f9f9f9;
+  color: #333;
+  min-height: 100vh; /* Per coprire l'intera altezza della finestra */
+  margin-left: 220px; /* Spazio per la sidebar */
+}
+
+/* Titolo principale */
+.guests-page h1 {
+  text-align: center;
+  color: #4caf50;
+  font-size: 2.4em;
+  margin-bottom: 20px;
+}
+
+/* Sezione lista ospiti */
+.guest-list {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.guest-list h2 {
+  color: #333;
+  font-size: 1.8em;
+  margin-bottom: 15px;
+}
+
+.guest-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.guest-list li {
+  padding: 10px 15px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.guest-list li:last-child {
+  border-bottom: none;
+}
+
+.guest-list li strong {
+  color: #4caf50;
+  font-size: 1.2em;
+}
+
+/* Sezione aggiungi ospite */
+.add-guest {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.add-guest h2 {
+  color: #333;
+  font-size: 1.8em;
+  margin-bottom: 15px;
+}
+
+.add-guest input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 1em;
+}
+
+.add-guest input:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
+.add-guest button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #4caf50;
+  color: white;
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-guest button:hover {
+  background-color: #45a049;
+}

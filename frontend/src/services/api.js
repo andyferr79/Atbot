@@ -17,8 +17,14 @@ api.interceptors.response.use(
 // Funzione per testare Firebase
 export const getTestFirebase = () => api.get("/test-firebase");
 
-// Funzione per gestire altri endpoint (esempio)
+// Funzione per inviare messaggi alla chat
 export const sendMessage = (message) =>
   api.post("/chat/message", { userMessage: message });
+
+// Funzione per recuperare tutti gli ospiti
+export const getGuests = () => api.get("/guests");
+
+// Funzione per aggiungere un nuovo ospite
+export const addGuest = (guestData) => api.post("/guests", guestData);
 
 export default api;
