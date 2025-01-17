@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Sidebar from "./components/Sidebar"; // Importa la Sidebar
-import { getTestFirebase } from "./services/api";
-import StayProDashboard from "./pages/StayProDashboard";
-import Bookings from "./pages/Bookings";
-import Guests from "./pages/Guests"; // Importa la nuova pagina Guests
+import Sidebar from "./components/Sidebar"; // Sidebar
+import { getTestFirebase } from "./services/api"; // API di test
+import StayProDashboard from "./pages/StayProDashboard"; // Dashboard
+import Bookings from "./pages/Bookings"; // Prenotazioni
+import Guests from "./pages/Guests"; // Ospiti
+import Rooms from "./pages/Rooms"; // Camere
 import "./App.css";
 
 function App() {
@@ -35,7 +36,8 @@ function App() {
           <Routes>
             <Route path="/" element={<StayProDashboard />} />
             <Route path="/bookings" element={<Bookings />} />
-            <Route path="/guests" element={<Guests />} /> {/* Nuova rotta */}
+            <Route path="/guests" element={<Guests />} />
+            <Route path="/rooms" element={<Rooms />} /> {/* Nuova pagina */}
           </Routes>
         </div>
       </div>

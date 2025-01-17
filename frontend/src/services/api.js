@@ -27,4 +27,17 @@ export const getGuests = () => api.get("/guests");
 // Funzione per aggiungere un nuovo ospite
 export const addGuest = (guestData) => api.post("/guests", guestData);
 
+// Funzione per recuperare tutte le camere
+export const getRooms = () => api.get("/rooms");
+
+// Funzione per aggiungere una nuova camera
+export const addRoom = (roomData) => api.post("/rooms", roomData);
+
+// Funzione per aggiornare una camera
+export const updateRoom = (roomId, updatedData) =>
+  api.put(`/rooms/${roomId}`, updatedData);
+
+// Funzione per eliminare una camera
+export const deleteRoom = (roomId) => api.delete(`/rooms/${roomId}`);
+
 export default api;

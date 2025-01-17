@@ -44,4 +44,77 @@ router.post("/guests", async (req, res) => {
   }
 });
 
+// Recupera tutte le camere
+router.get("/rooms", async (req, res) => {
+  try {
+    const snapshot = await admin.firestore().collection("rooms").get();
+    const rooms = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    res.json(rooms);
+  } catch (error) {
+    console.error("Errore nel recupero delle camere:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nel recupero delle camere", error });
+  }
+});
+
+// Aggiungi una nuova camera
+router.post("/rooms", async (req, res) => {
+  try {
+    const { operatorId, ...roomData } = req.body; // Estrai operatorId e altri dati della camera
+
+    if (!operatorId) {
+      return res
+        .status(400)
+        .json({ message: "L'ID dell'operatore è obbligatorio." });
+    }
+
+    const newRoom = {
+      ...roomData,
+      operatorId, // Assegna l'ID dell'operatore
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    const docRef = await admin.firestore().collection("rooms").add(newRoom);
+    res.json({ id: docRef.id, ...newRoom });
+  } catch (error) {
+    console.error("Errore nell'aggiunta della camera:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nell'aggiunta della camera", error });
+  }
+});
+
+// Aggiorna i dettagli di una camera
+router.put("/rooms/:id", async (req, res) => {
+  try {
+    const roomId = req.params.id;
+    const updatedData = req.body; // I nuovi dati della camera
+    updatedData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+
+    await admin.firestore().collection("rooms").doc(roomId).update(updatedData);
+    res.json({ id: roomId, ...updatedData });
+  } catch (error) {
+    console.error("Errore nell'aggiornamento della camera:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nell'aggiornamento della camera", error });
+  }
+});
+
+// Elimina una camera
+router.delete("/rooms/:id", async (req, res) => {
+  try {
+    const roomId = req.params.id;
+    await admin.firestore().collection("rooms").doc(roomId).delete();
+    res.json({ message: "Camera eliminata con successo", id: roomId });
+  } catch (error) {
+    console.error("Errore nell'eliminazione della camera:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nell'eliminazione della camera", error });
+  }
+});
+
 module.exports = router;
