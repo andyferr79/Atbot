@@ -6,6 +6,7 @@ import StayProDashboard from "./pages/StayProDashboard"; // Dashboard
 import Bookings from "./pages/Bookings"; // Prenotazioni
 import Guests from "./pages/Guests"; // Ospiti
 import Rooms from "./pages/Rooms"; // Camere
+import Suppliers from "./pages/Suppliers"; // Fornitori
 import "./App.css";
 
 function App() {
@@ -37,7 +38,9 @@ function App() {
             <Route path="/" element={<StayProDashboard />} />
             <Route path="/bookings" element={<Bookings />} />
             <Route path="/guests" element={<Guests />} />
-            <Route path="/rooms" element={<Rooms />} /> {/* Nuova pagina */}
+            <Route path="/rooms" element={<Rooms />} />
+            <Route path="/suppliers" element={<Suppliers />} />{" "}
+            {/* Nuova pagina */}
           </Routes>
         </div>
       </div>

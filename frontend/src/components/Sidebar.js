@@ -68,16 +68,22 @@ const Sidebar = () => {
             <span>Fornitori</span>
           </Link>
         </li>
+        <li>
+          <Link to="/settings">
+            <FontAwesomeIcon icon={faCog} className="icon" />
+            <span>Impostazioni</span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/support">
+            <FontAwesomeIcon icon={faLifeRing} className="icon" />
+            <span>Assistenza</span>
+          </Link>
+        </li>
       </ul>
 
       {/* Footer con impostazioni, assistenza e chat */}
       <div className="sidebar-footer">
-        <FontAwesomeIcon icon={faCog} className="icon" title="Impostazioni" />
-        <FontAwesomeIcon
-          icon={faLifeRing}
-          className="icon"
-          title="Assistenza"
-        />
         <FontAwesomeIcon icon={faComments} className="icon" title="Chat" />
       </div>
     </div>

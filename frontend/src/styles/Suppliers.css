@@ -1,0 +1,121 @@
+/* Suppliers.css - Stili per la Gestione Fornitori */
+
+.suppliers-page {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+/* Header Styles */
+.suppliers-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.suppliers-header h1 {
+  font-size: 1.8em;
+  color: #333;
+}
+
+.add-supplier-button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.add-supplier-button:hover {
+  background-color: #0056b3;
+}
+
+.search-bar {
+  padding: 10px;
+  width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Table Styles */
+.suppliers-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.suppliers-table table {
+  width: 100%;
+  border: 1px solid #ddd;
+}
+
+.suppliers-table th,
+.suppliers-table td {
+  text-align: left;
+  padding: 10px;
+}
+
+.suppliers-table th {
+  background-color: #f8f9fa;
+  color: #333;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.suppliers-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.view-button,
+.edit-button,
+.archive-button {
+  margin: 0 5px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.view-button {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.edit-button {
+  background-color: #ffc107;
+  color: black;
+}
+
+.archive-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Details Section */
+.supplier-details {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f8f9fa;
+}
+
+.supplier-details h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.close-details-button {
+  background-color: #6c757d;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.close-details-button:hover {
+  background-color: #5a6268;
+}

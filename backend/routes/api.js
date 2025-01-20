@@ -16,7 +16,7 @@ router.get("/test-firebase", async (req, res) => {
   }
 });
 
-// Recupera tutti gli ospiti
+// Rotte per la gestione degli ospiti
 router.get("/guests", async (req, res) => {
   try {
     const snapshot = await admin.firestore().collection("Guests").get();
@@ -30,10 +30,9 @@ router.get("/guests", async (req, res) => {
   }
 });
 
-// Aggiungi un nuovo ospite
 router.post("/guests", async (req, res) => {
   try {
-    const newGuest = req.body; // I dati dell'ospite vengono passati dal client
+    const newGuest = req.body;
     const docRef = await admin.firestore().collection("Guests").add(newGuest);
     res.json({ id: docRef.id, ...newGuest });
   } catch (error) {
@@ -44,7 +43,7 @@ router.post("/guests", async (req, res) => {
   }
 });
 
-// Recupera tutte le camere
+// Rotte per la gestione delle camere
 router.get("/rooms", async (req, res) => {
   try {
     const snapshot = await admin.firestore().collection("rooms").get();
@@ -58,10 +57,9 @@ router.get("/rooms", async (req, res) => {
   }
 });
 
-// Aggiungi una nuova camera
 router.post("/rooms", async (req, res) => {
   try {
-    const { operatorId, ...roomData } = req.body; // Estrai operatorId e altri dati della camera
+    const { operatorId, ...roomData } = req.body;
 
     if (!operatorId) {
       return res
@@ -71,7 +69,7 @@ router.post("/rooms", async (req, res) => {
 
     const newRoom = {
       ...roomData,
-      operatorId, // Assegna l'ID dell'operatore
+      operatorId,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
@@ -86,11 +84,10 @@ router.post("/rooms", async (req, res) => {
   }
 });
 
-// Aggiorna i dettagli di una camera
 router.put("/rooms/:id", async (req, res) => {
   try {
     const roomId = req.params.id;
-    const updatedData = req.body; // I nuovi dati della camera
+    const updatedData = req.body;
     updatedData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
 
     await admin.firestore().collection("rooms").doc(roomId).update(updatedData);
@@ -103,7 +100,6 @@ router.put("/rooms/:id", async (req, res) => {
   }
 });
 
-// Elimina una camera
 router.delete("/rooms/:id", async (req, res) => {
   try {
     const roomId = req.params.id;
@@ -114,6 +110,83 @@ router.delete("/rooms/:id", async (req, res) => {
     res
       .status(500)
       .json({ message: "Errore nell'eliminazione della camera", error });
+  }
+});
+
+// Rotte per la gestione dei fornitori
+router.get("/suppliers", async (req, res) => {
+  try {
+    const snapshot = await admin.firestore().collection("Suppliers").get();
+    const suppliers = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt ? data.createdAt.toDate() : null,
+        updatedAt: data.updatedAt ? data.updatedAt.toDate() : null,
+      };
+    });
+    res.json(suppliers);
+  } catch (error) {
+    console.error("Errore nel recupero dei fornitori:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nel recupero dei fornitori", error });
+  }
+});
+
+router.post("/suppliers", async (req, res) => {
+  try {
+    const newSupplier = {
+      ...req.body,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    const docRef = await admin
+      .firestore()
+      .collection("Suppliers")
+      .add(newSupplier);
+    res.json({ id: docRef.id, ...newSupplier });
+  } catch (error) {
+    console.error("Errore nell'aggiunta del fornitore:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nell'aggiunta del fornitore", error });
+  }
+});
+
+router.put("/suppliers/:id", async (req, res) => {
+  try {
+    const supplierId = req.params.id;
+    const updatedData = {
+      ...req.body,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    await admin
+      .firestore()
+      .collection("Suppliers")
+      .doc(supplierId)
+      .update(updatedData);
+    res.json({ id: supplierId, ...updatedData });
+  } catch (error) {
+    console.error("Errore nell'aggiornamento del fornitore:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nell'aggiornamento del fornitore", error });
+  }
+});
+
+router.delete("/suppliers/:id", async (req, res) => {
+  try {
+    const supplierId = req.params.id;
+    await admin.firestore().collection("Suppliers").doc(supplierId).delete();
+    res.json({ message: "Fornitore eliminato con successo", id: supplierId });
+  } catch (error) {
+    console.error("Errore nell'eliminazione del fornitore:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nell'eliminazione del fornitore", error });
   }
 });
 

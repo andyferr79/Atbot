@@ -14,30 +14,31 @@ api.interceptors.response.use(
   }
 );
 
-// Funzione per testare Firebase
+// **Funzioni Firebase**
 export const getTestFirebase = () => api.get("/test-firebase");
 
-// Funzione per inviare messaggi alla chat
+// **Funzioni Chat**
 export const sendMessage = (message) =>
   api.post("/chat/message", { userMessage: message });
 
-// Funzione per recuperare tutti gli ospiti
-export const getGuests = () => api.get("/guests");
+// **Funzioni Fornitori (Suppliers)**
+export const getSuppliers = () => api.get("/suppliers");
+export const addSupplier = (supplierData) =>
+  api.post("/suppliers", supplierData);
+export const updateSupplier = (supplierId, updatedData) =>
+  api.put(`/suppliers/${supplierId}`, updatedData);
+export const deleteSupplier = (supplierId) =>
+  api.delete(`/suppliers/${supplierId}`);
 
-// Funzione per aggiungere un nuovo ospite
+// **Funzioni Ospiti (Guests)**
+export const getGuests = () => api.get("/guests");
 export const addGuest = (guestData) => api.post("/guests", guestData);
 
-// Funzione per recuperare tutte le camere
+// **Funzioni Camere (Rooms)**
 export const getRooms = () => api.get("/rooms");
-
-// Funzione per aggiungere una nuova camera
 export const addRoom = (roomData) => api.post("/rooms", roomData);
-
-// Funzione per aggiornare una camera
 export const updateRoom = (roomId, updatedData) =>
   api.put(`/rooms/${roomId}`, updatedData);
-
-// Funzione per eliminare una camera
 export const deleteRoom = (roomId) => api.delete(`/rooms/${roomId}`);
 
 export default api;
