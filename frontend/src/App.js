@@ -7,6 +7,8 @@ import Bookings from "./pages/Bookings"; // Prenotazioni
 import Guests from "./pages/Guests"; // Ospiti
 import Rooms from "./pages/Rooms"; // Camere
 import Suppliers from "./pages/Suppliers"; // Fornitori
+import Marketing from "./pages/Marketing"; // Marketing
+import Settings from "./pages/Settings"; // Impostazioni
 import "./App.css";
 
 function App() {
@@ -39,8 +41,9 @@ function App() {
             <Route path="/bookings" element={<Bookings />} />
             <Route path="/guests" element={<Guests />} />
             <Route path="/rooms" element={<Rooms />} />
-            <Route path="/suppliers" element={<Suppliers />} />{" "}
-            {/* Nuova pagina */}
+            <Route path="/suppliers" element={<Suppliers />} />
+            <Route path="/marketing" element={<Marketing />} />
+            <Route path="/settings" element={<Settings />} /> {/* Nuova pagina Impostazioni */}
           </Routes>
         </div>
       </div>

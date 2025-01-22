@@ -24,6 +24,7 @@ const Suppliers = () => {
     setError(null);
     try {
       const data = await getSuppliers();
+      console.log("Dati ricevuti:", data);
       setSuppliers(data);
     } catch (err) {
       console.error("Errore nel recupero dei fornitori:", err);
@@ -54,13 +55,18 @@ const Suppliers = () => {
 
   const handleAddSupplier = async () => {
     const name = prompt("Inserisci il nome del nuovo fornitore:");
-    if (!name) return;
+    const email = prompt("Inserisci l'email del fornitore:");
+    const phone = prompt("Inserisci il numero di telefono del fornitore:");
+    if (!name || !email) return;
     try {
       const newSupplier = {
         name,
         category: "Generale",
         status: "Attivo",
-        contact: "",
+        contact: {
+          email,
+          phone,
+        },
       };
       const addedSupplier = await addSupplier(newSupplier);
       setSuppliers((prevSuppliers) => [...prevSuppliers, addedSupplier]);
@@ -73,10 +79,25 @@ const Suppliers = () => {
 
   const handleEditSupplier = async (supplier) => {
     const newName = prompt("Modifica il nome del fornitore:", supplier.name);
+    const newEmail = prompt(
+      "Modifica l'email del fornitore:",
+      supplier.contact?.email
+    );
+    const newPhone = prompt(
+      "Modifica il numero di telefono del fornitore:",
+      supplier.contact?.phone
+    );
     if (!newName || newName === supplier.name) return;
 
     try {
-      const updatedSupplier = { ...supplier, name: newName };
+      const updatedSupplier = {
+        ...supplier,
+        name: newName,
+        contact: {
+          email: newEmail || supplier.contact?.email,
+          phone: newPhone || supplier.contact?.phone,
+        },
+      };
       await updateSupplier(supplier.id, updatedSupplier);
       setSuppliers((prevSuppliers) =>
         prevSuppliers.map((s) => (s.id === supplier.id ? updatedSupplier : s))
@@ -88,9 +109,11 @@ const Suppliers = () => {
     }
   };
 
-  const filteredSuppliers = suppliers.filter((supplier) =>
-    supplier.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredSuppliers = Array.isArray(suppliers)
+    ? suppliers.filter((supplier) =>
+        supplier.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   return (
     <div className="suppliers-page">
@@ -115,45 +138,53 @@ const Suppliers = () => {
 
       {/* Table */}
       <div className="suppliers-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Categoria</th>
-              <th>Stato</th>
-              <th>Azioni</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSuppliers.map((supplier) => (
-              <tr key={supplier.id}>
-                <td>{supplier.name}</td>
-                <td>{supplier.category}</td>
-                <td>{supplier.status}</td>
-                <td>
-                  <button
-                    onClick={() => setSelectedSupplier(supplier)}
-                    className="view-button"
-                  >
-                    Visualizza
-                  </button>
-                  <button
-                    onClick={() => handleEditSupplier(supplier)}
-                    className="edit-button"
-                  >
-                    Modifica
-                  </button>
-                  <button
-                    onClick={() => handleDeleteSupplier(supplier.id)}
-                    className="archive-button"
-                  >
-                    Archivia
-                  </button>
-                </td>
+        {filteredSuppliers.length === 0 ? (
+          <p>Nessun fornitore trovato</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Email</th>
+                <th>Telefono</th>
+                <th>Stato</th>
+                <th>Azioni</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredSuppliers.map((supplier) => (
+                <tr key={supplier.id}>
+                  <td>{supplier.name}</td>
+                  <td>{supplier.category}</td>
+                  <td>{supplier.contact?.email || "Non disponibile"}</td>
+                  <td>{supplier.contact?.phone || "Non disponibile"}</td>
+                  <td>{supplier.status}</td>
+                  <td>
+                    <button
+                      onClick={() => setSelectedSupplier(supplier)}
+                      className="view-button"
+                    >
+                      Visualizza
+                    </button>
+                    <button
+                      onClick={() => handleEditSupplier(supplier)}
+                      className="edit-button"
+                    >
+                      Modifica
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSupplier(supplier.id)}
+                      className="archive-button"
+                    >
+                      Archivia
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Supplier Details */}
@@ -167,10 +198,15 @@ const Suppliers = () => {
             <strong>Categoria:</strong> {selectedSupplier.category}
           </p>
           <p>
-            <strong>Stato:</strong> {selectedSupplier.status}
+            <strong>Email:</strong>{" "}
+            {selectedSupplier.contact?.email || "Non disponibile"}
           </p>
           <p>
-            <strong>Contatti:</strong> {selectedSupplier.contact}
+            <strong>Telefono:</strong>{" "}
+            {selectedSupplier.contact?.phone || "Non disponibile"}
+          </p>
+          <p>
+            <strong>Stato:</strong> {selectedSupplier.status}
           </p>
           <button
             className="close-details-button"
