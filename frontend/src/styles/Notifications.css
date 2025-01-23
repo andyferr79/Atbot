@@ -1,0 +1,100 @@
+/* Notifications.css - Stile per la sezione Notifiche */
+
+/* Layout generale */
+.notifications {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 1.8em;
+  color: #333;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.section-description {
+  font-size: 1em;
+  color: #666;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Sezioni delle notifiche */
+.notifications-section {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notifications-label {
+  font-size: 1.1em;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notifications-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.notifications-input {
+  padding: 10px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+  transition: border-color 0.3s;
+}
+
+.notifications-input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Bottoni */
+.notifications-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.save-button {
+  padding: 10px 20px;
+  font-size: 1.1em;
+  color: #fff;
+  background-color: #28a745;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.save-button:hover {
+  background-color: #218838;
+}
+
+.cancel-button {
+  padding: 10px 20px;
+  font-size: 1.1em;
+  color: #fff;
+  background-color: #dc3545;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.cancel-button:hover {
+  background-color: #c82333;
+}
