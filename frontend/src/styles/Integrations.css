@@ -1,0 +1,119 @@
+/* Integrations.css - Stile per Gestione Integrazioni */
+
+/* Layout Generale */
+.integrations {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 1.8em;
+  color: #333;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.section-description {
+  font-size: 1em;
+  color: #666;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Aggiungi Integrazione */
+.add-integration-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.add-integration-section label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1em;
+  color: #444;
+}
+
+.add-integration-section input,
+.add-integration-section select,
+.add-integration-section textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.add-integration-section input:focus,
+.add-integration-section select:focus,
+.add-integration-section textarea:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.add-button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.add-button:hover {
+  background-color: #218838;
+}
+
+/* Elenco Integrazioni */
+.integrations-list {
+  margin-top: 20px;
+}
+
+.integrations-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.integrations-list th,
+.integrations-list td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.integrations-list th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.remove-button {
+  padding: 5px 10px;
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.remove-button:hover {
+  background-color: #c82333;
+}

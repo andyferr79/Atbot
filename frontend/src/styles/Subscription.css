@@ -1,0 +1,190 @@
+/* Subscription.css - Stile per la gestione degli abbonamenti */
+
+.subscription {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 1.8em;
+  color: #333;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.section-description {
+  font-size: 1em;
+  color: #666;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Piano Attuale */
+.current-plan {
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  margin-bottom: 20px;
+}
+
+.current-plan h3 {
+  font-size: 1.4em;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.current-plan ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.cancel-button {
+  padding: 10px 20px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.cancel-button:hover {
+  background-color: #f1b0b7;
+  color: #721c24;
+}
+
+/* Piani Disponibili */
+.available-plans {
+  margin-top: 20px;
+}
+
+.plans-container {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.plan-card {
+  flex: 1 1 calc(33.333% - 15px);
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.plan-card h4 {
+  font-size: 1.2em;
+  color: #444;
+}
+
+.plan-card ul {
+  list-style: disc;
+  padding-left: 20px;
+  margin-top: 10px;
+}
+
+.change-plan-button {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.change-plan-button:hover {
+  background-color: #218838;
+}
+
+/* Storico Fatture */
+.invoices-section {
+  margin-top: 20px;
+}
+
+.invoices-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.invoices-table th,
+.invoices-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.invoices-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.download-button {
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.download-button:hover {
+  background-color: #0056b3;
+}
+
+.send-button {
+  padding: 5px 10px;
+  background-color: #ffc107;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.send-button:hover {
+  background-color: #e0a800;
+}
+
+/* Contatti Commercialista */
+.accountant-section {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.accountant-section p {
+  font-size: 1em;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.edit-accountant-button {
+  padding: 10px 20px;
+  background-color: #17a2b8;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.edit-accountant-button:hover {
+  background-color: #138496;
+}

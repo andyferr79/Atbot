@@ -1,0 +1,158 @@
+/* BackupSecurity.css - Stile per la gestione dei backup e sicurezza */
+
+/* Layout Generale */
+.backup-security {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 1.8em;
+  color: #333;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.section-description {
+  font-size: 1em;
+  color: #666;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Backup Automatico */
+.backup-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.toggle-label {
+  font-size: 1.1em;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.add-backup-button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.add-backup-button:hover {
+  background-color: #218838;
+}
+
+/* Elenco Backup */
+.backup-list {
+  margin-top: 20px;
+}
+
+.backup-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.backup-list th,
+.backup-list td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.backup-list th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.download-button {
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.download-button:hover {
+  background-color: #0056b3;
+}
+
+.restore-button {
+  padding: 5px 10px;
+  background-color: #ffc107;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.restore-button:hover {
+  background-color: #e0a800;
+}
+
+/* Sicurezza */
+.security-section {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.security-section label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1em;
+  color: #444;
+}
+
+.security-section input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.security-section input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.save-password-button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #17a2b8;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.save-password-button:hover {
+  background-color: #138496;
+}

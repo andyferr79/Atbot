@@ -1,0 +1,177 @@
+/* UsersPermissions.css - Stile per Gestione Collaboratori e Permessi */
+
+/* Layout Generale */
+.users-permissions {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 1.8em;
+  color: #333;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.section-description {
+  font-size: 1em;
+  color: #666;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Aggiungi Collaboratore */
+.add-collaborator-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.add-collaborator-section label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1em;
+  color: #444;
+}
+
+.add-collaborator-section input,
+.add-collaborator-section select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.add-collaborator-section input:focus,
+.add-collaborator-section select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.add-button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.add-button:hover {
+  background-color: #218838;
+}
+
+/* Filtra Collaboratori */
+.filter-section {
+  margin-bottom: 20px;
+}
+
+.filter-section input {
+  width: 100%;
+  padding: 10px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.filter-section input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Elenco Collaboratori */
+.collaborators-list {
+  margin-top: 20px;
+}
+
+.collaborators-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.collaborators-list th,
+.collaborators-list td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.collaborators-list th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.view-button {
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.view-button:hover {
+  background-color: #0056b3;
+}
+
+.remove-button {
+  padding: 5px 10px;
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.remove-button:hover {
+  background-color: #c82333;
+}
+
+/* Dettagli Collaboratore */
+.collaborator-details {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.collaborator-details p {
+  font-size: 1em;
+  margin: 10px 0;
+  color: #444;
+}
+
+.back-button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #6c757d;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.back-button:hover {
+  background-color: #5a6268;
+}
