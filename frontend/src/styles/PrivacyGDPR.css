@@ -1,0 +1,132 @@
+/* PrivacyGDPR.css - Stile per la gestione della privacy e GDPR */
+
+.privacy-gdpr {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 1.8em;
+  color: #333;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.section-description {
+  font-size: 1em;
+  color: #666;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Gestione Dati */
+.data-management {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.export-button,
+.delete-button {
+  padding: 10px 20px;
+  font-size: 1em;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-right: 10px;
+}
+
+.export-button {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.export-button:hover {
+  background-color: #0056b3;
+}
+
+.delete-button {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}
+
+/* Gestione Consensi */
+.consents-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.consents-section label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1em;
+  color: #444;
+}
+
+.consents-section input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+/* Storico Richieste GDPR */
+.requests-section {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.requests-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.requests-table th,
+.requests-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.requests-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+/* Documentazione GDPR */
+.documentation-section {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.doc-link {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1em;
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.doc-link:hover {
+  color: #0056b3;
+}
