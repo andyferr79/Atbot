@@ -41,4 +41,12 @@ export const updateRoom = (roomId, updatedData) =>
   api.put(`/rooms/${roomId}`, updatedData);
 export const deleteRoom = (roomId) => api.delete(`/rooms/${roomId}`);
 
+// **Funzioni Prenotazioni (Bookings)**
+export const getBookings = () => api.get("/bookings"); // Recupera tutte le prenotazioni
+export const addBooking = (bookingData) => api.post("/bookings", bookingData); // Crea una nuova prenotazione
+export const updateBooking = (bookingId, updatedData) =>
+  api.put(`/bookings/${bookingId}`, updatedData); // Modifica una prenotazione
+export const deleteBooking = (bookingId) =>
+  api.delete(`/bookings/${bookingId}`); // Elimina una prenotazione
+
 export default api;

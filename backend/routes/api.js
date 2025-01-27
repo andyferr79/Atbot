@@ -16,7 +16,7 @@ router.get("/test-firebase", async (req, res) => {
   }
 });
 
-// Rotte per la gestione degli ospiti
+// **Rotte per la gestione degli ospiti**
 router.get("/guests", async (req, res) => {
   try {
     const snapshot = await admin.firestore().collection("Guests").get();
@@ -43,10 +43,10 @@ router.post("/guests", async (req, res) => {
   }
 });
 
-// Rotte per la gestione delle camere
+// **Rotte per la gestione delle camere**
 router.get("/rooms", async (req, res) => {
   try {
-    const snapshot = await admin.firestore().collection("rooms").get();
+    const snapshot = await admin.firestore().collection("Rooms").get();
     const rooms = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     res.json(rooms);
   } catch (error) {
@@ -74,7 +74,7 @@ router.post("/rooms", async (req, res) => {
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
-    const docRef = await admin.firestore().collection("rooms").add(newRoom);
+    const docRef = await admin.firestore().collection("Rooms").add(newRoom);
     res.json({ id: docRef.id, ...newRoom });
   } catch (error) {
     console.error("Errore nell'aggiunta della camera:", error);
@@ -84,48 +84,87 @@ router.post("/rooms", async (req, res) => {
   }
 });
 
-router.put("/rooms/:id", async (req, res) => {
+// **Rotte per la gestione delle prenotazioni**
+router.get("/bookings", async (req, res) => {
   try {
-    const roomId = req.params.id;
-    const updatedData = req.body;
-    updatedData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
-
-    await admin.firestore().collection("rooms").doc(roomId).update(updatedData);
-    res.json({ id: roomId, ...updatedData });
+    const snapshot = await admin.firestore().collection("Bookings").get();
+    const bookings = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    res.json(bookings);
   } catch (error) {
-    console.error("Errore nell'aggiornamento della camera:", error);
+    console.error("Errore nel recupero delle prenotazioni:", error);
     res
       .status(500)
-      .json({ message: "Errore nell'aggiornamento della camera", error });
+      .json({ message: "Errore nel recupero delle prenotazioni", error });
   }
 });
 
-router.delete("/rooms/:id", async (req, res) => {
+router.post("/bookings", async (req, res) => {
   try {
-    const roomId = req.params.id;
-    await admin.firestore().collection("rooms").doc(roomId).delete();
-    res.json({ message: "Camera eliminata con successo", id: roomId });
+    const newBooking = {
+      ...req.body,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    const docRef = await admin
+      .firestore()
+      .collection("Bookings")
+      .add(newBooking);
+    res.json({ id: docRef.id, ...newBooking });
   } catch (error) {
-    console.error("Errore nell'eliminazione della camera:", error);
+    console.error("Errore nella creazione della prenotazione:", error);
     res
       .status(500)
-      .json({ message: "Errore nell'eliminazione della camera", error });
+      .json({ message: "Errore nella creazione della prenotazione", error });
   }
 });
 
-// Rotte per la gestione dei fornitori
+router.put("/bookings/:id", async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    const updatedData = {
+      ...req.body,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    await admin
+      .firestore()
+      .collection("Bookings")
+      .doc(bookingId)
+      .update(updatedData);
+    res.json({ id: bookingId, ...updatedData });
+  } catch (error) {
+    console.error("Errore nell'aggiornamento della prenotazione:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nell'aggiornamento della prenotazione", error });
+  }
+});
+
+router.delete("/bookings/:id", async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    await admin.firestore().collection("Bookings").doc(bookingId).delete();
+    res.json({ message: "Prenotazione eliminata con successo", id: bookingId });
+  } catch (error) {
+    console.error("Errore nell'eliminazione della prenotazione:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nell'eliminazione della prenotazione", error });
+  }
+});
+
+// **Rotte per la gestione dei fornitori**
 router.get("/suppliers", async (req, res) => {
   try {
     const snapshot = await admin.firestore().collection("Suppliers").get();
-    const suppliers = snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt ? data.createdAt.toDate() : null,
-        updatedAt: data.updatedAt ? data.updatedAt.toDate() : null,
-      };
-    });
+    const suppliers = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     res.json(suppliers);
   } catch (error) {
     console.error("Errore nel recupero dei fornitori:", error);
@@ -142,6 +181,7 @@ router.post("/suppliers", async (req, res) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
+
     const docRef = await admin
       .firestore()
       .collection("Suppliers")
