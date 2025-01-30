@@ -9,6 +9,7 @@ import Rooms from "./pages/Rooms"; // Camere
 import Suppliers from "./pages/Suppliers"; // Fornitori
 import Marketing from "./pages/Marketing"; // Marketing
 import Settings from "./pages/settings/Settings"; // Impostazioni
+import Reports from "./pages/reports/Reports"; // Report
 import "./App.css";
 
 function App() {
@@ -43,8 +44,9 @@ function App() {
             <Route path="/rooms" element={<Rooms />} />
             <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/marketing" element={<Marketing />} />
-            <Route path="/settings" element={<Settings />} />{" "}
-            {/* Nuova pagina Impostazioni */}
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/reports" element={<Reports />} />{" "}
+            {/* Nuova pagina Report */}
           </Routes>
         </div>
       </div>
