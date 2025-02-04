@@ -1,28 +1,42 @@
 const express = require("express");
 const admin = require("firebase-admin");
 const dotenv = require("dotenv");
-const cors = require("cors"); // Importa cors
+const cors = require("cors");
 
 // Carica le variabili d'ambiente
 dotenv.config();
 
-// Percorso del file serviceAccountKey.json
-const serviceAccount = require("../firebase/serviceAccountKey.json");
-
 // Inizializza Firebase Admin SDK
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://autotaskerbot-default-rtdb.europe-west1.firebasedatabase.app",
-});
+let serviceAccount;
+try {
+  serviceAccount = require("../firebase/serviceAccountKey.json");
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL:
+      "https://autotaskerbot-default-rtdb.europe-west1.firebasedatabase.app",
+  });
+} catch (error) {
+  console.warn(
+    "⚠️ Warning: Firebase non inizializzato. Controlla il file serviceAccountKey.json."
+  );
+}
 
 // Crea un'app Express
 const app = express();
 
-// Aggiungi il middleware CORS
+// Middleware
 app.use(cors());
-
-// Middleware per parsing del corpo delle richieste JSON
 app.use(express.json());
+
+// ✅ Prova a caricare express-fileupload (senza crash)
+try {
+  const fileUpload = require("express-fileupload");
+  app.use(fileUpload());
+} catch (error) {
+  console.warn(
+    "⚠️ Warning: express-fileupload non trovato, upload disabilitato."
+  );
+}
 
 // Importa le API
 const apiRoutes = require("./routes/api");
@@ -30,11 +44,11 @@ app.use("/api", apiRoutes);
 
 // Rotta principale
 app.get("/", (req, res) => {
-  res.send("Backend ATB è attivo!");
+  res.send("✅ Backend ATB è attivo!");
 });
 
 // Imposta la porta del server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server in ascolto sulla porta ${PORT}`);
+  console.log(`✅ Server in ascolto sulla porta ${PORT}`);
 });

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 import "../../../styles/BookingsReport.css";
-import { getBookingsReportData } from "../../../services/reports/bookingsReportApi";
+import { getBookingsReportData } from "../../../../services/reports/bookingsReportApi";
 
 const BookingsReport = () => {
   const [bookingsData, setBookingsData] = useState({

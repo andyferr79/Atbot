@@ -40,6 +40,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: background 0.3s ease-in-out;
+}
+
+.dashboard ul li:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .dashboard ul li:last-child {
@@ -50,6 +55,7 @@
 .chart-container {
   width: 100%;
   max-width: 600px;
+  max-height: 350px;
   margin: 20px auto;
   background: white;
   padding: 15px;
