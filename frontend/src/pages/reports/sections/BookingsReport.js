@@ -1,8 +1,8 @@
 // 📅 BookingsReport.js - Report Prenotazioni con Grafico Avanzato
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Chart from "chart.js/auto";
-import "../../../styles/BookingsReport.css";
-import { getBookingsReportData } from "../../../../services/reports/bookingsReportApi";
+import "../../../styles/BookingsReport.css"; // ✅ Corretto il percorso del CSS
+import { getBookingsReportData } from "../../../services/reports/bookingsReportApi"; // ✅ Corretto il percorso API
 
 const BookingsReport = () => {
   const [bookingsData, setBookingsData] = useState({
@@ -14,30 +14,31 @@ const BookingsReport = () => {
   });
 
   const chartRef = useRef(null);
-  let chartInstance = useRef(null);
+  const chartInstance = useRef(null);
 
-  // 📊 Recupero dati prenotazioni
+  // 📊 Recupero dati prenotazioni con gestione errori
   useEffect(() => {
     const fetchBookingsData = async () => {
       try {
         const response = await getBookingsReportData();
-        setBookingsData(response);
+        if (response) {
+          setBookingsData(response);
+        } else {
+          console.warn("⚠️ Nessun dato ricevuto dal server.");
+        }
       } catch (error) {
-        console.error(
-          "❌ Errore nel recupero dei dati delle prenotazioni:",
-          error
-        );
+        console.error("❌ Errore nel recupero dei dati prenotazioni:", error);
       }
     };
     fetchBookingsData();
   }, []);
 
-  // 🎨 Creazione grafico prenotazioni
-  useEffect(() => {
-    if (bookingsData.bookingTrends.length > 0 && chartRef.current) {
-      if (chartInstance.current) {
-        chartInstance.current.destroy(); // ✅ Evita la creazione multipla del grafico
-      }
+  // 🎨 Creazione del grafico ottimizzato con `useCallback`
+  const renderChart = useCallback(() => {
+    if (!bookingsData.bookingTrends.length || !chartRef.current) return;
+
+    try {
+      if (chartInstance.current) chartInstance.current.destroy(); // ✅ Rimuove il grafico precedente
 
       chartInstance.current = new Chart(chartRef.current, {
         type: "line",
@@ -50,7 +51,7 @@ const BookingsReport = () => {
               borderColor: "#4CAF50",
               backgroundColor: "rgba(76, 175, 80, 0.3)",
               fill: true,
-              tension: 0.4, // 🌊 Effetto curvato nelle linee
+              tension: 0.4,
               pointRadius: 5,
               pointHoverRadius: 8,
               borderWidth: 3,
@@ -59,38 +60,26 @@ const BookingsReport = () => {
         },
         options: {
           responsive: true,
-          animation: {
-            duration: 1200,
-            easing: "easeInOutQuart",
-          },
+          animation: { duration: 1200, easing: "easeInOutQuart" },
           plugins: {
             legend: {
-              labels: {
-                color: "#2C3E50",
-                font: {
-                  size: 14,
-                  weight: "bold",
-                },
-              },
+              labels: { color: "#2C3E50", font: { size: 14, weight: "bold" } },
             },
           },
           scales: {
-            x: {
-              ticks: {
-                color: "#2C3E50",
-              },
-            },
-            y: {
-              ticks: {
-                color: "#2C3E50",
-              },
-              beginAtZero: true,
-            },
+            x: { ticks: { color: "#2C3E50" } },
+            y: { ticks: { color: "#2C3E50" }, beginAtZero: true },
           },
         },
       });
+    } catch (error) {
+      console.error("❌ Errore nella generazione del grafico:", error);
     }
   }, [bookingsData]);
+
+  useEffect(() => {
+    renderChart();
+  }, [bookingsData, renderChart]);
 
   return (
     <div className="bookings-report">

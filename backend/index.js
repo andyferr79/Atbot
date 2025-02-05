@@ -38,9 +38,13 @@ try {
   );
 }
 
-// Importa le API
+// ✅ Importa le API esistenti
 const apiRoutes = require("./routes/api");
 app.use("/api", apiRoutes);
+
+// ✅ Importa la nuova API per i report delle prenotazioni
+const bookingsReportsRoutes = require("./routes/bookingsReportsRoutes");
+app.use("/api/reports/bookings", bookingsReportsRoutes);
 
 // Rotta principale
 app.get("/", (req, res) => {
