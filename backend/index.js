@@ -46,6 +46,14 @@ app.use("/api", apiRoutes);
 const bookingsReportsRoutes = require("./routes/bookingsReportsRoutes");
 app.use("/api/reports/bookings", bookingsReportsRoutes);
 
+// ✅ Importa l'API per i report finanziari
+const financialReportsRoutes = require("./routes/financialReportsRoutes");
+app.use("/api/reports/financial", financialReportsRoutes);
+
+// ✅ Importa l'API per il report fornitori
+const suppliersReportsRoutes = require("./routes/suppliersReportsRoutes");
+app.use("/api/reports/suppliers", suppliersReportsRoutes);
+
 // Rotta principale
 app.get("/", (req, res) => {
   res.send("✅ Backend ATB è attivo!");

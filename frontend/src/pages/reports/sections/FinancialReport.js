@@ -18,7 +18,6 @@ const FinancialReport = () => {
   });
 
   const [importMethod, setImportMethod] = useState(null);
-  const [file, setFile] = useState(null);
   const revenueChartRef = useRef(null);
   const expensesChartRef = useRef(null);
   const revenueChartInstance = useRef(null);
@@ -89,13 +88,12 @@ const FinancialReport = () => {
   // ✅ Funzione per importare il file selezionato
   const handleFileUpload = async (event) => {
     const selectedFile = event.target.files[0];
-    setFile(selectedFile);
 
     if (selectedFile) {
       try {
-        const response = await importFinancialData(selectedFile);
-        console.log("✅ Dati importati con successo:", response);
-        alert("Dati importati con successo!");
+        await importFinancialData(selectedFile);
+        console.log("✅ Dati importati con successo:", selectedFile.name);
+        alert(`Dati importati con successo! File: ${selectedFile.name}`);
       } catch (error) {
         console.error("❌ Errore nell'importazione dei dati:", error);
         alert("Errore durante l'importazione.");

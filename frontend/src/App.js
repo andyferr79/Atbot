@@ -10,18 +10,22 @@ import Suppliers from "./pages/Suppliers"; // Fornitori
 import Marketing from "./pages/Marketing"; // Marketing
 import Settings from "./pages/settings/Settings"; // Impostazioni
 import Reports from "./pages/reports/Reports"; // Report
+import BookingsReport from "./pages/reports/sections/BookingsReport"; // ✅ Aggiunto Report Prenotazioni
+import FinancialReport from "./pages/reports/sections/FinancialReport"; // ✅ Aggiunto Report Finanziario
+import GeneralReport from "./pages/reports/sections/GeneralReport"; // ✅ Aggiunto Report Generale
+import SuppliersReport from "./pages/reports/sections/SuppliersReport"; // ✅ Aggiunto Report Fornitori
 import "./App.css";
 
 function App() {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Effettua la chiamata al backend per testare la connessione
+  // ✅ Effettua la chiamata al backend per testare la connessione
   useEffect(() => {
     getTestFirebase()
       .then((response) => setMessage(response.data.message))
       .catch((error) => {
-        console.error("Errore durante la richiesta:", error);
+        console.error("❌ Errore durante la richiesta:", error);
         setMessage("Errore nella connessione al backend");
       })
       .finally(() => setIsLoading(false));
@@ -45,8 +49,21 @@ function App() {
             <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/marketing" element={<Marketing />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/reports" element={<Reports />} />{" "}
-            {/* Nuova pagina Report */}
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/reports/bookings" element={<BookingsReport />} />{" "}
+            {/* ✅ Report Prenotazioni */}
+            <Route
+              path="/reports/financial"
+              element={<FinancialReport />}
+            />{" "}
+            {/* ✅ Report Finanziario */}
+            <Route path="/reports/general" element={<GeneralReport />} />{" "}
+            {/* ✅ Report Generale */}
+            <Route
+              path="/reports/suppliers"
+              element={<SuppliersReport />}
+            />{" "}
+            {/* ✅ Report Fornitori */}
           </Routes>
         </div>
       </div>
