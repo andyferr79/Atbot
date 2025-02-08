@@ -1,8 +1,68 @@
-// Marketing.js - Gestione Marketing
-import React from "react";
+// 📌 Marketing.js - Gestione Marketing
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import "../styles/Marketing.css";
 
 const Marketing = () => {
+  const [connectedAccounts, setConnectedAccounts] = useState({
+    facebookPageId: null,
+    googleAdsId: null,
+    tiktokAdsId: null,
+    mailchimpApiKey: null,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const userId = "user123"; // Da sostituire con l'ID utente dinamico
+
+  // ✅ Recupera gli account collegati da Firestore all'avvio della pagina
+  useEffect(() => {
+    const fetchConnectedAccounts = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3001/api/marketing/accounts"
+        );
+        const userAccount = response.data.find((acc) => acc.userId === userId);
+
+        if (userAccount) {
+          setConnectedAccounts({
+            facebookPageId: userAccount.facebookPageId || null,
+            googleAdsId: userAccount.googleAdsId || null,
+            tiktokAdsId: userAccount.tiktokAdsId || null,
+            mailchimpApiKey: userAccount.mailchimpApiKey || null,
+          });
+        }
+      } catch (error) {
+        console.error("❌ Errore nel recupero degli account collegati:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConnectedAccounts();
+  }, []);
+
+  // ✅ Funzione per collegare un account e salvarlo in Firestore
+  const handleConnect = async (platform) => {
+    try {
+      const updatedAccounts = {
+        ...connectedAccounts,
+        [`${platform}Id`]: `mock_${platform}_id`,
+      };
+
+      await axios.post("http://localhost:3001/api/marketing/accounts", {
+        userId,
+        facebookPageId: updatedAccounts.facebookPageId,
+        googleAdsId: updatedAccounts.googleAdsId,
+        tiktokAdsId: updatedAccounts.tiktokAdsId,
+        mailchimpApiKey: updatedAccounts.mailchimpApiKey,
+      });
+
+      setConnectedAccounts(updatedAccounts);
+    } catch (error) {
+      console.error(`❌ Errore nella connessione di ${platform}:`, error);
+    }
+  };
+
   return (
     <div className="marketing-page">
       {/* Header */}
@@ -10,6 +70,65 @@ const Marketing = () => {
         <h1>Gestione Marketing</h1>
         <button className="new-campaign-button">+ Nuova Campagna</button>
       </div>
+
+      {/* Sezione Collega i tuoi account */}
+      <section className="marketing-accounts">
+        <h2>🔗 Collega i tuoi Account di Marketing</h2>
+        <p>
+          Connetti i tuoi account pubblicitari e social per gestire tutto da
+          StayPro.
+        </p>
+
+        {loading ? (
+          <p>⏳ Caricamento account...</p>
+        ) : (
+          <div className="account-links">
+            <button
+              className={`connect-button ${
+                connectedAccounts.facebookPageId ? "connected" : ""
+              }`}
+              onClick={() => handleConnect("facebookPage")}
+            >
+              {connectedAccounts.facebookPageId
+                ? "✅ Facebook & Instagram Connessi"
+                : "🔵 Collega Facebook & Instagram"}
+            </button>
+
+            <button
+              className={`connect-button ${
+                connectedAccounts.googleAdsId ? "connected" : ""
+              }`}
+              onClick={() => handleConnect("googleAds")}
+            >
+              {connectedAccounts.googleAdsId
+                ? "✅ Google Ads Connesso"
+                : "🟢 Collega Google Ads"}
+            </button>
+
+            <button
+              className={`connect-button ${
+                connectedAccounts.tiktokAdsId ? "connected" : ""
+              }`}
+              onClick={() => handleConnect("tiktokAds")}
+            >
+              {connectedAccounts.tiktokAdsId
+                ? "✅ TikTok Ads Connesso"
+                : "🟣 Collega TikTok Ads"}
+            </button>
+
+            <button
+              className={`connect-button ${
+                connectedAccounts.mailchimpApiKey ? "connected" : ""
+              }`}
+              onClick={() => handleConnect("mailchimp")}
+            >
+              {connectedAccounts.mailchimpApiKey
+                ? "✅ Mailchimp Connesso"
+                : "✉️ Collega Mailchimp"}
+            </button>
+          </div>
+        )}
+      </section>
 
       {/* Dashboard delle Metriche */}
       <section className="marketing-dashboard">
