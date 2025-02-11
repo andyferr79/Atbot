@@ -1,38 +1,47 @@
-// Bookings.js - Gestione Prenotazioni
 import React, { useEffect, useState } from "react";
-import "../styles/bookings.css"; // Stile specifico per la pagina
+import "../styles/bookings.css";
 import {
   getBookings,
   updateBooking,
   deleteBooking,
   addBooking,
-} from "../services/api"; // API per le prenotazioni
+} from "../services/api";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+
+const localizer = momentLocalizer(moment);
+const STATUS_LABELS = {
+  pending: "In Attesa",
+  accepted: "Accettata",
+  confirmed: "Confermata",
+  completed: "Completata",
+};
 
 const Bookings = () => {
-  const [bookings, setBookings] = useState([]); // Stato per le prenotazioni
+  const [bookings, setBookings] = useState([]);
+  const [calendarView, setCalendarView] = useState("month");
+  const [searchQuery, setSearchQuery] = useState("");
   const [newBooking, setNewBooking] = useState({
     customerName: "",
     checkInDate: "",
     checkOutDate: "",
     status: "pending",
     channel: "direct",
-  }); // Stato per una nuova prenotazione
+  });
 
-  // Recupero prenotazioni all'avvio
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         const response = await getBookings();
-        setBookings(response.data); // Assumi che response.data contenga un array di prenotazioni
+        setBookings(response.data);
       } catch (error) {
         console.error("Errore nel recupero delle prenotazioni:", error);
       }
     };
-
     fetchBookings();
   }, []);
 
-  // Aggiunta di una nuova prenotazione
   const handleAddBooking = async () => {
     try {
       if (
@@ -43,10 +52,8 @@ const Bookings = () => {
         alert("Tutti i campi devono essere compilati.");
         return;
       }
-
       const response = await addBooking(newBooking);
       setBookings((prev) => [...prev, response.data]);
-      alert("Prenotazione aggiunta con successo.");
       setNewBooking({
         customerName: "",
         checkInDate: "",
@@ -56,157 +63,97 @@ const Bookings = () => {
       });
     } catch (error) {
       console.error("Errore nella creazione della prenotazione:", error);
-      alert("Errore nella creazione della prenotazione.");
     }
   };
 
-  // Eliminazione di una prenotazione
   const handleDelete = async (bookingId) => {
-    if (!window.confirm("Sei sicuro di voler eliminare questa prenotazione?")) {
-      return;
-    }
     try {
       await deleteBooking(bookingId);
       setBookings((prev) => prev.filter((booking) => booking.id !== bookingId));
-      alert("Prenotazione eliminata con successo.");
     } catch (error) {
       console.error("Errore nell'eliminazione della prenotazione:", error);
-      alert("Errore nell'eliminazione della prenotazione.");
     }
   };
 
-  // Modifica di una prenotazione
-  const handleEdit = async (bookingId) => {
-    const newStatus = prompt("Inserisci il nuovo stato della prenotazione:");
-    if (!newStatus) return;
-
-    try {
-      await updateBooking(bookingId, { status: newStatus });
-      setBookings((prev) =>
-        prev.map((booking) =>
-          booking.id === bookingId ? { ...booking, status: newStatus } : booking
-        )
-      );
-      alert("Prenotazione aggiornata con successo.");
-    } catch (error) {
-      console.error("Errore nella modifica della prenotazione:", error);
-      alert("Errore nella modifica della prenotazione.");
-    }
+  const handleSearch = (event) => {
+    setSearchQuery(event.target.value);
   };
 
-  // Gruppo di prenotazioni per canale
-  const groupByChannel = (bookings) => {
-    return bookings.reduce((groups, booking) => {
-      const channel = booking.channel || "direct";
-      if (!groups[channel]) {
-        groups[channel] = [];
-      }
-      groups[channel].push(booking);
-      return groups;
-    }, {});
-  };
+  const filteredBookings = bookings.filter(
+    (booking) =>
+      booking.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.id.includes(searchQuery)
+  );
 
   return (
     <div className="bookings-page">
       <header className="bookings-header">
         <h1>Gestione Prenotazioni</h1>
-        <p>Visualizza, modifica e gestisci le prenotazioni del tuo hotel.</p>
       </header>
 
       <main className="bookings-content">
-        {/* Aggiungi Prenotazione */}
         <section className="add-booking">
           <h2>Aggiungi Prenotazione</h2>
           <div className="form-group">
-            <label>
-              Nome Cliente:
-              <input
-                type="text"
-                value={newBooking.customerName}
-                onChange={(e) =>
-                  setNewBooking({ ...newBooking, customerName: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Data Check-in:
-              <input
-                type="date"
-                value={newBooking.checkInDate}
-                onChange={(e) =>
-                  setNewBooking({ ...newBooking, checkInDate: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Data Check-out:
-              <input
-                type="date"
-                value={newBooking.checkOutDate}
-                onChange={(e) =>
-                  setNewBooking({ ...newBooking, checkOutDate: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Canale:
-              <select
-                value={newBooking.channel}
-                onChange={(e) =>
-                  setNewBooking({ ...newBooking, channel: e.target.value })
-                }
-              >
-                <option value="direct">Direct</option>
-                <option value="booking">Booking.com</option>
-                <option value="airbnb">Airbnb</option>
-                <option value="expedia">Expedia</option>
-              </select>
-            </label>
+            <input
+              type="text"
+              placeholder="Nome Cliente"
+              value={newBooking.customerName}
+              onChange={(e) =>
+                setNewBooking({ ...newBooking, customerName: e.target.value })
+              }
+            />
+            <input
+              type="date"
+              value={newBooking.checkInDate}
+              onChange={(e) =>
+                setNewBooking({ ...newBooking, checkInDate: e.target.value })
+              }
+            />
+            <input
+              type="date"
+              value={newBooking.checkOutDate}
+              onChange={(e) =>
+                setNewBooking({ ...newBooking, checkOutDate: e.target.value })
+              }
+            />
             <button onClick={handleAddBooking}>Aggiungi Prenotazione</button>
           </div>
         </section>
 
-        {/* Prenotazioni per Canale */}
-        <section className="channel-bookings">
-          <h2>Prenotazioni per Canale</h2>
-          {Object.entries(groupByChannel(bookings)).map(
-            ([channel, bookings]) => (
-              <div key={channel} className="channel-section">
-                <h3>{channel.toUpperCase()}</h3>
-                <table className="bookings-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Nome Cliente</th>
-                      <th>Data Check-in</th>
-                      <th>Data Check-out</th>
-                      <th>Stato</th>
-                      <th>Azioni</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bookings.map((booking) => (
-                      <tr key={booking.id}>
-                        <td>{booking.id}</td>
-                        <td>{booking.customerName}</td>
-                        <td>{booking.checkInDate}</td>
-                        <td>{booking.checkOutDate}</td>
-                        <td>{booking.status}</td>
-                        <td>
-                          <button onClick={() => handleEdit(booking.id)}>
-                            Modifica
-                          </button>
-                          <button onClick={() => handleDelete(booking.id)}>
-                            Elimina
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )
-          )}
+        <section className="search-bar">
+          <input
+            type="text"
+            placeholder="🔍 Cerca per nome o ID prenotazione..."
+            value={searchQuery}
+            onChange={handleSearch}
+          />
+        </section>
+
+        <section className="calendar-controls">
+          <button onClick={() => setCalendarView("day")}>Giornaliero</button>
+          <button onClick={() => setCalendarView("week")}>Settimanale</button>
+          <button onClick={() => setCalendarView("month")}>Mensile</button>
+        </section>
+
+        <section className="calendar-container">
+          <h2>Calendario Prenotazioni</h2>
+          <Calendar
+            localizer={localizer}
+            events={filteredBookings.map((booking) => ({
+              title: `${booking.customerName} (${
+                STATUS_LABELS[booking.status]
+              })`,
+              start: new Date(booking.checkInDate),
+              end: new Date(booking.checkOutDate),
+            }))}
+            startAccessor="start"
+            endAccessor="end"
+            views={{ month: true, week: true, day: true }}
+            view={calendarView}
+            onView={(view) => setCalendarView(view)}
+            style={{ height: 500 }}
+          />
         </section>
       </main>
     </div>

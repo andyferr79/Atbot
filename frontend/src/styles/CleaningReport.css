@@ -1,0 +1,39 @@
+.cleaning-report {
+  width: 80%;
+  margin: auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.cleaning-report h1 {
+  text-align: center;
+  color: #333;
+}
+
+.cleaning-report table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.cleaning-report th,
+.cleaning-report td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.cleaning-report th {
+  background-color: #007bff;
+  color: white;
+}
+
+.cleaning-report tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.cleaning-report tr:hover {
+  background-color: #ddd;
+}

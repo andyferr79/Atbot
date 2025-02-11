@@ -148,12 +148,10 @@ router.get("/accounts", async (req, res) => {
     res.json(accounts);
   } catch (error) {
     console.error("❌ Errore nel recupero degli account di marketing:", error);
-    res
-      .status(500)
-      .json({
-        message: "Errore nel recupero degli account di marketing",
-        error,
-      });
+    res.status(500).json({
+      message: "Errore nel recupero degli account di marketing",
+      error,
+    });
   }
 });
 
@@ -196,10 +194,148 @@ router.post("/accounts", async (req, res) => {
       "❌ Errore nel salvataggio dell'account di marketing:",
       error
     );
+    res.status(500).json({
+      message: "Errore nel salvataggio dell'account di marketing",
+      error,
+    });
+  }
+});
+
+// ==============================
+// 📌 GESTIONE CAMPAGNE MARKETING
+// ==============================
+
+// ✅ Recupera tutte le campagne marketing
+router.get("/campaigns", async (req, res) => {
+  try {
+    const snapshot = await admin
+      .firestore()
+      .collection("MarketingCampaigns")
+      .get();
+    const campaigns = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    res.json(campaigns);
+  } catch (error) {
+    console.error("❌ Errore nel recupero delle campagne marketing:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nel recupero delle campagne marketing", error });
+  }
+});
+
+// ✅ Recupera una singola campagna tramite ID
+router.get("/campaigns/:id", async (req, res) => {
+  try {
+    const campaignId = req.params.id;
+    const doc = await admin
+      .firestore()
+      .collection("MarketingCampaigns")
+      .doc(campaignId)
+      .get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: "❌ Campagna non trovata" });
+    }
+
+    res.json({ id: doc.id, ...doc.data() });
+  } catch (error) {
+    console.error("❌ Errore nel recupero della campagna:", error);
+    res
+      .status(500)
+      .json({ message: "Errore nel recupero della campagna", error });
+  }
+});
+
+// ✅ Aggiunge una nuova campagna marketing
+router.post("/campaigns", async (req, res) => {
+  try {
+    const { userId, platforms, budget, targetAudience, goal } = req.body;
+
+    if (!userId || !platforms || !budget || !targetAudience || !goal) {
+      return res
+        .status(400)
+        .json({ error: "❌ Tutti i campi sono obbligatori." });
+    }
+
+    const newCampaign = {
+      userId,
+      platforms,
+      budget,
+      targetAudience,
+      goal,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    const docRef = await admin
+      .firestore()
+      .collection("MarketingCampaigns")
+      .add(newCampaign);
+    res.json({
+      message: "✅ Campagna marketing creata con successo",
+      id: docRef.id,
+    });
+  } catch (error) {
+    console.error("❌ Errore nella creazione della campagna marketing:", error);
     res
       .status(500)
       .json({
-        message: "Errore nel salvataggio dell'account di marketing",
+        message: "Errore nella creazione della campagna marketing",
+        error,
+      });
+  }
+});
+
+// ✅ Modifica una campagna esistente
+router.put("/campaigns/:id", async (req, res) => {
+  try {
+    const campaignId = req.params.id;
+    const updateData = req.body;
+
+    if (!updateData) {
+      return res.status(400).json({ error: "❌ Nessun dato da aggiornare" });
+    }
+
+    await admin
+      .firestore()
+      .collection("MarketingCampaigns")
+      .doc(campaignId)
+      .update(updateData);
+    res.json({ message: "✅ Campagna marketing aggiornata con successo" });
+  } catch (error) {
+    console.error(
+      "❌ Errore nell'aggiornamento della campagna marketing:",
+      error
+    );
+    res
+      .status(500)
+      .json({
+        message: "Errore nell'aggiornamento della campagna marketing",
+        error,
+      });
+  }
+});
+
+// ✅ Elimina una campagna marketing
+router.delete("/campaigns/:id", async (req, res) => {
+  try {
+    const campaignId = req.params.id;
+    await admin
+      .firestore()
+      .collection("MarketingCampaigns")
+      .doc(campaignId)
+      .delete();
+    res.json({ message: "✅ Campagna marketing eliminata con successo" });
+  } catch (error) {
+    console.error(
+      "❌ Errore nell'eliminazione della campagna marketing:",
+      error
+    );
+    res
+      .status(500)
+      .json({
+        message: "Errore nell'eliminazione della campagna marketing",
         error,
       });
   }
