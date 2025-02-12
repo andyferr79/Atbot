@@ -14,6 +14,9 @@ import BookingsReport from "./pages/reports/sections/BookingsReport"; // ✅ Agg
 import FinancialReport from "./pages/reports/sections/FinancialReport"; // ✅ Aggiunto Report Finanziario
 import GeneralReport from "./pages/reports/sections/GeneralReport"; // ✅ Aggiunto Report Generale
 import SuppliersReport from "./pages/reports/sections/SuppliersReport"; // ✅ Aggiunto Report Fornitori
+import CleaningReport from "./pages/reports/sections/CleaningReport"; // ✅ Aggiunto Report Pulizie
+import MarketingReport from "./pages/reports/sections/MarketingReport"; // ✅ Aggiunto Report Marketing
+import CustomersReport from "./pages/reports/sections/CustomersReport"; // ✅ Aggiunto Report Clienti
 import "./App.css";
 
 function App() {
@@ -50,20 +53,13 @@ function App() {
             <Route path="/marketing" element={<Marketing />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/reports" element={<Reports />} />
-            <Route path="/reports/bookings" element={<BookingsReport />} />{" "}
-            {/* ✅ Report Prenotazioni */}
-            <Route
-              path="/reports/financial"
-              element={<FinancialReport />}
-            />{" "}
-            {/* ✅ Report Finanziario */}
-            <Route path="/reports/general" element={<GeneralReport />} />{" "}
-            {/* ✅ Report Generale */}
-            <Route
-              path="/reports/suppliers"
-              element={<SuppliersReport />}
-            />{" "}
-            {/* ✅ Report Fornitori */}
+            <Route path="/reports/bookings" element={<BookingsReport />} />
+            <Route path="/reports/financial" element={<FinancialReport />} />
+            <Route path="/reports/general" element={<GeneralReport />} />
+            <Route path="/reports/suppliers" element={<SuppliersReport />} />
+            <Route path="/reports/cleaning" element={<CleaningReport />} />
+            <Route path="/reports/marketing" element={<MarketingReport />} />
+            <Route path="/reports/customers" element={<CustomersReport />} />
           </Routes>
         </div>
       </div>

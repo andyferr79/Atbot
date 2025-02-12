@@ -1,0 +1,39 @@
+.marketing-report {
+  width: 80%;
+  margin: auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.marketing-report h1 {
+  text-align: center;
+  color: #333;
+}
+
+.marketing-report table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.marketing-report th,
+.marketing-report td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.marketing-report th {
+  background-color: #28a745;
+  color: white;
+}
+
+.marketing-report tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.marketing-report tr:hover {
+  background-color: #ddd;
+}

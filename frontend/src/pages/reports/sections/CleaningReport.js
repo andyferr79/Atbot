@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../styles/CleaningReport.css";
+import "../../../styles/CleaningReport.css";
 
 const CleaningReport = () => {
   const [cleaningTasks, setCleaningTasks] = useState([]);

@@ -63,6 +63,9 @@ app.use("/api/reports/financial", verifyToken, financialReportsRoutes);
 const suppliersReportsRoutes = require("./routes/suppliersReportsRoutes");
 app.use("/api/reports/suppliers", verifyToken, suppliersReportsRoutes);
 
+const customersReportsRoutes = require("./routes/customersReportsRoutes");
+app.use("/api/reports/customers", verifyToken, customersReportsRoutes);
+
 // Rotta principale (senza protezione per verificare lo stato del server)
 app.get("/", (req, res) => {
   res.send("✅ Backend ATB è attivo e protetto!");
