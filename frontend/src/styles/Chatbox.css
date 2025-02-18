@@ -1,0 +1,102 @@
+/* 📂 E:\ATBot\frontend\src\styles\Chatbox.css */
+/* Stile moderno per Chatbox IA - Tema elegante con ombre e pulsanti moderni */
+
+.chatbox-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 350px;
+  height: 500px;
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #ccc;
+}
+
+.chatbox-header {
+  background-color: #4caf50;
+  color: white;
+  padding: 12px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.close-btn:hover {
+  transform: scale(1.1);
+}
+
+.chatbox-messages {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+}
+
+.message {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 15px;
+  font-size: 0.9rem;
+}
+
+.message.user {
+  background-color: #d1e7dd;
+  align-self: flex-end;
+  color: #155724;
+}
+
+.message.bot {
+  background-color: #e2e3e5;
+  color: #495057;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  color: #6c757d;
+  margin-left: 5px;
+}
+
+.chatbox-input-area {
+  display: flex;
+  padding: 10px;
+  background-color: #f1f1f1;
+  border-top: 1px solid #ccc;
+}
+
+.chatbox-input-area input {
+  flex: 1;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  margin-right: 10px;
+}
+
+.chatbox-input-area button {
+  padding: 12px 18px;
+  font-size: 1rem;
+  color: white;
+  background-color: #4caf50;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.chatbox-input-area button:hover {
+  background-color: #45a049;
+}

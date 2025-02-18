@@ -1,44 +1,55 @@
+/* 📂 E:\ATBot\frontend\src\styles\TopBar.css */
+/* ✅ Rimosso il logo residuo, mantenendo la barra fissa durante lo scroll */
+
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
 
 .top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-  background-color: #20232a;
+  height: 2cm;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #282828;
   color: #ffffff;
   font-family: "Inter", sans-serif;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  border-bottom: 2px solid #61dafb;
-}
-
-.logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #61dafb;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+  border-bottom: 2px solid #4caf50;
+  z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-end;
+  padding: 4px 20px;
+}
+
+/* ✅ Rimosso completamente il logo */
+.logo,
+.logo-icon {
+  display: none;
 }
 
 .nav-links {
   display: flex;
-  gap: 20px;
+  gap: 14px;
 }
 
 .top-link {
-  font-size: 1rem;
-  color: #ffffff;
+  font-size: 0.9rem;
+  color: white;
   text-decoration: none;
   transition: color 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 5px;
 }
 
 .top-link:hover {
-  color: #61dafb;
+  color: #4caf50;
+  background-color: rgba(255, 255, 255, 0.1);
   text-decoration: underline;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
+
+.main-content {
+  padding-top: 2cm;
+}
+
+/* ✅ Ora il logo è completamente rimosso, e la barra è fissa durante lo scroll. */

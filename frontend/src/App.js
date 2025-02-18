@@ -1,5 +1,5 @@
-// 📌 `App.js` – Correzione completa con tutte le rotte aggiornate, inclusi Login, SignUp e Chatbox IA
-// ✅ Ripristino delle rotte rimosse erroneamente e aggiunta delle nuove sezioni sviluppate oggi
+// 📂 E:\ATBot\frontend\src\App.js
+// ✅ Correzione completa del file `App.js` con percorso corretto per Chatbox
 
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
@@ -20,7 +20,7 @@ import SuppliersReport from "./pages/reports/sections/SuppliersReport";
 import CleaningReport from "./pages/reports/sections/CleaningReport";
 import MarketingReport from "./pages/reports/sections/MarketingReport";
 import CustomersReport from "./pages/reports/sections/CustomersReport";
-import Chatbox from "./pages/chatbox/Chatbox";
+import Chatbox from "./pages/Chatbox"; // ✅ Percorso corretto
 import AIInsights from "./pages/reports/sections/AIInsightsReport";
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
@@ -59,3 +59,5 @@ function App() {
 }
 
 export default App;
+
+/* 📂 Nota: Percorso corretto per Chatbox: `E:\ATBot\frontend\src\pages\Chatbox.js` */
