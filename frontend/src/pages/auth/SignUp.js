@@ -1,10 +1,9 @@
-// 📂 E:\ATBot\frontend\src\pages\auth\SignUp.js
+// 📂 E:\\ATBot\\frontend\\src\\pages\\auth\\SignUp.js
 // Correzione import per firebaseConfig.js
 
 import React, { useState } from "react";
-import { auth, db, googleProvider } from "../../firebaseConfig";
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { setDoc, doc, serverTimestamp } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "../../styles/SignUp.css";
 
 const SignUp = () => {
@@ -12,25 +11,25 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
+      const response = await axios.post(
+        "http://localhost:3001/api/auth/register",
+        {
+          email,
+          password,
+        }
       );
-      await setDoc(doc(db, "users", userCredential.user.uid), {
-        email,
-        method: "email/password",
-        createdAt: serverTimestamp(),
-      });
+      localStorage.setItem("token", response.data.token);
       alert("✅ Registrazione completata! Controlla la tua email.");
+      navigate("/dashboard");
     } catch (err) {
-      setError("❌ Errore: " + err.message);
+      setError("❌ Errore: " + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }
@@ -39,15 +38,14 @@ const SignUp = () => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      await setDoc(doc(db, "users", result.user.uid), {
-        email: result.user.email,
-        provider: "Google",
-        createdAt: serverTimestamp(),
-      });
+      const response = await axios.post(
+        "http://localhost:3001/api/auth/google"
+      );
+      localStorage.setItem("token", response.data.token);
       alert("✅ Accesso riuscito tramite Google!");
+      navigate("/dashboard");
     } catch (err) {
-      setError("❌ Errore: " + err.message);
+      setError("❌ Errore: " + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }

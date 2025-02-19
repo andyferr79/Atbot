@@ -2,6 +2,7 @@ const express = require("express");
 const admin = require("firebase-admin");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const path = require("path");
 
 // Carica le variabili d'ambiente
 dotenv.config();
@@ -9,7 +10,9 @@ dotenv.config();
 // Inizializza Firebase Admin SDK
 let serviceAccount;
 try {
-  serviceAccount = require("../firebase/serviceAccountKey.json");
+  serviceAccount = require(path.resolve(
+    "E:/ATBot/firebase/serviceAccountKey.json"
+  ));
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL:
@@ -65,6 +68,14 @@ app.use("/api/reports/suppliers", verifyToken, suppliersReportsRoutes);
 
 const customersReportsRoutes = require("./routes/customersReportsRoutes");
 app.use("/api/reports/customers", verifyToken, customersReportsRoutes);
+
+// ✅ Importa API di autenticazione
+const authRoutes = require("./auth/authRoutes");
+app.use("/api/auth", authRoutes);
+
+// ✅ Importa API per il login
+const loginRoutes = require("./auth/loginRoutes");
+app.use("/api/auth/login", loginRoutes);
 
 // Rotta principale (senza protezione per verificare lo stato del server)
 app.get("/", (req, res) => {
