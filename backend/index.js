@@ -77,6 +77,44 @@ app.use("/api/auth", authRoutes);
 const loginRoutes = require("./auth/loginRoutes");
 app.use("/api/auth/login", loginRoutes);
 
+// ✅ Importa API per la panoramica generale della dashboard
+const dashboardOverviewRoutes = require("./routes/dashboardOverviewRoutes");
+app.use("/api/dashboard", dashboardOverviewRoutes);
+
+// ✅ Importa API aggiunte oggi
+const bookingsRoutes = require("./routes/bookingsRoutes");
+app.use("/api/bookings", verifyToken, bookingsRoutes);
+
+const housekeepingRoutes = require("./routes/housekeepingRoutes");
+app.use("/api/housekeeping", verifyToken, housekeepingRoutes);
+
+const customersRoutes = require("./routes/customersRoutes");
+app.use("/api/customers", verifyToken, customersRoutes);
+
+const financesRoutes = require("./routes/financesRoutes");
+app.use("/api/finances", verifyToken, financesRoutes);
+
+const marketingRoutes = require("./routes/marketingRoutes");
+app.use("/api/marketing", verifyToken, marketingRoutes);
+
+const notificationsRoutes = require("./routes/notificationsRoutes");
+app.use("/api/notifications", verifyToken, notificationsRoutes);
+
+const reportsRoutes = require("./routes/reportsRoutes");
+app.use("/api/reports", verifyToken, reportsRoutes);
+
+const channelManagerRoutes = require("./routes/channelManagerRoutes");
+app.use("/api/channel-manager", verifyToken, channelManagerRoutes);
+
+const pricingRoutes = require("./routes/pricingRoutes");
+app.use("/api/pricing", verifyToken, pricingRoutes);
+
+const reviewsRoutes = require("./routes/reviewsRoutes");
+app.use("/api/reviews", verifyToken, reviewsRoutes);
+
+const expensesRoutes = require("./routes/expensesRoutes");
+app.use("/api/expenses", verifyToken, expensesRoutes);
+
 // Rotta principale (senza protezione per verificare lo stato del server)
 app.get("/", (req, res) => {
   res.send("✅ Backend ATB è attivo e protetto!");
