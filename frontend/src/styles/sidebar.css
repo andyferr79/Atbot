@@ -33,7 +33,7 @@
 }
 
 .sidebar-header h1 {
-  font-size: 1.4rem; /* Ridotta proporzionalmente */
+  font-size: 1.4rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -51,40 +51,68 @@
 .sidebar-menu li {
   display: flex;
   align-items: center;
-  padding: 12px; /* Ridotto per adattarsi alla larghezza */
+  padding: 12px;
   margin: 5px 0;
   cursor: pointer;
   border-radius: 8px;
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
+/* Stile per separazione tra sezioni */
+.sidebar-divider {
+  border: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 10px 0;
+}
+
+/* Stile icone */
+.sidebar-menu .icon {
+  font-size: 1.3rem;
+  margin-right: 10px;
+  color: white;
+  transition: color 0.3s ease;
+}
+
+.sidebar-menu .icon:hover {
+  color: #4caf50;
+}
+
+/* Stile link */
+.sidebar-menu li a {
+  color: white !important;
+  text-decoration: none !important;
+  font-weight: bold;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  transition: 0.3s ease-in-out;
+}
+
+/* Effetto hover */
 .sidebar-menu li:hover {
   background: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
 }
 
-.sidebar-menu .icon {
-  font-size: 1.3rem; /* Ridotta proporzionalmente */
-  margin-right: 8px; /* Ridotta proporzionalmente */
-  color: #4caf50;
-}
-
-.sidebar-menu span {
-  font-size: 1rem; /* Ridotta proporzionalmente */
-  font-weight: 500;
+/* Aggiunge un'ombra ai link */
+.sidebar-menu li a:hover {
+  box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
 /* Footer della sidebar */
 .sidebar-footer {
   display: flex;
-  justify-content: space-around;
+  flex-direction: column;
   margin-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 2px solid rgba(255, 255, 255, 0.3);
   padding-top: 20px;
 }
 
+/* Stile icone nel footer */
 .sidebar-footer .icon {
-  font-size: 1.6rem; /* Ridotta proporzionalmente */
+  font-size: 1.6rem;
   cursor: pointer;
   transition: color 0.3s ease, transform 0.2s ease;
 }
@@ -97,31 +125,21 @@
 /* Responsività */
 @media (max-width: 768px) {
   .sidebar {
-    width: 180px; /* Riduzione per dispositivi più piccoli */
+    width: 180px;
   }
 
   .sidebar-menu li {
-    padding: 8px; /* Ridotto ulteriormente */
+    padding: 8px;
   }
 
   .sidebar-footer .icon {
     font-size: 1.4rem;
   }
-  .icon {
-    margin-right: 10px;
-    font-size: 1.2em;
-    color: white;
-    transition: color 0.3s ease;
-  }
-
-  .icon:hover {
-    color: #4caf50;
-  }
 }
 
 /* Contenuto principale */
 .main-content {
-  margin-left: 220px; /* Aggiornato per riflettere la nuova larghezza */
+  margin-left: 220px;
   padding: 20px;
   transition: margin-left 0.3s ease;
 }

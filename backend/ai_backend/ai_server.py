@@ -3,6 +3,8 @@ import openai
 import firebase_admin
 from firebase_admin import credentials, firestore
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -11,6 +13,20 @@ load_dotenv()
 
 # Inizializza FastAPI
 app = FastAPI()
+
+# ✅ FIX CORS DEFINITIVO: Abilitazione completa per React
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permetti richieste da qualsiasi dominio (solo per debug, in produzione restringi)
+    allow_credentials=True,
+    allow_methods=["*"],  # Permetti tutti i metodi
+    allow_headers=["*"],  # Permetti tutti gli header
+)
+
+# ✅ FIX PRE-OPTIONS REQUEST: Risponde manualmente alle richieste OPTIONS
+@app.options("/{full_path:path}")
+async def preflight_check(full_path: str):
+    return JSONResponse(content={}, status_code=200)
 
 # Configura OpenAI API
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -33,18 +49,21 @@ else:
     except Exception as e:
         print(f"🔴 ERRORE: Impossibile connettersi a Firebase - {str(e)}")
 
+
 # Modello dati per la richiesta alla chatbox
 class ChatRequest(BaseModel):
     user_message: str
     session_id: str
 
-# Funzione per selezionare il modello AI
+
+# ✅ Funzione per selezionare il modello AI
 def decide_model(user_message: str):
     if "analisi avanzata" in user_message.lower():
         return "gpt-4"
     return "gpt-3.5-turbo"
 
-# Endpoint per la chat AI
+
+# ✅ Endpoint per la chat AI
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
     if not openai_api_key:
@@ -52,18 +71,23 @@ async def chat_endpoint(request: ChatRequest):
 
     try:
         model = decide_model(request.user_message)
-        response = openai.client.completions.create(
+        client = openai.OpenAI()  # Inizializza il client OpenAI
+        response = client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": request.user_message}],
             temperature=0.7
         )
-        return {"response": response.choices[0].message.content}
-    except Exception as e:
-        print(f"❌ Errore durante la richiesta a OpenAI: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Errore durante la richiesta a OpenAI: {str(e)}")
 
-# Avvio del server con uvicorn
+        return {"response": response.choices[0].message.content}
+    except openai.OpenAIError as e:
+        print(f"❌ Errore OpenAI: {str(e)}")
+        raise HTTPException(status_code=500, detail="Errore nell'elaborazione IA")
+    except Exception as e:
+        print(f"❌ Errore generale: {str(e)}")
+        raise HTTPException(status_code=500, detail="Errore interno del server")
+
+
+# ✅ Avvio del server con Uvicorn
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

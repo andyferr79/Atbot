@@ -11,7 +11,7 @@ import {
   faTruck,
   faCog,
   faLifeRing,
-  faComments,
+  faRobot, // Nuova icona per Chatbot
 } from "@fortawesome/free-solid-svg-icons";
 import "../styles/sidebar.css"; // Stili CSS
 
@@ -68,24 +68,39 @@ const Sidebar = () => {
             <span>Fornitori</span>
           </Link>
         </li>
+      </ul>
+
+      {/* Linea di separazione */}
+      <hr className="sidebar-divider" />
+
+      {/* Sezione impostazioni */}
+      <ul className="sidebar-menu">
         <li>
           <Link to="/settings">
             <FontAwesomeIcon icon={faCog} className="icon" />
             <span>Impostazioni</span>
           </Link>
         </li>
+      </ul>
+
+      {/* Linea di separazione */}
+      <hr className="sidebar-divider" />
+
+      {/* Sezione Assistenza e Chat */}
+      <ul className="sidebar-menu">
         <li>
           <Link to="/support">
             <FontAwesomeIcon icon={faLifeRing} className="icon" />
             <span>Assistenza</span>
           </Link>
         </li>
+        <li>
+          <Link to="/chatbox">
+            <FontAwesomeIcon icon={faRobot} className="icon" />
+            <span>Chat IA</span>
+          </Link>
+        </li>
       </ul>
-
-      {/* Footer con impostazioni, assistenza e chat */}
-      <div className="sidebar-footer">
-        <FontAwesomeIcon icon={faComments} className="icon" title="Chat" />
-      </div>
     </div>
   );
 };
