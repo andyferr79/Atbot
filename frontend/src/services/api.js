@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Crea l'istanza Axios
 const api = axios.create({
-  baseURL: "http://localhost:3001/api", // URL del backend
+  baseURL: "http://localhost:3001/api", // URL del backend principale
 });
 
 // Interceptor per gestire errori globali
@@ -17,9 +17,9 @@ api.interceptors.response.use(
 // **Funzioni Firebase**
 export const getTestFirebase = () => api.get("/test-firebase");
 
-// **Funzioni Chat**
-export const sendMessage = (message) =>
-  api.post("/chat/message", { userMessage: message });
+// **Funzioni Chat (AI)**
+export const sendMessageToAI = (message, sessionId) =>
+  api.post("/ai/chat", { user_message: message, session_id: sessionId });
 
 // **Funzioni Fornitori (Suppliers)**
 export const getSuppliers = () => api.get("/suppliers");

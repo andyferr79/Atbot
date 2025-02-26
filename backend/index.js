@@ -18,6 +18,7 @@ try {
     databaseURL:
       "https://autotaskerbot-default-rtdb.europe-west1.firebasedatabase.app",
   });
+  console.log("✅ Firebase inizializzato correttamente!");
 } catch (error) {
   console.warn(
     "⚠️ Warning: Firebase non inizializzato. Controlla il file serviceAccountKey.json."
@@ -52,11 +53,11 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-// ✅ Importa API generali (Rooms, Guests, Bookings, Suppliers) con protezione
+// ✅ Importa API generali con protezione
 const apiRoutes = require("./routes/api");
 app.use("/api", verifyToken, apiRoutes);
 
-// ✅ Importa API specifiche per i report con protezione
+// ✅ Importa API per i report con protezione
 const bookingsReportsRoutes = require("./routes/bookingsReportsRoutes");
 app.use("/api/reports/bookings", verifyToken, bookingsReportsRoutes);
 
@@ -73,7 +74,6 @@ app.use("/api/reports/customers", verifyToken, customersReportsRoutes);
 const authRoutes = require("./auth/authRoutes");
 app.use("/api/auth", authRoutes);
 
-// ✅ Importa API per il login
 const loginRoutes = require("./auth/loginRoutes");
 app.use("/api/auth/login", loginRoutes);
 
@@ -81,7 +81,7 @@ app.use("/api/auth/login", loginRoutes);
 const dashboardOverviewRoutes = require("./routes/dashboardOverviewRoutes");
 app.use("/api/dashboard", dashboardOverviewRoutes);
 
-// ✅ Importa API aggiunte oggi
+// ✅ Importa API specifiche per la gestione di StayPro
 const bookingsRoutes = require("./routes/bookingsRoutes");
 app.use("/api/bookings", verifyToken, bookingsRoutes);
 
@@ -114,6 +114,10 @@ app.use("/api/reviews", verifyToken, reviewsRoutes);
 
 const expensesRoutes = require("./routes/expensesRoutes");
 app.use("/api/expenses", verifyToken, expensesRoutes);
+
+// ✅ Importa API AI
+const aiRoutes = require("./routes/aiRoutes");
+app.use("/api/ai", aiRoutes); // 🔥 AI INTEGRATA
 
 // Rotta principale (senza protezione per verificare lo stato del server)
 app.get("/", (req, res) => {
