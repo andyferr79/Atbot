@@ -1,184 +1,206 @@
 const express = require("express");
 const router = express.Router();
-const admin = require("firebase-admin");
+const admin = require("../firebase");
+const rateLimit = require("express-rate-limit");
+const winston = require("winston");
 
-// Preferenze Generali
-router.get("/preferences", async (req, res) => {
+// ✅ Configurazione del logging avanzato
+const logger = winston.createLogger({
+  level: "error",
+  format: winston.format.json(),
+  transports: [new winston.transports.File({ filename: "logs/errors.log" })],
+});
+
+// ✅ Middleware per limitare le richieste API (Max 50 richieste per IP ogni 10 minuti)
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 50,
+  message: "❌ Troppe richieste. Riprova più tardi.",
+});
+
+// ✅ Middleware di autenticazione Firebase
+const verifyToken = async (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(403).json({ error: "❌ Token mancante" });
+
   try {
-    const doc = await admin.firestore().collection("Settings").doc("preferences").get();
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.user = decodedToken;
+    next();
+  } catch (error) {
+    logger.error("❌ Token non valido:", error);
+    return res.status(401).json({ error: "❌ Token non valido" });
+  }
+};
+
+// 📌 API per ottenere le preferenze generali
+router.get("/preferences", limiter, verifyToken, async (req, res) => {
+  try {
+    const doc = await admin
+      .firestore()
+      .collection("Settings")
+      .doc("preferences")
+      .get();
     if (!doc.exists) {
       return res.status(404).json({ message: "Preferenze non trovate" });
     }
     res.json(doc.data());
   } catch (error) {
-    console.error("Errore nel recupero delle preferenze:", error);
-    res.status(500).json({ message: "Errore nel recupero delle preferenze", error });
+    logger.error("❌ Errore nel recupero delle preferenze:", error);
+    res
+      .status(500)
+      .json({
+        message: "Errore nel recupero delle preferenze",
+        details: error.message,
+      });
   }
 });
 
-router.put("/preferences", async (req, res) => {
+// 📌 API per aggiornare le preferenze generali
+router.put("/preferences", limiter, verifyToken, async (req, res) => {
   try {
     const preferences = req.body;
-    await admin.firestore().collection("Settings").doc("preferences").set(preferences, { merge: true });
-    res.json({ message: "Preferenze aggiornate con successo" });
+    if (!preferences || typeof preferences !== "object") {
+      return res
+        .status(400)
+        .json({ error: "❌ Dati di preferenze non validi." });
+    }
+
+    await admin
+      .firestore()
+      .collection("Settings")
+      .doc("preferences")
+      .set(preferences, { merge: true });
+    res.json({ message: "✅ Preferenze aggiornate con successo" });
   } catch (error) {
-    console.error("Errore nell'aggiornamento delle preferenze:", error);
-    res.status(500).json({ message: "Errore nell'aggiornamento delle preferenze", error });
+    logger.error("❌ Errore nell'aggiornamento delle preferenze:", error);
+    res
+      .status(500)
+      .json({
+        message: "Errore nell'aggiornamento delle preferenze",
+        details: error.message,
+      });
   }
 });
 
-// Notifiche
-router.get("/notifications", async (req, res) => {
+// 📌 API per ottenere la configurazione della struttura
+router.get("/structure", limiter, verifyToken, async (req, res) => {
   try {
-    const doc = await admin.firestore().collection("Settings").doc("notifications").get();
+    const doc = await admin
+      .firestore()
+      .collection("Settings")
+      .doc("structure")
+      .get();
     if (!doc.exists) {
-      return res.status(404).json({ message: "Notifiche non trovate" });
+      return res
+        .status(404)
+        .json({ message: "Configurazioni della struttura non trovate" });
     }
     res.json(doc.data());
   } catch (error) {
-    console.error("Errore nel recupero delle notifiche:", error);
-    res.status(500).json({ message: "Errore nel recupero delle notifiche", error });
+    logger.error(
+      "❌ Errore nel recupero delle configurazioni della struttura:",
+      error
+    );
+    res
+      .status(500)
+      .json({
+        message: "Errore nel recupero delle configurazioni della struttura",
+        details: error.message,
+      });
   }
 });
 
-router.put("/notifications", async (req, res) => {
-  try {
-    const notifications = req.body;
-    await admin.firestore().collection("Settings").doc("notifications").set(notifications, { merge: true });
-    res.json({ message: "Notifiche aggiornate con successo" });
-  } catch (error) {
-    console.error("Errore nell'aggiornamento delle notifiche:", error);
-    res.status(500).json({ message: "Errore nell'aggiornamento delle notifiche", error });
-  }
-});
-
-// Configurazioni della Struttura
-router.get("/structure", async (req, res) => {
-  try {
-    const doc = await admin.firestore().collection("Settings").doc("structure").get();
-    if (!doc.exists) {
-      return res.status(404).json({ message: "Configurazioni della struttura non trovate" });
-    }
-    res.json(doc.data());
-  } catch (error) {
-    console.error("Errore nel recupero delle configurazioni della struttura:", error);
-    res.status(500).json({ message: "Errore nel recupero delle configurazioni della struttura", error });
-  }
-});
-
-router.put("/structure", async (req, res) => {
+// 📌 API per aggiornare la configurazione della struttura
+router.put("/structure", limiter, verifyToken, async (req, res) => {
   try {
     const structure = req.body;
-    await admin.firestore().collection("Settings").doc("structure").set(structure, { merge: true });
-    res.json({ message: "Configurazioni della struttura aggiornate con successo" });
+    if (!structure || typeof structure !== "object") {
+      return res
+        .status(400)
+        .json({ error: "❌ Dati di struttura non validi." });
+    }
+
+    await admin
+      .firestore()
+      .collection("Settings")
+      .doc("structure")
+      .set(structure, { merge: true });
+    res.json({
+      message: "✅ Configurazioni della struttura aggiornate con successo",
+    });
   } catch (error) {
-    console.error("Errore nell'aggiornamento delle configurazioni della struttura:", error);
-    res.status(500).json({ message: "Errore nell'aggiornamento delle configurazioni della struttura", error });
+    logger.error(
+      "❌ Errore nell'aggiornamento delle configurazioni della struttura:",
+      error
+    );
+    res
+      .status(500)
+      .json({
+        message:
+          "Errore nell'aggiornamento delle configurazioni della struttura",
+        details: error.message,
+      });
   }
 });
 
-// Utenti e Permessi
-router.get("/users", async (req, res) => {
+// 📌 API per ottenere le impostazioni di sicurezza
+router.get("/security", limiter, verifyToken, async (req, res) => {
   try {
-    const snapshot = await admin.firestore().collection("Users").get();
-    const users = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    res.json(users);
-  } catch (error) {
-    console.error("Errore nel recupero degli utenti:", error);
-    res.status(500).json({ message: "Errore nel recupero degli utenti", error });
-  }
-});
-
-router.post("/users", async (req, res) => {
-  try {
-    const newUser = req.body;
-    const docRef = await admin.firestore().collection("Users").add(newUser);
-    res.json({ id: docRef.id, ...newUser });
-  } catch (error) {
-    console.error("Errore nell'aggiunta dell'utente:", error);
-    res.status(500).json({ message: "Errore nell'aggiunta dell'utente", error });
-  }
-});
-
-router.delete("/users/:id", async (req, res) => {
-  try {
-    const userId = req.params.id;
-    await admin.firestore().collection("Users").doc(userId).delete();
-    res.json({ message: "Utente eliminato con successo" });
-  } catch (error) {
-    console.error("Errore nell'eliminazione dell'utente:", error);
-    res.status(500).json({ message: "Errore nell'eliminazione dell'utente", error });
-  }
-});
-
-// Integrazioni
-router.get("/integrations", async (req, res) => {
-  try {
-    const doc = await admin.firestore().collection("Settings").doc("integrations").get();
+    const doc = await admin
+      .firestore()
+      .collection("Settings")
+      .doc("security")
+      .get();
     if (!doc.exists) {
-      return res.status(404).json({ message: "Integrazioni non trovate" });
+      return res
+        .status(404)
+        .json({ message: "Impostazioni di sicurezza non trovate" });
     }
     res.json(doc.data());
   } catch (error) {
-    console.error("Errore nel recupero delle integrazioni:", error);
-    res.status(500).json({ message: "Errore nel recupero delle integrazioni", error });
+    logger.error(
+      "❌ Errore nel recupero delle impostazioni di sicurezza:",
+      error
+    );
+    res
+      .status(500)
+      .json({
+        message: "Errore nel recupero delle impostazioni di sicurezza",
+        details: error.message,
+      });
   }
 });
 
-router.post("/integrations", async (req, res) => {
-  try {
-    const integration = req.body;
-    await admin.firestore().collection("Settings").doc("integrations").set(integration, { merge: true });
-    res.json({ message: "Integrazione aggiunta con successo" });
-  } catch (error) {
-    console.error("Errore nell'aggiunta dell'integrazione:", error);
-    res.status(500).json({ message: "Errore nell'aggiunta dell'integrazione", error });
-  }
-});
-
-// Backup e Sicurezza
-router.get("/security", async (req, res) => {
-  try {
-    const doc = await admin.firestore().collection("Settings").doc("security").get();
-    if (!doc.exists) {
-      return res.status(404).json({ message: "Impostazioni di sicurezza non trovate" });
-    }
-    res.json(doc.data());
-  } catch (error) {
-    console.error("Errore nel recupero delle impostazioni di sicurezza:", error);
-    res.status(500).json({ message: "Errore nel recupero delle impostazioni di sicurezza", error });
-  }
-});
-
-router.put("/security", async (req, res) => {
+// 📌 API per aggiornare le impostazioni di sicurezza
+router.put("/security", limiter, verifyToken, async (req, res) => {
   try {
     const security = req.body;
-    await admin.firestore().collection("Settings").doc("security").set(security, { merge: true });
-    res.json({ message: "Impostazioni di sicurezza aggiornate con successo" });
-  } catch (error) {
-    console.error("Errore nell'aggiornamento delle impostazioni di sicurezza:", error);
-    res.status(500).json({ message: "Errore nell'aggiornamento delle impostazioni di sicurezza", error });
-  }
-});
+    if (!security || typeof security !== "object") {
+      return res
+        .status(400)
+        .json({ error: "❌ Dati di sicurezza non validi." });
+    }
 
-// Privacy e GDPR
-router.get("/privacy/export", async (req, res) => {
-  try {
-    // Logica per esportare i dati personali
-    res.json({ message: "Esportazione dei dati personali completata" });
+    await admin
+      .firestore()
+      .collection("Settings")
+      .doc("security")
+      .set(security, { merge: true });
+    res.json({
+      message: "✅ Impostazioni di sicurezza aggiornate con successo",
+    });
   } catch (error) {
-    console.error("Errore nell'esportazione dei dati personali:", error);
-    res.status(500).json({ message: "Errore nell'esportazione dei dati personali", error });
-  }
-});
-
-router.delete("/privacy/delete", async (req, res) => {
-  try {
-    // Logica per cancellare i dati personali
-    res.json({ message: "Cancellazione dei dati personali completata" });
-  } catch (error) {
-    console.error("Errore nella cancellazione dei dati personali:", error);
-    res.status(500).json({ message: "Errore nella cancellazione dei dati personali", error });
+    logger.error(
+      "❌ Errore nell'aggiornamento delle impostazioni di sicurezza:",
+      error
+    );
+    res
+      .status(500)
+      .json({
+        message: "Errore nell'aggiornamento delle impostazioni di sicurezza",
+        details: error.message,
+      });
   }
 });
 

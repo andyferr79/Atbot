@@ -1,6 +1,33 @@
 const express = require("express");
 const router = express.Router();
 const admin = require("firebase-admin");
+const rateLimit = require("express-rate-limit");
+const winston = require("winston");
+
+// ✅ Configurazione del logging avanzato
+const logger = winston.createLogger({
+  level: "error",
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.File({ filename: "logs/api_errors.log" }),
+  ],
+});
+
+// ✅ Middleware per limitare le richieste di test Firebase (Max 10 richieste per IP ogni 5 minuti)
+const testLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 10,
+  message: "❌ Troppe richieste. Riprova più tardi.",
+});
+
+// ✅ **Verifica connessione Firebase prima di avviare le route**
+try {
+  admin.firestore();
+  console.log("✅ Connessione a Firebase riuscita!");
+} catch (error) {
+  logger.error("❌ Errore nella connessione a Firebase:", error);
+  throw new Error("❌ Impossibile connettersi a Firebase.");
+}
 
 // ✅ Importiamo il file aiRoutes.js
 const aiRoutes = require("./aiRoutes");
@@ -8,8 +35,8 @@ const aiRoutes = require("./aiRoutes");
 // ✅ Integriamo aiRoutes con l'API principale
 router.use("/ai", aiRoutes);
 
-// **Rotta di test Firebase**
-router.get("/test-firebase", async (req, res) => {
+// ✅ **Rotta di test Firebase**
+router.get("/test-firebase", testLimiter, async (req, res) => {
   try {
     const db = admin.firestore();
     const docRef = db.collection("test").doc("example");
@@ -17,12 +44,17 @@ router.get("/test-firebase", async (req, res) => {
     const doc = await docRef.get();
     res.json(doc.data());
   } catch (error) {
-    console.error("Errore nella connessione a Firebase:", error);
-    res.status(500).send("Errore nella connessione a Firebase");
+    logger.error("❌ Errore nella connessione a Firebase:", error);
+    res
+      .status(500)
+      .json({
+        message: "Errore nella connessione a Firebase",
+        details: error.message,
+      });
   }
 });
 
-// ✅ **Manteniamo tutte le altre API come sono**
+// ✅ **Importiamo tutte le altre route**
 const bookingsRoutes = require("./bookingsRoutes");
 const bookingsReportsRoutes = require("./bookingsReportsRoutes");
 const channelManagerRoutes = require("./channelManagerRoutes");
@@ -44,7 +76,7 @@ const settingsRoutes = require("./settingsRoutes");
 const suppliersReportsRoutes = require("./suppliersReportsRoutes");
 const suppliersRoutes = require("./suppliersRoutes");
 
-// ✅ **Manteniamo le route esistenti**
+// ✅ **Definiamo tutte le route**
 router.use("/bookings", bookingsRoutes);
 router.use("/bookings/reports", bookingsReportsRoutes);
 router.use("/channel-manager", channelManagerRoutes);
@@ -66,7 +98,6 @@ router.use("/settings", settingsRoutes);
 router.use("/suppliers/reports", suppliersReportsRoutes);
 router.use("/suppliers", suppliersRoutes);
 
-// ✅ **Integriamo l'AI**
-router.use("/ai", aiRoutes); // 🔥 AI INTEGRATA
+// ✅ **Rimosso il doppio utilizzo di `router.use("/ai", aiRoutes);`**
 
 module.exports = router;

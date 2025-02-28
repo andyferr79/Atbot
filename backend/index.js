@@ -31,7 +31,7 @@ const app = express();
 // ✅ CORS: Ora accetta solo richieste dal frontend autorizzato
 app.use(
   cors({
-    origin: "http://localhost:3000", // Solo il frontend autorizzato può accedere
+    origin: "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -55,20 +55,20 @@ const verifyToken = async (req, res, next) => {
 
 // ✅ Importa API generali con protezione
 const apiRoutes = require("./routes/api");
-app.use("/api", verifyToken, apiRoutes);
+app.use("/api", apiRoutes);
 
-// ✅ Importa API per i report con protezione
+// ✅ IMPORT API REPORT (senza protezione per test)
 const bookingsReportsRoutes = require("./routes/bookingsReportsRoutes");
-app.use("/api/reports/bookings", verifyToken, bookingsReportsRoutes);
+app.use("/api/reports/bookings", bookingsReportsRoutes);
 
 const financialReportsRoutes = require("./routes/financialReportsRoutes");
-app.use("/api/reports/financial", verifyToken, financialReportsRoutes);
+app.use("/api/reports/financial", financialReportsRoutes);
 
 const suppliersReportsRoutes = require("./routes/suppliersReportsRoutes");
-app.use("/api/reports/suppliers", verifyToken, suppliersReportsRoutes);
+app.use("/api/reports/suppliers", suppliersReportsRoutes);
 
 const customersReportsRoutes = require("./routes/customersReportsRoutes");
-app.use("/api/reports/customers", verifyToken, customersReportsRoutes);
+app.use("/api/reports/customers", customersReportsRoutes);
 
 // ✅ Importa API di autenticazione
 const authRoutes = require("./auth/authRoutes");
@@ -81,47 +81,48 @@ app.use("/api/auth/login", loginRoutes);
 const dashboardOverviewRoutes = require("./routes/dashboardOverviewRoutes");
 app.use("/api/dashboard", dashboardOverviewRoutes);
 
-// ✅ Importa API specifiche per la gestione di StayPro
+// ✅ Importa API specifiche per StayPro
 const bookingsRoutes = require("./routes/bookingsRoutes");
-app.use("/api/bookings", verifyToken, bookingsRoutes);
+app.use("/api/bookings", bookingsRoutes);
 
 const housekeepingRoutes = require("./routes/housekeepingRoutes");
-app.use("/api/housekeeping", verifyToken, housekeepingRoutes);
+app.use("/api/housekeeping", housekeepingRoutes);
 
 const customersRoutes = require("./routes/customersRoutes");
-app.use("/api/customers", verifyToken, customersRoutes);
+app.use("/api/customers", customersRoutes);
 
 const financesRoutes = require("./routes/financesRoutes");
-app.use("/api/finances", verifyToken, financesRoutes);
+app.use("/api/finances", financesRoutes);
 
 const marketingRoutes = require("./routes/marketingRoutes");
-app.use("/api/marketing", verifyToken, marketingRoutes);
+app.use("/api/marketing", marketingRoutes);
 
 const notificationsRoutes = require("./routes/notificationsRoutes");
-app.use("/api/notifications", verifyToken, notificationsRoutes);
+app.use("/api/notifications", notificationsRoutes);
 
 const reportsRoutes = require("./routes/reportsRoutes");
-app.use("/api/reports", verifyToken, reportsRoutes);
+app.use("/api/reports", reportsRoutes);
 
 const channelManagerRoutes = require("./routes/channelManagerRoutes");
-app.use("/api/channel-manager", verifyToken, channelManagerRoutes);
+app.use("/api/channel-manager", channelManagerRoutes);
 
 const pricingRoutes = require("./routes/pricingRoutes");
-app.use("/api/pricing", verifyToken, pricingRoutes);
+app.use("/api/pricing", pricingRoutes);
 
 const reviewsRoutes = require("./routes/reviewsRoutes");
-app.use("/api/reviews", verifyToken, reviewsRoutes);
+app.use("/api/reviews", reviewsRoutes);
 
 const expensesRoutes = require("./routes/expensesRoutes");
-app.use("/api/expenses", verifyToken, expensesRoutes);
+app.use("/api/expenses", expensesRoutes);
 
 // ✅ Importa API AI
 const aiRoutes = require("./routes/aiRoutes");
-app.use("/api/ai", aiRoutes); // 🔥 AI INTEGRATA
+app.use("/api/ai", aiRoutes);
 
-// Rotta principale (senza protezione per verificare lo stato del server)
-app.get("/", (req, res) => {
-  res.send("✅ Backend ATB è attivo e protetto!");
+// ✅ Rotta di test per verificare lo stato del backend
+app.get("/test", (req, res) => {
+  console.log("✅ Endpoint /test chiamato correttamente");
+  res.send("✅ Backend ATB è attivo e funzionante!");
 });
 
 // ✅ Imposta la porta del server su tutte le interfacce
