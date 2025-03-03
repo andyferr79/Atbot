@@ -103,11 +103,29 @@ app.use("/api/notifications", notificationsRoutes);
 const reportsRoutes = require("./routes/reportsRoutes");
 app.use("/api/reports", reportsRoutes);
 
+const reportsStatsRoutes = require("./routes/reportsStatsRoutes");
+app.use("/api/reports/stats", reportsStatsRoutes);
+
+const reportsExportRoutes = require("./routes/reportsExportRoutes");
+app.use("/api/reports/export", reportsExportRoutes);
+
 const channelManagerRoutes = require("./routes/channelManagerRoutes");
 app.use("/api/channel-manager", channelManagerRoutes);
 
+const channelManagerSyncRoutes = require("./routes/channelManagerSyncRoutes");
+app.use("/api/channel-manager/sync", channelManagerSyncRoutes);
+
 const pricingRoutes = require("./routes/pricingRoutes");
 app.use("/api/pricing", pricingRoutes);
+
+const pricingRecommendationsRoutes = require("./routes/pricingRecommendationsRoutes");
+app.use("/api/pricing/recommendations", pricingRecommendationsRoutes);
+
+const automationTasksRoutes = require("./routes/automationTasksRoutes");
+app.use("/api/automation/tasks", automationTasksRoutes);
+
+const housekeepingScheduleRoutes = require("./routes/housekeepingScheduleRoutes");
+app.use("/api/housekeeping/schedule", housekeepingScheduleRoutes);
 
 const reviewsRoutes = require("./routes/reviewsRoutes");
 app.use("/api/reviews", reviewsRoutes);

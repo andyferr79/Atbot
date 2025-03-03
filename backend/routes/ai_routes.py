@@ -3,6 +3,7 @@ import requests
 import logging
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from ai_backend.routes.pricingRoutes import app as pricing_app  # Percorso corretto
 
 router = APIRouter()
 
@@ -35,3 +36,6 @@ async def chat_with_ai(user_message: str, session_id: str):
     except requests.exceptions.RequestException as e:
         logging.error(f"❌ Errore comunicazione AI: {str(e)}")
         raise HTTPException(status_code=500, detail=f"❌ Errore comunicazione AI: {str(e)}")
+
+# ✅ Registriamo l'API Auto-Optimizer Prezzi
+router.include_router(pricing_app, prefix="/api/agent/pricing")
