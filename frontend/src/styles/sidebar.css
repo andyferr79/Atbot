@@ -1,51 +1,47 @@
-/* Contenitore principale */
+/* 🔥 Sidebar: Stesso colore della Topbar */
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
   height: 100vh;
-  width: 220px; /* Larghezza ridotta */
-  background: linear-gradient(
-    145deg,
-    rgba(40, 40, 40, 0.9),
-    rgba(20, 20, 20, 0.8)
-  );
-  backdrop-filter: blur(10px);
-  color: white;
+  width: 220px;
+  background: #212121 !important; /* 🔥 Stesso colore della topbar */
+  color: white !important;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 20px;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
-  overflow-y: auto; /* Scroll verticale per contenuti lunghi */
+  overflow-y: auto;
 }
 
-/* Header della sidebar */
+/* 🔥 Header della Sidebar */
 .sidebar-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .sidebar-logo {
-  width: 80px; /* Ridotta proporzionalmente */
+  width: 80px;
   height: auto;
   margin-bottom: 10px;
 }
 
+/* 🔥 Testo bianco */
 .sidebar-header h1 {
   font-size: 1.4rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #4caf50;
+  color: white !important;
 }
 
-/* Menu */
+/* 🔥 Menu */
 .sidebar-menu {
   list-style: none;
   padding: 0;
   margin: 0;
-  flex: 1; /* Occupa lo spazio disponibile */
+  flex: 1;
 }
 
 .sidebar-menu li {
@@ -58,27 +54,15 @@
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-/* Stile per separazione tra sezioni */
-.sidebar-divider {
-  border: 0;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.3);
-  margin: 10px 0;
-}
-
-/* Stile icone */
+/* 🔥 Icone bianche */
 .sidebar-menu .icon {
   font-size: 1.3rem;
   margin-right: 10px;
-  color: white;
+  color: white !important;
   transition: color 0.3s ease;
 }
 
-.sidebar-menu .icon:hover {
-  color: #4caf50;
-}
-
-/* Stile link */
+/* 🔥 Stile link */
 .sidebar-menu li a {
   color: white !important;
   text-decoration: none !important;
@@ -89,57 +73,23 @@
   transition: 0.3s ease-in-out;
 }
 
-/* Effetto hover */
+/* 🔥 Hover */
 .sidebar-menu li:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
 }
 
-/* Aggiunge un'ombra ai link */
-.sidebar-menu li a:hover {
-  box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
+/* 🔥 Divider */
+.sidebar-divider {
+  border: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 10px 0;
 }
 
-/* Footer della sidebar */
-.sidebar-footer {
-  display: flex;
-  flex-direction: column;
-  margin-top: 20px;
-  border-top: 2px solid rgba(255, 255, 255, 0.3);
-  padding-top: 20px;
-}
-
-/* Stile icone nel footer */
-.sidebar-footer .icon {
-  font-size: 1.6rem;
-  cursor: pointer;
-  transition: color 0.3s ease, transform 0.2s ease;
-}
-
-.sidebar-footer .icon:hover {
-  color: #4caf50;
-  transform: scale(1.1);
-}
-
-/* Responsività */
+/* 🔥 Responsività */
 @media (max-width: 768px) {
   .sidebar {
     width: 180px;
   }
-
-  .sidebar-menu li {
-    padding: 8px;
-  }
-
-  .sidebar-footer .icon {
-    font-size: 1.4rem;
-  }
-}
-
-/* Contenuto principale */
-.main-content {
-  margin-left: 220px;
-  padding: 20px;
-  transition: margin-left 0.3s ease;
 }

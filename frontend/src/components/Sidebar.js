@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom"; // Usa Link di React Router
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -11,11 +11,39 @@ import {
   faTruck,
   faCog,
   faLifeRing,
-  faRobot, // Nuova icona per Chatbot
+  faRobot, // Chatbot
+  faBell, // 🔔 Notifiche
+  faEnvelopeOpenText, // 📢 Comunicazioni ufficiali
 } from "@fortawesome/free-solid-svg-icons";
+import api from "../services/api"; // Importa API per recuperare notifiche
 import "../styles/sidebar.css"; // Stili CSS
 
 const Sidebar = () => {
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
+
+  useEffect(() => {
+    fetchUnreadCounts();
+  }, []);
+
+  const fetchUnreadCounts = async () => {
+    try {
+      // Recupera il numero di notifiche non lette
+      const notificationsResponse = await api.get(
+        "/notifications/unread-count"
+      );
+      setUnreadNotifications(notificationsResponse.data.count);
+
+      // Recupera il numero di comunicazioni ufficiali non lette
+      const announcementsResponse = await api.get(
+        "/notifications/announcements/unread-count"
+      );
+      setUnreadAnnouncements(announcementsResponse.data.count);
+    } catch (error) {
+      console.error("Errore nel recupero delle notifiche:", error);
+    }
+  };
+
   return (
     <div className="sidebar">
       {/* Header con logo */}
@@ -66,6 +94,31 @@ const Sidebar = () => {
           <Link to="/suppliers">
             <FontAwesomeIcon icon={faTruck} className="icon" />
             <span>Fornitori</span>
+          </Link>
+        </li>
+      </ul>
+
+      {/* Linea di separazione */}
+      <hr className="sidebar-divider" />
+
+      {/* Sezione Notifiche e Comunicazioni */}
+      <ul className="sidebar-menu">
+        <li>
+          <Link to="/notifications">
+            <FontAwesomeIcon icon={faBell} className="icon" />
+            <span>Notifiche</span>
+            {unreadNotifications > 0 && (
+              <span className="badge">{unreadNotifications}</span>
+            )}
+          </Link>
+        </li>
+        <li>
+          <Link to="/announcements">
+            <FontAwesomeIcon icon={faEnvelopeOpenText} className="icon" />
+            <span>Comunicazioni Ufficiali</span>
+            {unreadAnnouncements > 0 && (
+              <span className="badge">{unreadAnnouncements}</span>
+            )}
           </Link>
         </li>
       </ul>

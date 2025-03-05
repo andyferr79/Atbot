@@ -33,46 +33,93 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-// 📌 API per ottenere le notifiche e gli alert
+// 📌 API per ottenere tutte le notifiche dell'utente
 router.get("/", limiter, verifyToken, async (req, res) => {
   try {
-    if (!admin.apps.length) {
-      throw new Error("Firestore non inizializzato correttamente.");
-    }
-
+    const userId = req.user.uid;
     const db = admin.firestore();
-    const notificationsSnapshot = await db.collection("Notifications").get();
+    const snapshot = await db
+      .collection("Notifications")
+      .where("userId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .get();
 
-    if (notificationsSnapshot.empty) {
+    if (snapshot.empty) {
       return res.json({ notifications: [] });
     }
 
-    let notifications = [];
-
-    notificationsSnapshot.forEach((doc) => {
-      const notification = doc.data();
-      notifications.push({
-        id: doc.id,
-        type: notification.type || "general",
-        message: notification.message || "Nessun messaggio",
-        createdAt: notification.createdAt
-          ? notification.createdAt.toDate().toISOString()
-          : "N/A",
-        status: notification.status || "unread",
-      });
-    });
+    let notifications = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      type: doc.data().type || "general",
+      message: doc.data().message || "Nessun messaggio",
+      createdAt: doc.data().createdAt
+        ? doc.data().createdAt.toDate().toISOString()
+        : "N/A",
+      status: doc.data().status || "unread",
+    }));
 
     res.json({ notifications });
   } catch (error) {
     logger.error("❌ Errore nel recupero delle notifiche:", error);
-    res
-      .status(500)
-      .json({
-        error: "Errore nel recupero delle notifiche",
-        details: error.message,
-      });
+    res.status(500).json({
+      error: "Errore nel recupero delle notifiche",
+      details: error.message,
+    });
   }
 });
+
+// 📌 API per ottenere il numero di notifiche non lette
+router.get("/unread-count", limiter, verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const db = admin.firestore();
+    const snapshot = await db
+      .collection("Notifications")
+      .where("userId", "==", userId)
+      .where("status", "==", "unread")
+      .get();
+
+    res.json({ count: snapshot.size });
+  } catch (error) {
+    logger.error(
+      "❌ Errore nel recupero del numero di notifiche non lette:",
+      error
+    );
+    res.status(500).json({
+      error: "Errore nel recupero del numero di notifiche non lette",
+      details: error.message,
+    });
+  }
+});
+
+// 📌 API per ottenere il numero di comunicazioni ufficiali non lette
+router.get(
+  "/announcements/unread-count",
+  limiter,
+  verifyToken,
+  async (req, res) => {
+    try {
+      const userId = req.user.uid;
+      const db = admin.firestore();
+      const snapshot = await db
+        .collection("Announcements")
+        .where("userId", "==", userId)
+        .where("status", "==", "unread")
+        .get();
+
+      res.json({ count: snapshot.size });
+    } catch (error) {
+      logger.error(
+        "❌ Errore nel recupero delle comunicazioni ufficiali non lette:",
+        error
+      );
+      res.status(500).json({
+        error: "Errore nel recupero delle comunicazioni ufficiali non lette",
+        details: error.message,
+      });
+    }
+  }
+);
 
 // 📌 API per contrassegnare una notifica come letta
 router.put("/read/:id", limiter, verifyToken, async (req, res) => {
@@ -83,12 +130,37 @@ router.put("/read/:id", limiter, verifyToken, async (req, res) => {
     res.json({ message: "✅ Notifica contrassegnata come letta", id });
   } catch (error) {
     logger.error("❌ Errore nell'aggiornamento della notifica:", error);
-    res
-      .status(500)
-      .json({
-        error: "Errore nell'aggiornamento della notifica",
-        details: error.message,
-      });
+    res.status(500).json({
+      error: "Errore nell'aggiornamento della notifica",
+      details: error.message,
+    });
+  }
+});
+
+// 📌 API per contrassegnare tutte le notifiche come lette
+router.put("/read-all", limiter, verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const db = admin.firestore();
+    const snapshot = await db
+      .collection("Notifications")
+      .where("userId", "==", userId)
+      .where("status", "==", "unread")
+      .get();
+
+    const batch = db.batch();
+    snapshot.docs.forEach((doc) => {
+      batch.update(doc.ref, { status: "read" });
+    });
+
+    await batch.commit();
+    res.json({ message: "✅ Tutte le notifiche contrassegnate come lette" });
+  } catch (error) {
+    logger.error("❌ Errore nell'aggiornamento delle notifiche:", error);
+    res.status(500).json({
+      error: "Errore nell'aggiornamento delle notifiche",
+      details: error.message,
+    });
   }
 });
 

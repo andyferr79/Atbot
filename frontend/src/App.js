@@ -1,5 +1,5 @@
-// 📂 E:\ATBot\frontend\src\App.js
-// ✅ Correzione completa del file `App.js` con percorso corretto per Chatbox
+// 📂 E:\\ATBot\\frontend\\src\\App.js
+// ✅ Correzione completa per la visibilità della Sidebar
 
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
@@ -20,8 +20,9 @@ import SuppliersReport from "./pages/reports/sections/SuppliersReport";
 import CleaningReport from "./pages/reports/sections/CleaningReport";
 import MarketingReport from "./pages/reports/sections/MarketingReport";
 import CustomersReport from "./pages/reports/sections/CustomersReport";
-import Chatbox from "./pages/Chatbox"; // ✅ Percorso corretto
 import AIInsights from "./pages/reports/sections/AIInsightsReport";
+import Chatbox from "./pages/Chatbox";
+import Notifications from "./pages/notifications/Notifications";
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
 import "./App.css";
@@ -29,30 +30,33 @@ import "./App.css";
 function App() {
   return (
     <Router>
-      <TopBar />
-      <Sidebar />
-      <div className="main-content">
-        <Routes>
-          <Route path="/" element={<StayProDashboard />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/bookings" element={<Bookings />} />
-          <Route path="/guests" element={<Guests />} />
-          <Route path="/rooms" element={<Rooms />} />
-          <Route path="/suppliers" element={<Suppliers />} />
-          <Route path="/marketing" element={<Marketing />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/reports/bookings" element={<BookingsReport />} />
-          <Route path="/reports/financial" element={<FinancialReport />} />
-          <Route path="/reports/general" element={<GeneralReport />} />
-          <Route path="/reports/suppliers" element={<SuppliersReport />} />
-          <Route path="/reports/cleaning" element={<CleaningReport />} />
-          <Route path="/reports/marketing" element={<MarketingReport />} />
-          <Route path="/reports/customers" element={<CustomersReport />} />
-          <Route path="/reports/ai-insights" element={<AIInsights />} />
-          <Route path="/chatbox" element={<Chatbox />} />
-        </Routes>
+      <div className="app-container" style={{ display: "flex" }}>
+        <Sidebar />
+        <div className="main-content" style={{ flex: 1, paddingLeft: "220px" }}>
+          <TopBar />
+          <Routes>
+            <Route path="/" element={<StayProDashboard />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/bookings" element={<Bookings />} />
+            <Route path="/guests" element={<Guests />} />
+            <Route path="/rooms" element={<Rooms />} />
+            <Route path="/suppliers" element={<Suppliers />} />
+            <Route path="/marketing" element={<Marketing />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/reports/bookings" element={<BookingsReport />} />
+            <Route path="/reports/financial" element={<FinancialReport />} />
+            <Route path="/reports/general" element={<GeneralReport />} />
+            <Route path="/reports/suppliers" element={<SuppliersReport />} />
+            <Route path="/reports/cleaning" element={<CleaningReport />} />
+            <Route path="/reports/marketing" element={<MarketingReport />} />
+            <Route path="/reports/customers" element={<CustomersReport />} />
+            <Route path="/reports/ai-insights" element={<AIInsights />} />
+            <Route path="/chatbox" element={<Chatbox />} />
+            <Route path="/notifications" element={<Notifications />} />
+          </Routes>
+        </div>
       </div>
     </Router>
   );
@@ -60,4 +64,4 @@ function App() {
 
 export default App;
 
-/* 📂 Nota: Percorso corretto per Chatbox: `E:\ATBot\frontend\src\pages\Chatbox.js` */
+/* 📂 Nota: Il layout è stato corretto con flexbox per garantire la visibilità della Sidebar. */
