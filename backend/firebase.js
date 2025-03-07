@@ -1,5 +1,7 @@
 const admin = require("firebase-admin");
 const path = require("path");
+const { LoggingWinston } = require("@google-cloud/logging-winston");
+const winston = require("winston");
 
 // ✅ Verifica se Firebase è già stato inizializzato per evitare errori
 if (!admin.apps.length) {
@@ -15,4 +17,14 @@ if (!admin.apps.length) {
   });
 }
 
-module.exports = admin;
+// ✅ Configura il logging con Cloud Logging di Firebase
+const loggingWinston = new LoggingWinston();
+const logger = winston.createLogger({
+  level: "info",
+  transports: [
+    new winston.transports.Console(),
+    loggingWinston, // ✅ Invia i log a Firebase Logging
+  ],
+});
+
+module.exports = { admin, logger };

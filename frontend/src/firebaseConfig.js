@@ -1,8 +1,9 @@
-// E:\\ATBot\\frontend\\src\\firebaseConfig.js - Configurazione Firebase aggiornata per StayPro
+// 📌 Configurazione Firebase aggiornata per StayPro con Performance Monitoring
 
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getPerformance } from "firebase/performance"; // ✅ Import Performance Monitoring
 
 // Configurazione Firebase con le credenziali esistenti
 const firebaseConfig = {
@@ -22,5 +23,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
+const perf = getPerformance(app); // ✅ Inizializza Performance Monitoring
 
-export { app, auth, db, googleProvider };
+export { app, auth, db, googleProvider, perf }; // ✅ Esporta perf per usarlo nel frontend
