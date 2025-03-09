@@ -30,7 +30,7 @@ try {
 }
 
 // ✅ Importiamo il file aiRoutes.js
-const aiRoutes = require("./aiRoutes");
+const aiRoutes = require("../functions/aiRoutes");
 
 // ✅ Integriamo aiRoutes con l'API principale
 router.use("/ai", aiRoutes);
@@ -45,36 +45,34 @@ router.get("/test-firebase", testLimiter, async (req, res) => {
     res.json(doc.data());
   } catch (error) {
     logger.error("❌ Errore nella connessione a Firebase:", error);
-    res
-      .status(500)
-      .json({
-        message: "Errore nella connessione a Firebase",
-        details: error.message,
-      });
+    res.status(500).json({
+      message: "Errore nella connessione a Firebase",
+      details: error.message,
+    });
   }
 });
 
 // ✅ **Importiamo tutte le altre route**
-const bookingsRoutes = require("./bookingsRoutes");
-const bookingsReportsRoutes = require("./bookingsReportsRoutes");
-const channelManagerRoutes = require("./channelManagerRoutes");
-const cleaningReportsRoutes = require("./cleaningReportsRoutes");
-const customersReportsRoutes = require("./customersReportsRoutes");
-const customersRoutes = require("./customersRoutes");
-const dashboardOverviewRoutes = require("./dashboardOverviewRoutes");
-const expensesRoutes = require("./expensesRoutes");
-const financesRoutes = require("./financesRoutes");
-const financialReportsRoutes = require("./financialReportsRoutes");
-const housekeepingRoutes = require("./housekeepingRoutes");
-const marketingReportsRoutes = require("./marketingReportsRoutes");
-const marketingRoutes = require("./marketingRoutes");
-const notificationsRoutes = require("./notificationsRoutes");
-const pricingRoutes = require("./pricingRoutes");
-const reportsRoutes = require("./reportsRoutes");
-const reviewsRoutes = require("./reviewsRoutes");
-const settingsRoutes = require("./settingsRoutes");
-const suppliersReportsRoutes = require("./suppliersReportsRoutes");
-const suppliersRoutes = require("./suppliersRoutes");
+const bookingsRoutes = require("../functions/bookingsRoutes");
+const bookingsReportsRoutes = require("../functions/bookingsReportsRoutes");
+const channelManagerRoutes = require("../functions/channelManagerRoutes");
+const cleaningReportsRoutes = require("../functions/cleaningReportsRoutes");
+const customersReportsRoutes = require("../functions/customersReportsRoutes");
+const customersRoutes = require("../functions/customersRoutes");
+const dashboardOverviewRoutes = require("../functions/dashboardOverviewRoutes");
+const expensesRoutes = require("../functions/expensesRoutes");
+const financesRoutes = require("../functions/financesRoutes");
+const financialReportsRoutes = require("../functions/financialReportsRoutes");
+const housekeepingRoutes = require("../functions/housekeepingRoutes");
+const marketingReportsRoutes = require("../functions/marketingReportsRoutes");
+const marketingRoutes = require("../functions/marketingRoutes");
+const notificationsRoutes = require("../functions/notificationsRoutes");
+const pricingRoutes = require("../functions/pricingRoutes");
+const reportsRoutes = require("../functions/reportsRoutes");
+const reviewsRoutes = require("../functions/reviewsRoutes");
+const settingsRoutes = require("../functions/settingsRoutes");
+const suppliersReportsRoutes = require("../functions/suppliersReportsRoutes");
+const suppliersRoutes = require("../functions/suppliersRoutes");
 
 // ✅ **Definiamo tutte le route**
 router.use("/bookings", bookingsRoutes);
