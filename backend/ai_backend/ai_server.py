@@ -8,18 +8,18 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-# Carica le variabili d'ambiente
+# 🔍 Carica le variabili d'ambiente
 load_dotenv()
 
-# Inizializza FastAPI
+# ✅ Inizializza FastAPI
 app = FastAPI()
 
-# ✅ FIX CORS DEFINITIVO: Abilitazione completa per React
+# ✅ FIX CORS: Abilitazione completa per React
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Permetti richieste da qualsiasi dominio (solo per debug, in produzione restringi)
     allow_credentials=True,
-    allow_methods=["*"],  # Permetti tutti i metodi
+    allow_methods=["*"],  # Permetti tutti i metodi (GET, POST, etc.)
     allow_headers=["*"],  # Permetti tutti gli header
 )
 
@@ -28,14 +28,14 @@ app.add_middleware(
 async def preflight_check(full_path: str):
     return JSONResponse(content={}, status_code=200)
 
-# Configura OpenAI API
+# 🔑 Configura OpenAI API
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
     print("⚠️ ATTENZIONE: La chiave API di OpenAI non è stata trovata. Assicurati di averla impostata nel file .env")
 else:
-    openai.api_key = openai_api_key
+    openai.api_key = openai_api_key  # ✅ Imposta direttamente la chiave API
 
-# Inizializza Firebase
+# 🔥 Inizializza Firebase
 firebase_credentials_path = "E:/ATBot/firebase/serviceAccountKey.json"
 if not os.path.exists(firebase_credentials_path):
     print(f"⚠️ ATTENZIONE: Il file delle credenziali Firebase non è stato trovato: {firebase_credentials_path}")
@@ -49,19 +49,16 @@ else:
     except Exception as e:
         print(f"🔴 ERRORE: Impossibile connettersi a Firebase - {str(e)}")
 
-
-# Modello dati per la richiesta alla chatbox
+# ✅ Modello dati per la richiesta alla chat AI
 class ChatRequest(BaseModel):
     user_message: str
     session_id: str
-
 
 # ✅ Funzione per selezionare il modello AI
 def decide_model(user_message: str):
     if "analisi avanzata" in user_message.lower():
         return "gpt-4"
     return "gpt-3.5-turbo"
-
 
 # ✅ Endpoint per la chat AI
 @app.post("/chat")
@@ -71,21 +68,22 @@ async def chat_endpoint(request: ChatRequest):
 
     try:
         model = decide_model(request.user_message)
-        client = openai.OpenAI()  # Inizializza il client OpenAI
-        response = client.chat.completions.create(
+        
+        response = openai.ChatCompletion.create(  # ✅ FIX metodo corretto
             model=model,
             messages=[{"role": "user", "content": request.user_message}],
             temperature=0.7
         )
 
-        return {"response": response.choices[0].message.content}
-    except openai.OpenAIError as e:
+        return {"response": response["choices"][0]["message"]["content"]}
+
+    except openai.error.OpenAIError as e:
         print(f"❌ Errore OpenAI: {str(e)}")
         raise HTTPException(status_code=500, detail="Errore nell'elaborazione IA")
+
     except Exception as e:
         print(f"❌ Errore generale: {str(e)}")
         raise HTTPException(status_code=500, detail="Errore interno del server")
-
 
 # ✅ Avvio del server con Uvicorn
 if __name__ == "__main__":

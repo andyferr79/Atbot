@@ -5,7 +5,8 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-exports.getBookings = require("./bookingsRoutes").getBookings;
+exports.getBookingsData = require("./bookingsRoutes").getBookingsData;
+
 exports.getBookingsReports =
   require("./bookingsReportsRoutes").getBookingsReports;
 exports.syncChannelManager =
