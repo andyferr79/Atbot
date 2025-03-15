@@ -1,39 +1,34 @@
-import axios from "axios";
-
-// 📌 Istanza Axios per la gestione dei report
-const reportsApi = axios.create({
-  baseURL: "http://localhost:3001/api/reports",
-});
+import api from "../api"; // Usa l'istanza Firebase aggiornata
 
 // 📊 Recupera le impostazioni dei report
-export const getReportSettings = () => reportsApi.get("/settings");
+export const getReportSettings = () => api.get("/getReportSettings");
 
 // ⚙️ Aggiorna le impostazioni dei report
 export const updateReportSettings = (settings) =>
-  reportsApi.put("/settings", settings);
+  api.put("/updateReportSettings", settings);
 
 // 🚀 Genera un report immediatamente
-export const generateReportNow = () => reportsApi.post("/generate");
+export const generateReportNow = () => api.post("/generateReportNow");
 
 // 📊 Recupera dati per la dashboard dei report
-export const getDashboardMetrics = () => reportsApi.get("/dashboard");
+export const getDashboardMetrics = () => api.get("/getDashboardMetrics");
 
 // 📅 Recupera dati sulle prenotazioni per il report BookingReport.js
-export const getBookingsData = () => reportsApi.get("/bookings-data");
+export const getBookingsData = () => api.get("/getBookingsData");
 
 // 📄 Recupera dati sui report finanziari
-export const getFinancialReport = () => reportsApi.get("/financial-data");
+export const getFinancialReport = () => api.get("/getFinancialReport");
 
 // 🚛 Recupera dati sui fornitori per il report
-export const getSuppliersReport = () => reportsApi.get("/suppliers-data");
+export const getSuppliersReport = () => api.get("/getSuppliersReport");
 
 // 🏨 Recupera dati sulla pulizia delle camere
-export const getCleaningReport = () => reportsApi.get("/cleaning-data");
+export const getCleaningReport = () => api.get("/getCleaningReport");
 
 // 📢 Recupera dati sulle campagne marketing
-export const getMarketingReport = () => reportsApi.get("/marketing-data");
+export const getMarketingReport = () => api.get("/getMarketingReport");
 
 // 🛎️ Recupera dati sui clienti e feedback
-export const getCustomersReport = () => reportsApi.get("/customers-data");
+export const getCustomersReport = () => api.get("/getCustomersReport");
 
-export default reportsApi;
+export default api;

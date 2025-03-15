@@ -1,14 +1,14 @@
-import api from "../api"; // Importa l'istanza API principale
-import { db } from "../firebase"; // Importa Firestore per il tempo reale
+import api from "../api"; // Usa l'istanza Firebase aggiornata
+import { db } from "../firebase"; // Firestore per aggiornamenti in tempo reale
 import { collection, onSnapshot } from "firebase/firestore";
 
 // ✅ Recupera statistiche generali dei report (chiamata manuale)
 export const getReportsStats = async () => {
   try {
-    const response = await api.get("/reports/stats");
+    const response = await api.get("/getReportsStats");
     return response.data;
   } catch (error) {
-    console.error("Errore nel recupero delle statistiche generali:", error);
+    console.error("❌ Errore nel recupero delle statistiche generali:", error);
     throw error;
   }
 };
@@ -25,7 +25,7 @@ export const subscribeToReportsStats = (callback) => {
 // ✅ Esportazione sicura dell'API
 const reportsStatsApi = {
   getReportsStats,
-  subscribeToReportsStats, // Aggiornamenti automatici
+  subscribeToReportsStats, // 🔄 Aggiornamenti automatici in tempo reale
 };
 
 export default reportsStatsApi;

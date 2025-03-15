@@ -1,32 +1,32 @@
-// 📌 marketingReportApi.js - API per il Report Marketing
+// 📌 marketingReportApi.js - API per il Report Marketing con Firebase Functions
 import api from "../api"; // Importa l'istanza API principale
 
 // ✅ Recupera i dati del report marketing
-const getMarketingReportData = async () => {
+export const getMarketingReportData = async () => {
   try {
-    const response = await api.get("/reports/marketing");
+    const response = await api.get("/getMarketingReports");
     return response.data;
   } catch (error) {
-    console.error("Errore nel recupero dei dati di marketing", error);
+    console.error("Errore nel recupero del report marketing:", error);
     throw error;
   }
 };
 
 // ✅ Genera manualmente un report di marketing
-const generateMarketingReportNow = async () => {
+export const generateMarketingReportNow = async () => {
   try {
-    const response = await api.post("/reports/marketing/generate");
+    const response = await api.post("/generateMarketingReport");
     return response.data;
   } catch (error) {
-    console.error("Errore nella generazione del report marketing", error);
+    console.error("Errore nella generazione del report marketing:", error);
     throw error;
   }
 };
 
 // ✅ Imposta configurazioni automatiche per il report marketing
-const updateMarketingReportSettings = async (settings) => {
+export const updateMarketingReportSettings = async (settings) => {
   try {
-    const response = await api.put("/reports/marketing/settings", settings);
+    const response = await api.put("/updateMarketingReportSettings", settings);
     return response.data;
   } catch (error) {
     console.error(

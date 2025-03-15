@@ -1,47 +1,49 @@
-// settingsApi.js - Servizi per la pagina Settings
-import axios from "axios";
+import api from "../api"; // Usa l'istanza Firebase aggiornata
 
-// Crea l'istanza Axios
-const settingsApi = axios.create({
-  baseURL: "http://localhost:3001/api/settings", // Base URL per le API Settings
-});
-
-// Interceptor per gestire errori globali
-settingsApi.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("Errore durante la richiesta:", error);
-    return Promise.reject(error);
-  }
-);
-
-// **Funzioni Preferenze Generali**
-export const getPreferences = () => settingsApi.get("/preferences");
+// **Preferenze Generali**
+export const getPreferences = () => api.get("/getPreferences");
 export const updatePreferences = (preferences) =>
-  settingsApi.put("/preferences", preferences);
+  api.put("/updatePreferences", preferences);
 
-// **Funzioni Notifiche**
-export const getNotifications = () => settingsApi.get("/notifications");
+// **Notifiche**
+export const getNotifications = () => api.get("/getNotifications");
 export const updateNotifications = (notifications) =>
-  settingsApi.put("/notifications", notifications);
+  api.put("/updateNotifications", notifications);
 
-// **Funzioni Configurazioni della Struttura**
-export const getStructureSettings = () => settingsApi.get("/structure");
+// **Configurazioni della Struttura**
+export const getStructureSettings = () => api.get("/getStructureSettings");
 export const updateStructureSettings = (structure) =>
-  settingsApi.put("/structure", structure);
+  api.put("/updateStructureSettings", structure);
 
-// **Funzioni Utenti e Permessi**
-export const getUsers = () => settingsApi.get("/users");
-export const addUser = (user) => settingsApi.post("/users", user);
-export const deleteUser = (userId) => settingsApi.delete(`/users/${userId}`);
+// **Gestione Utenti e Permessi**
+export const getUsers = () => api.get("/getUsers");
+export const addUser = (user) => api.post("/addUser", user);
+export const deleteUser = (userId) => api.delete(`/deleteUser/${userId}`);
 
-// **Funzioni Backup e Sicurezza**
-export const getSecuritySettings = () => settingsApi.get("/security");
+// **Backup e Sicurezza**
+export const getSecuritySettings = () => api.get("/getSecuritySettings");
 export const updateSecuritySettings = (security) =>
-  settingsApi.put("/security", security);
+  api.put("/updateSecuritySettings", security);
 
-// **Funzioni Privacy e GDPR**
-export const exportPrivacyData = () => settingsApi.get("/privacy/export");
-export const deletePrivacyData = () => settingsApi.delete("/privacy/delete");
+// **Privacy e GDPR**
+export const exportPrivacyData = () => api.get("/exportPrivacyData");
+export const deletePrivacyData = () => api.delete("/deletePrivacyData");
+
+// ✅ 🔥 FIX EXPORT - Assegniamo prima a una variabile prima di esportare
+const settingsApi = {
+  getPreferences,
+  updatePreferences,
+  getNotifications,
+  updateNotifications,
+  getStructureSettings,
+  updateStructureSettings,
+  getUsers,
+  addUser,
+  deleteUser,
+  getSecuritySettings,
+  updateSecuritySettings,
+  exportPrivacyData,
+  deletePrivacyData,
+};
 
 export default settingsApi;

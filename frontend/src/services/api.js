@@ -1,52 +1,55 @@
 import axios from "axios";
 
-// Crea l'istanza Axios
+// 🔹 Imposta la base URL per Firebase Functions (Emulatore locale o produzione)
 const api = axios.create({
-  baseURL: "http://localhost:3001/api", // URL del backend principale
+  baseURL: "http://127.0.0.1:5001/autotaskerbot/us-central1", // 🔴 Cambiare in produzione
 });
 
-// Interceptor per gestire errori globali
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("Errore durante la richiesta:", error);
-    return Promise.reject(error);
-  }
+// 🔹 Interceptor per gestire il Token Firebase
+api.interceptors.request.use(
+  async (config) => {
+    const token = localStorage.getItem("firebaseToken"); // Recupera il token salvato dopo il login
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
-// **Funzioni Firebase**
-export const getTestFirebase = () => api.get("/test-firebase");
+// **Test API Firebase**
+export const getTestFirebase = () => api.get("/getTestFirebase");
 
-// **Funzioni Chat (AI)**
+// **API - Chat AI**
 export const sendMessageToAI = (message, sessionId) =>
-  api.post("/ai/chat", { user_message: message, session_id: sessionId });
+  api.post("/chatWithAI", { user_message: message, session_id: sessionId });
 
-// **Funzioni Fornitori (Suppliers)**
-export const getSuppliers = () => api.get("/suppliers");
+// **API - Fornitori**
+export const getSuppliers = () => api.get("/getSuppliers");
 export const addSupplier = (supplierData) =>
-  api.post("/suppliers", supplierData);
+  api.post("/addSupplier", supplierData);
 export const updateSupplier = (supplierId, updatedData) =>
-  api.put(`/suppliers/${supplierId}`, updatedData);
+  api.put(`/updateSupplier/${supplierId}`, updatedData);
 export const deleteSupplier = (supplierId) =>
-  api.delete(`/suppliers/${supplierId}`);
+  api.delete(`/deleteSupplier/${supplierId}`);
 
-// **Funzioni Ospiti (Guests)**
-export const getGuests = () => api.get("/guests");
-export const addGuest = (guestData) => api.post("/guests", guestData);
+// **API - Ospiti**
+export const getGuests = () => api.get("/getGuests");
+export const addGuest = (guestData) => api.post("/addGuest", guestData);
 
-// **Funzioni Camere (Rooms)**
-export const getRooms = () => api.get("/rooms");
-export const addRoom = (roomData) => api.post("/rooms", roomData);
+// **API - Camere**
+export const getRooms = () => api.get("/getRooms");
+export const addRoom = (roomData) => api.post("/addRoom", roomData);
 export const updateRoom = (roomId, updatedData) =>
-  api.put(`/rooms/${roomId}`, updatedData);
-export const deleteRoom = (roomId) => api.delete(`/rooms/${roomId}`);
+  api.put(`/updateRoom/${roomId}`, updatedData);
+export const deleteRoom = (roomId) => api.delete(`/deleteRoom/${roomId}`);
 
-// **Funzioni Prenotazioni (Bookings)**
-export const getBookings = () => api.get("/bookings"); // Recupera tutte le prenotazioni
-export const addBooking = (bookingData) => api.post("/bookings", bookingData); // Crea una nuova prenotazione
+// **API - Prenotazioni**
+export const getBookings = () => api.get("/getBookings");
+export const addBooking = (bookingData) => api.post("/addBooking", bookingData);
 export const updateBooking = (bookingId, updatedData) =>
-  api.put(`/bookings/${bookingId}`, updatedData); // Modifica una prenotazione
+  api.put(`/updateBooking/${bookingId}`, updatedData);
 export const deleteBooking = (bookingId) =>
-  api.delete(`/bookings/${bookingId}`); // Elimina una prenotazione
+  api.delete(`/deleteBooking/${bookingId}`);
 
 export default api;

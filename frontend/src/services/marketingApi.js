@@ -1,33 +1,26 @@
-import axios from "axios";
+import api from "../api"; // Usa l'istanza Firebase aggiornata
 
-// Crea l'istanza Axios
-const marketingApi = axios.create({
-  baseURL: "http://localhost:3001/api/marketing", // Base URL specifico per le API Marketing
-});
+// ✅ Recupera i post sui social media
+export const getSocialPosts = () => api.get("/getSocialPosts");
 
-// Interceptor per gestire errori globali
-marketingApi.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("Errore durante la richiesta:", error);
-    return Promise.reject(error);
-  }
-);
+// ✅ Aggiunge un nuovo post sui social
+export const addSocialPost = (postData) => api.post("/addSocialPost", postData);
 
-// **Funzioni Social Media**
-export const getSocialPosts = () => marketingApi.get("/social/posts");
-export const addSocialPost = (postData) =>
-  marketingApi.post("/social/posts", postData);
+// ✅ Elimina un post
 export const deleteSocialPost = (postId) =>
-  marketingApi.delete(`/social/posts/${postId}`);
+  api.delete(`/deleteSocialPost/${postId}`);
 
-// **Funzioni Campagne Ads**
-export const getAds = () => marketingApi.get("/ads");
-export const addAd = (adData) => marketingApi.post("/ads", adData);
+// ✅ Recupera le campagne pubblicitarie
+export const getAds = () => api.get("/getAds");
 
-// **Funzioni Promozioni**
-export const getPromotions = () => marketingApi.get("/promotions");
+// ✅ Crea una nuova campagna pubblicitaria
+export const addAd = (adData) => api.post("/addAd", adData);
+
+// ✅ Recupera le promozioni attive
+export const getPromotions = () => api.get("/getPromotions");
+
+// ✅ Aggiunge una nuova promozione
 export const addPromotion = (promotionData) =>
-  marketingApi.post("/promotions", promotionData);
+  api.post("/addPromotion", promotionData);
 
-export default marketingApi;
+export default api;

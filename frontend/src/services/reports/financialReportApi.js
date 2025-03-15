@@ -1,11 +1,10 @@
-import axios from "axios";
+// 📌 financialReportApi.js - API per il Report Finanziario con Firebase Functions
+import api from "../api"; // Importa l'istanza API principale
 
-const API_URL = "http://localhost:3001/api/reports/financial";
-
-// ✅ Funzione per ottenere i dati finanziari (Fix dell'export)
+// ✅ Recupera i dati finanziari del report
 export const getFinancialReportData = async () => {
   try {
-    const response = await axios.get(API_URL);
+    const response = await api.get("/getFinancialReports");
     return response.data;
   } catch (error) {
     console.error("Errore nel recupero del report finanziario:", error);
@@ -13,10 +12,12 @@ export const getFinancialReportData = async () => {
   }
 };
 
-// ✅ Funzione per esportare il report finanziario
+// ✅ Esporta il report finanziario (PDF, Excel, CSV)
 export const exportFinancialReport = async (format) => {
   try {
-    const response = await axios.get(`${API_URL}/export?format=${format}`);
+    const response = await api.get(`/exportFinancialReport?format=${format}`, {
+      responseType: "blob", // Permette di scaricare il file
+    });
     return response.data;
   } catch (error) {
     console.error("Errore nell'esportazione del report:", error);
@@ -24,18 +25,27 @@ export const exportFinancialReport = async (format) => {
   }
 };
 
-// ✅ Funzione per importare dati finanziari (Se esiste questa funzione)
+// ✅ Importa dati finanziari (Se supportato nel backend)
 export const importFinancialData = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
 
   try {
-    const response = await axios.post(`${API_URL}/import`, formData, {
+    const response = await api.post("/importFinancialData", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
   } catch (error) {
-    console.error("Errore nell'importazione dei dati:", error);
+    console.error("Errore nell'importazione dei dati finanziari:", error);
     throw error;
   }
 };
+
+// 🚀 ✅ FIX EXPORT - Assegniamo a una variabile prima di esportare
+const financialReportApi = {
+  getFinancialReportData,
+  exportFinancialReport,
+  importFinancialData,
+};
+
+export default financialReportApi;

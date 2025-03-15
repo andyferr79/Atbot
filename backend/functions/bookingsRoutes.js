@@ -23,36 +23,17 @@ exports.getBookingsData = functions.https.onRequest(async (req, res) => {
     }
     try {
       const decodedToken = await admin.auth().verifyIdToken(token);
-      // Se serve, puoi salvare `decodedToken` in `req.user`.
+      functions.logger.info(
+        "✅ Token verificato con successo per UID:",
+        decodedToken.uid
+      );
     } catch (error) {
       functions.logger.error("❌ Token non valido:", error);
       return res.status(401).json({ error: "❌ Token non valido" });
     }
 
-    // ✅ Rate limiting con Firestore
-    const db = admin.firestore();
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    const rateLimitRef = db.collection("RateLimits").doc(ip);
-
-    const now = Date.now();
-    const rateLimitDoc = await rateLimitRef.get();
-    // Esempio: blocca se arriva un'altra richiesta entro 15 minuti (15 * 60 * 1000).
-    // Se preferisci un'altra soglia o un contatore incrementale, adegua la logica.
-    if (rateLimitDoc.exists) {
-      const lastRequest = rateLimitDoc.data().lastRequest;
-      if (now - lastRequest < 15 * 60 * 1000) {
-        return res
-          .status(429)
-          .json({ error: "❌ Troppe richieste. Riprova più tardi." });
-      }
-    }
-    // Aggiorna il timestamp dell'ultima richiesta
-    await rateLimitRef.set({ lastRequest: now });
-
     // ✅ Recupero delle prenotazioni da Firestore
+    const db = admin.firestore();
     const bookingsSnapshot = await db.collection("Bookings").get();
 
     if (bookingsSnapshot.empty) {
@@ -79,15 +60,23 @@ exports.getBookingsData = functions.https.onRequest(async (req, res) => {
       if (booking.status === "confirmed") confirmedBookings++;
       if (booking.status === "cancelled") cancelledBookings++;
 
+      // 🔹 Correzione: Verifica se `checkInDate` e `checkOutDate` esistono ed evita `instanceof`
+      const checkInDate =
+        booking.checkInDate && typeof booking.checkInDate.toDate === "function"
+          ? booking.checkInDate.toDate().toISOString()
+          : "N/A";
+
+      const checkOutDate =
+        booking.checkOutDate &&
+        typeof booking.checkOutDate.toDate === "function"
+          ? booking.checkOutDate.toDate().toISOString()
+          : "N/A";
+
       recentBookings.push({
         id: doc.id,
         customerName: booking.customerName || "N/A",
-        checkInDate: booking.checkInDate
-          ? booking.checkInDate.toDate().toISOString()
-          : "N/A",
-        checkOutDate: booking.checkOutDate
-          ? booking.checkOutDate.toDate().toISOString()
-          : "N/A",
+        checkInDate,
+        checkOutDate,
         amount: booking.amount || 0,
         status: booking.status || "unknown",
       });

@@ -1,13 +1,12 @@
-// 📌 cleaningReportApi.js - API per il Report Pulizia Camere
 import api from "../api"; // Importa l'istanza API principale
 
 // ✅ Recupera i dati del report pulizia
 const getCleaningReportData = async () => {
   try {
-    const response = await api.get("/reports/cleaning");
+    const response = await api.get("/getCleaningReports");
     return response.data;
   } catch (error) {
-    console.error("Errore nel recupero dei dati della pulizia", error);
+    console.error("❌ Errore nel recupero dei dati della pulizia", error);
     throw error;
   }
 };
@@ -15,10 +14,10 @@ const getCleaningReportData = async () => {
 // ✅ Genera manualmente un report sulla pulizia
 const generateCleaningReportNow = async () => {
   try {
-    const response = await api.post("/reports/cleaning/generate");
+    const response = await api.post("/generateCleaningReport");
     return response.data;
   } catch (error) {
-    console.error("Errore nella generazione del report pulizia", error);
+    console.error("❌ Errore nella generazione del report pulizia", error);
     throw error;
   }
 };
@@ -26,11 +25,11 @@ const generateCleaningReportNow = async () => {
 // ✅ Imposta configurazioni automatiche per il report pulizia
 const updateCleaningReportSettings = async (settings) => {
   try {
-    const response = await api.put("/reports/cleaning/settings", settings);
+    const response = await api.put("/updateCleaningReportSettings", settings);
     return response.data;
   } catch (error) {
     console.error(
-      "Errore nel salvataggio delle impostazioni del report pulizia",
+      "❌ Errore nel salvataggio delle impostazioni del report pulizia",
       error
     );
     throw error;

@@ -1,10 +1,10 @@
-// 📌 customersReportApi.js - API per il Report Clienti
-import api from "../api"; // Assicuriamoci di importare l'istanza API principale
+// 📌 customersReportApi.js - API per il Report Clienti con Firebase Functions
+import api from "../api"; // Importa l'istanza API principale
 
 // ✅ Recupera i dati dei clienti per il report
 export const getCustomersReportData = async () => {
   try {
-    const response = await api.get("/reports/customers");
+    const response = await api.get("/getCustomersReports");
     return response.data;
   } catch (error) {
     console.error("Errore nel recupero dei dati dei clienti", error);
@@ -15,7 +15,7 @@ export const getCustomersReportData = async () => {
 // ✅ Genera manualmente un report dei clienti
 export const generateCustomersReportNow = async () => {
   try {
-    const response = await api.post("/reports/customers/generate");
+    const response = await api.post("/generateCustomersReport");
     return response.data;
   } catch (error) {
     console.error("Errore nella generazione del report clienti", error);
@@ -26,7 +26,7 @@ export const generateCustomersReportNow = async () => {
 // ✅ Imposta configurazioni automatiche per il report clienti
 export const updateCustomersReportSettings = async (settings) => {
   try {
-    const response = await api.put("/reports/customers/settings", settings);
+    const response = await api.put("/updateCustomersReportSettings", settings);
     return response.data;
   } catch (error) {
     console.error("Errore nel salvataggio delle impostazioni", error);
@@ -37,7 +37,7 @@ export const updateCustomersReportSettings = async (settings) => {
 // ✅ Recupera lo storico dei report generati
 export const getCustomersReportHistory = async () => {
   try {
-    const response = await api.get("/reports/customers/history");
+    const response = await api.get("/getCustomersReportHistory");
     return response.data;
   } catch (error) {
     console.error(
@@ -51,12 +51,9 @@ export const getCustomersReportHistory = async () => {
 // ✅ Esporta i dati del report clienti (PDF, Excel, CSV)
 export const exportCustomersReport = async (format) => {
   try {
-    const response = await api.get(
-      `/reports/customers/export?format=${format}`,
-      {
-        responseType: "blob", // Permette di scaricare il file
-      }
-    );
+    const response = await api.get(`/exportCustomersReport?format=${format}`, {
+      responseType: "blob", // Permette di scaricare il file
+    });
     return response.data;
   } catch (error) {
     console.error("Errore nell'esportazione del report clienti", error);

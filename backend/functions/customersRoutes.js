@@ -28,7 +28,7 @@ exports.getCustomersData = functions.https.onRequest(async (req, res) => {
       return res.status(401).json({ error: "❌ Token non valido" });
     }
 
-    // ✅ Rate limiting su Firestore (max 50 richieste / 10 min per IP)
+    // ✅ Rate limiting migliorato su Firestore (10 richieste ogni 60 secondi per IP)
     const db = admin.firestore();
     const ip =
       req.headers["x-forwarded-for"] ||
@@ -38,16 +38,26 @@ exports.getCustomersData = functions.https.onRequest(async (req, res) => {
     const rateDocRef = db.collection("RateLimits").doc(ip);
     const rateDoc = await rateDocRef.get();
 
+    let requestCount = 1;
+
     if (rateDoc.exists) {
-      const lastRequest = rateDoc.data().lastRequest || 0;
-      // 10 minuti
-      if (now - lastRequest < 10 * 60 * 1000) {
+      const data = rateDoc.data();
+      const lastRequest = data.lastRequest || 0;
+      requestCount = (data.requestCount || 0) + 1;
+
+      // 🔹 Se ha superato 10 richieste in 60 secondi → Blocca per 1 minuto
+      if (now - lastRequest < 60 * 1000 && requestCount > 10) {
         return res
           .status(429)
-          .json({ error: "❌ Troppe richieste. Riprova più tardi." });
+          .json({ error: "❌ Troppe richieste. Riprova tra 1 minuto." });
       }
     }
-    await rateDocRef.set({ lastRequest: now });
+
+    // ✅ Salva il nuovo valore del Rate Limit
+    await rateDocRef.set({
+      lastRequest: now,
+      requestCount: requestCount,
+    });
 
     // ✅ Recupero dati dalla collezione "Customers"
     const customersSnapshot = await db.collection("Customers").get();
@@ -72,20 +82,28 @@ exports.getCustomersData = functions.https.onRequest(async (req, res) => {
       if (customer.type === "lead") leads++;
       if (customer.isVIP) vipCustomers++;
 
+      // 🔹 Fix: Controllo avanzato su `lastBooking`
+      let lastBooking = null;
+      if (customer.lastBooking) {
+        if (typeof customer.lastBooking.toDate === "function") {
+          lastBooking = customer.lastBooking.toDate().toISOString();
+        } else if (typeof customer.lastBooking === "string") {
+          lastBooking = customer.lastBooking; // Se è già una stringa ISO
+        }
+      }
+
       recentCustomers.push({
         id: doc.id,
         name: customer.name || "N/A",
         email: customer.email || "N/A",
         phone: customer.phone || "N/A",
-        lastBooking: customer.lastBooking
-          ? customer.lastBooking.toDate().toISOString()
-          : "N/A",
+        lastBooking,
       });
     });
 
-    // Mantiene solo gli ultimi 5 clienti con lastBooking != "N/A"
+    // Mantiene solo gli ultimi 5 clienti con lastBooking valido
     recentCustomers = recentCustomers
-      .filter((c) => c.lastBooking !== "N/A")
+      .filter((c) => c.lastBooking !== null)
       .sort((a, b) => new Date(b.lastBooking) - new Date(a.lastBooking))
       .slice(0, 5);
 
