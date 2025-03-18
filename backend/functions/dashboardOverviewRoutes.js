@@ -1,104 +1,124 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
-// Inizializza Firebase Admin se non è già attivo
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-// ✅ Funzione Cloud per ottenere i dati della dashboard in tempo reale
+const db = admin.firestore();
+
+// ✅ Middleware Autenticazione
+async function authenticate(req) {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) throw { status: 403, message: "❌ Token mancante" };
+  try {
+    return await admin.auth().verifyIdToken(token);
+  } catch (error) {
+    functions.logger.error("❌ Token non valido:", error);
+    throw { status: 401, message: "❌ Token non valido" };
+  }
+}
+
+// ✅ Middleware Rate Limiting avanzato
+async function checkRateLimit(ip, maxRequests, windowMs) {
+  const rateDocRef = admin.firestore().collection("RateLimits").doc(ip);
+  const rateDoc = await rateDocRef.get();
+  const now = Date.now();
+
+  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
+
+  if (now - data.firstRequest < windowMs) {
+    if (data.count >= maxRequests) {
+      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
+    }
+    data.count++;
+  } else {
+    data = { count: 1, firstRequest: now };
+  }
+
+  await rateDocRef.set(data);
+}
+
+// 📌 GET - Dati Dashboard Overview
 exports.getDashboardOverview = functions.https.onRequest(async (req, res) => {
-  // Consenti solo richieste GET
   if (req.method !== "GET") {
-    return res
-      .status(405)
-      .json({ error: "❌ Metodo non consentito. Usa GET." });
+    return res.status(405).json({ error: "❌ Usa GET." });
   }
 
   try {
-    // ✅ Rate limiting con Firestore (max 50 richieste ogni 5 min)
-    const db = admin.firestore();
+    await authenticate(req);
     const ip =
       req.headers["x-forwarded-for"] ||
       req.connection?.remoteAddress ||
       "unknown_ip";
-    const now = Date.now();
-    const rateDocRef = db.collection("RateLimits").doc(ip);
-    const rateDoc = await rateDocRef.get();
+    await checkRateLimit(ip, 20, 5 * 60 * 1000); // 20 richieste ogni 5 min
 
-    if (rateDoc.exists) {
-      const lastRequest = rateDoc.data().lastRequest || 0;
-      // 5 minuti = 5 * 60 * 1000
-      if (now - lastRequest < 5 * 60 * 1000) {
-        return res
-          .status(429)
-          .json({ error: "❌ Troppe richieste. Attendi prima di riprovare." });
-      }
-    }
-    await rateDocRef.set({ lastRequest: now });
+    const db = admin.firestore();
+    const [bookingsSnapshot, financesSnapshot] = await Promise.all([
+      db.collection("Bookings").get(),
+      db.collection("FinancialReports").get(),
+    ]);
 
-    // Funzione locale per aggiornare Firestore
-    const updateFirestoreDashboard = async (dashboardData) => {
-      await db
-        .collection("Dashboard")
-        .doc("overview")
-        .set(dashboardData, { merge: true });
-    };
-
-    // Recupero dati da Firestore
-    const bookingsSnapshot = await db.collection("Bookings").get();
-    const financesSnapshot = await db.collection("FinancialReports").get();
-
-    if (bookingsSnapshot.empty && financesSnapshot.empty) {
-      const emptyData = {
-        totalRevenue: 0,
-        totalBookings: 0,
-        occupancyRate: "0.00%",
-        avgRevenuePerBooking: "0.00",
-        updatedAt: new Date().toISOString(),
-      };
-      // Salviamo ugualmente su Firestore se vuoi tenere traccia
-      await updateFirestoreDashboard(emptyData);
-      return res.json(emptyData);
-    }
-
-    // Calcolo statistiche
     const totalBookings = bookingsSnapshot.size;
     const totalRevenue = financesSnapshot.docs.reduce(
-      (sum, doc) => sum + (doc.data().amount || 0),
+      (sum, doc) => sum + (doc.data().revenue || 0),
       0
     );
+
+    // Simulazione calcolo occupancy
+    const occupiedRooms = totalBookings * 1.5; // esempio
+    const totalRooms = 100;
+    const occupancyRate = ((occupiedRooms / totalRooms) * 100).toFixed(2) + "%";
+
     const avgRevenuePerBooking =
       totalBookings > 0 ? (totalRevenue / totalBookings).toFixed(2) : "0.00";
 
-    // Simulazione tasso di occupazione (esempio)
-    const occupiedRooms = totalBookings * 1.5; // logica fittizia
-    const totalRooms = 100;
-    const occupancyRate =
-      totalRooms > 0
-        ? ((occupiedRooms / totalRooms) * 100).toFixed(2) + "%"
-        : "0.00%";
-
     const dashboardData = {
-      totalRevenue,
       totalBookings,
+      totalRevenue,
       occupancyRate,
-      avgRevenuePerBooking,
-      updatedAt: new Date().toISOString(),
+      recentUpdate: new Date().toISOString(),
     };
 
-    // ✅ Salva i dati su Firestore
-    await updateFirestoreDashboard(dashboardData);
+    await db
+      .collection("Dashboard")
+      .doc("overview")
+      .set(dashboardData, { merge: true });
 
     return res.json(dashboardData);
   } catch (error) {
-    functions.logger.error(
-      "❌ Errore nel recupero dei dati della dashboard:",
-      error
-    );
-    return res.status(500).json({
-      error: "Errore nel recupero dei dati della dashboard",
-      details: error.message,
-    });
+    functions.logger.error("❌ Errore dashboard overview:", error);
+    return res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
+  }
+});
+
+// 📌 POST - Richiedere aggiornamento manuale dashboard
+exports.updateDashboardData = functions.https.onRequest(async (req, res) => {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "❌ Usa POST." });
+  }
+
+  try {
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 5, 5 * 60 * 1000); // Meno frequente, aggiornamenti manuali
+
+    // Possibile inserire qui logica reale o chiamare altre funzioni di aggiornamento
+    await db
+      .collection("Dashboard")
+      .doc("overview")
+      .update({ updatedAt: new Date() });
+
+    res.json({ message: "✅ Dashboard aggiornata manualmente." });
+  } catch (error) {
+    functions.logger.error("❌ Errore aggiornamento manuale dashboard:", error);
+    return res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
   }
 });

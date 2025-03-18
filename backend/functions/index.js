@@ -1,163 +1,229 @@
-const { onRequest } = require("firebase-functions/v2/https");
+const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-// Funzione per verificare il token con log dettagliati
-const verifyToken = async (req, res, next) => {
-  console.log("📌 Header ricevuto:", req.headers);
+// ✅ Importazione di tutti i file delle route aggiornate
+const bookingsRoutes = require("./bookingsRoutes");
+const bookingsReportsRoutes = require("./bookingsReportsRoutes");
+const channelManagerRoutes = require("./channelManagerRoutes");
+const cleaningReportsRoutes = require("./cleaningReportsRoutes");
+const customersRoutes = require("./customersRoutes");
+const customersReportsRoutes = require("./customersReportsRoutes");
+const dashboardOverviewRoutes = require("./dashboardOverviewRoutes");
+const expensesRoutes = require("./expensesRoutes");
+const financialReportsRoutes = require("./financialReportsRoutes");
+const housekeepingRoutes = require("./housekeepingRoutes");
+const housekeepingScheduleRoutes = require("./housekeepingScheduleRoutes");
+const marketingReportsRoutes = require("./marketingReportsRoutes");
+const marketingRoutes = require("./marketingRoutes");
+const notificationsRoutes = require("./notificationsRoutes");
+const pricingRecommendationsRoutes = require("./pricingRecommendationsRoutes");
+const pricingRoutes = require("./pricingRoutes");
+const reportsExportRoutes = require("./reportsExportRoutes");
+const reportsRoutes = require("./reportsRoutes");
+const reportsStatsRoutes = require("./reportsStatsRoutes");
+const reviewsRoutes = require("./reviewsRoutes");
+const roomsRoutes = require("./roomsRoutes");
+const settingsRoutes = require("./settingsRoutes");
+const suppliersReportsRoutes = require("./suppliersReportsRoutes");
+const suppliersRoutes = require("./suppliersRoutes");
+const aiRoutes = require("./aiRoutes");
 
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    console.error("❌ Token mancante o malformato!");
-    return res.status(403).json({ error: "❌ Token mancante o malformato" });
-  }
+// ==================== 🚀 ESPORTAZIONE API ==================== //
 
-  const token = authHeader.split(" ")[1];
-  console.log("📌 Token ricevuto:", token);
+// 📌 Bookings
+exports.getBookings = functions.https.onRequest(bookingsRoutes.getBookings);
+exports.getBookingsReports = functions.https.onRequest(
+  bookingsRoutes.getBookingsReports
+);
 
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    console.log(
-      "✅ Token verificato con successo. Dati ricevuti:",
-      decodedToken
-    );
+// 📌 Channel Manager
+exports.syncChannelManager = functions.https.onRequest(
+  channelManagerRoutes.syncChannelManager
+);
 
-    // Log extra per verificare i dati importanti del token
-    console.log("🔹 UID:", decodedToken.uid);
-    console.log("🔹 Email:", decodedToken.email);
-    console.log("🔹 Expira:", new Date(decodedToken.exp * 1000).toISOString());
+// 📌 Cleaning Reports
+exports.getCleaningReports = functions.https.onRequest(
+  cleaningReportsRoutes.getCleaningReports
+);
+exports.addCleaningReport = functions.https.onRequest(
+  cleaningReportsRoutes.addCleaningReport
+);
 
-    req.user = decodedToken;
-    next();
-  } catch (error) {
-    console.error("❌ Errore nella verifica del token:", error);
-    return res
-      .status(401)
-      .json({ error: "❌ Token non valido", details: error.message });
-  }
-};
+// 📌 Customers
+exports.getCustomers = functions.https.onRequest(
+  customersRoutes.getCustomersData
+);
+exports.addCustomer = functions.https.onRequest(customersRoutes.addCustomer);
+exports.updateCustomer = functions.https.onRequest(
+  customersRoutes.updateCustomer
+);
+exports.deleteCustomer = functions.https.onRequest(
+  customersRoutes.deleteCustomer
+);
 
-// Middleware per rimuovere il Rate Limiting temporaneamente
-const disableRateLimit = (req, res, next) => {
-  res.set("Access-Control-Allow-Origin", "*");
-  res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+// 📌 Customers Reports
+exports.getCustomersReports = functions.https.onRequest(
+  customersReportsRoutes.getCustomersReports
+);
+exports.addCustomerReport = functions.https.onRequest(
+  customersReportsRoutes.addCustomerReport
+);
 
-  console.log("🔄 Bypass Rate Limit per questa richiesta.");
-  next();
-};
+// 📌 Dashboard Overview
+exports.getDashboardOverview = functions.https.onRequest(
+  dashboardOverviewRoutes.getDashboardOverview
+);
 
-// 🔹 Correzione per la funzione `secureFunction`
-const secureFunction = (handler) =>
-  onRequest(async (req, res) => {
-    try {
-      await new Promise((resolve, reject) => {
-        disableRateLimit(req, res, async () => {
-          await verifyToken(req, res, (err) => {
-            if (err) return reject(err);
-            resolve();
-          });
-        });
-      });
+// 📌 Expenses
+exports.getExpenses = functions.https.onRequest(expensesRoutes.getExpenses);
+exports.addExpense = functions.https.onRequest(expensesRoutes.addExpense);
 
-      return handler(req, res);
-    } catch (error) {
-      console.error("❌ Errore in `secureFunction`:", error);
-      return res
-        .status(500)
-        .json({ error: "❌ Errore interno", details: error.message });
-    }
-  });
+// 📌 Financial Reports
+exports.importFinancialReports = functions.https.onRequest(
+  financialReportsRoutes.importFinancialReports
+);
 
-exports.getBookingsData = secureFunction(
-  require("./bookingsRoutes").getBookingsData
+// 📌 Housekeeping
+exports.getHousekeepingStatus = functions.https.onRequest(
+  housekeepingRoutes.getHousekeepingStatus
 );
-exports.getBookingsReports = secureFunction(
-  require("./bookingsReportsRoutes").getBookingsReports
+
+// 📌 Housekeeping Schedule
+exports.getHousekeepingSchedule = functions.https.onRequest(
+  housekeepingScheduleRoutes.generateHousekeepingSchedule
 );
-exports.syncChannelManager = secureFunction(
-  require("./channelManagerRoutes").syncChannelManager
+exports.updateHousekeepingSchedule = functions.https.onRequest(
+  housekeepingScheduleRoutes.updateHousekeepingSchedule
 );
-exports.getCleaningReports = secureFunction(
-  require("./cleaningReportsRoutes").getCleaningReports
+
+// 📌 Marketing Reports
+exports.getMarketingReports = functions.https.onRequest(
+  marketingReportsRoutes.getMarketingReports
 );
-exports.getCustomersReports = secureFunction(
-  require("./customersReportsRoutes").getCustomersReports
+exports.addMarketingReport = functions.https.onRequest(
+  marketingReportsRoutes.addMarketingReport
 );
-exports.getCustomers = secureFunction(
-  require("./customersRoutes").getCustomersData
+exports.updateMarketingReport = functions.https.onRequest(
+  marketingReportsRoutes.updateMarketingReport
 );
-exports.getDashboardOverview = secureFunction(
-  require("./dashboardOverviewRoutes").getDashboardOverview
+exports.deleteMarketingReport = functions.https.onRequest(
+  marketingReportsRoutes.deleteMarketingReport
 );
-exports.getExpenses = secureFunction(require("./expensesRoutes").getExpenses);
-exports.getFinances = secureFunction(require("./financesRoutes").getFinances);
-exports.importFinancialReports = secureFunction(
-  require("./financialReportsRoutes").importFinancialReports
+
+// 📌 Marketing (Campagne, Post Social)
+exports.getMarketingCampaigns = functions.https.onRequest(
+  marketingRoutes.getMarketingCampaigns
 );
-exports.getHousekeepingStatus = secureFunction(
-  require("./housekeepingRoutes").getHousekeepingStatus
+exports.addMarketingCampaign = functions.https.onRequest(
+  marketingRoutes.addMarketingCampaign
 );
-exports.getHousekeepingSchedule = secureFunction(
-  require("./housekeepingScheduleRoutes").generateHousekeepingSchedule
+exports.getSocialMediaPosts = functions.https.onRequest(
+  marketingRoutes.getSocialMediaPosts
 );
-exports.getMarketingReports = secureFunction(
-  require("./marketingReportsRoutes").getMarketingReports
+exports.createSocialPost = functions.https.onRequest(
+  marketingRoutes.createSocialPost
 );
-exports.getMarketingCampaigns = secureFunction(
-  require("./marketingRoutes").getMarketingCampaigns
+exports.deleteSocialPost = functions.https.onRequest(
+  marketingRoutes.deleteSocialPost
 );
-exports.getNotifications = secureFunction(
-  require("./notificationsRoutes").getNotifications
+
+// 📌 Notifications
+exports.getNotifications = functions.https.onRequest(
+  notificationsRoutes.getNotifications
 );
-exports.getUnreadNotificationsCount = secureFunction(
-  require("./notificationsRoutes").getUnreadNotificationsCount
+exports.getUnreadNotificationsCount = functions.https.onRequest(
+  notificationsRoutes.getUnreadNotificationsCount
 );
-exports.getPricingRecommendations = secureFunction(
-  require("./pricingRecommendationsRoutes").getPricingRecommendations
+exports.markNotificationAsRead = functions.https.onRequest(
+  notificationsRoutes.markNotificationAsRead
 );
-exports.getRoomPricing = secureFunction(
-  require("./pricingRoutes").getRoomPricing
+exports.markAllNotificationsAsRead = functions.https.onRequest(
+  notificationsRoutes.markAllNotificationsAsRead
 );
-exports.updateRoomPricing = secureFunction(
-  require("./pricingRoutes").updateRoomPricing
+
+// 📌 Pricing
+exports.getPricingRecommendations = functions.https.onRequest(
+  aiRoutes.getPricingRecommendations
 );
-exports.exportReports = secureFunction(
-  require("./reportsExportRoutes").exportReports
+exports.getRoomPricing = functions.https.onRequest(
+  pricingRoutes.getRoomPricing
 );
-exports.getReports = secureFunction(require("./reportsRoutes").getReports);
-exports.createReport = secureFunction(require("./reportsRoutes").createReport);
-exports.getReportsStats = secureFunction(
-  require("./reportsStatsRoutes").getReportsStats
+exports.updateRoomPricing = functions.https.onRequest(
+  pricingRoutes.updateRoomPricing
 );
-exports.getReviews = secureFunction(require("./reviewsRoutes").getReviews);
-exports.addReview = secureFunction(require("./reviewsRoutes").addReview);
-exports.getPreferences = secureFunction(
-  require("./settingsRoutes").getPreferences
+exports.addRoomPricing = functions.https.onRequest(
+  pricingRoutes.addRoomPricing
 );
-exports.updatePreferences = secureFunction(
-  require("./settingsRoutes").updatePreferences
+exports.deleteRoomPricing = functions.https.onRequest(
+  pricingRoutes.deleteRoomPricing
 );
-exports.getStructureSettings = secureFunction(
-  require("./settingsRoutes").getStructureSettings
+
+// 📌 Reports
+exports.getReports = functions.https.onRequest(reportsRoutes.getReports);
+exports.createReport = functions.https.onRequest(reportsRoutes.createReport);
+exports.updateReport = functions.https.onRequest(reportsRoutes.updateReport);
+exports.deleteReport = functions.https.onRequest(reportsRoutes.deleteReport);
+
+// 📌 Reports Export
+exports.exportReports = functions.https.onRequest(
+  reportsExportRoutes.exportReports
 );
-exports.updateStructureSettings = secureFunction(
-  require("./settingsRoutes").updateStructureSettings
+
+// 📌 Reports Stats
+exports.getReportsStats = functions.https.onRequest(
+  reportsStatsRoutes.getReportsStats
 );
-exports.getSecuritySettings = secureFunction(
-  require("./settingsRoutes").getSecuritySettings
+
+// 📌 Reviews
+exports.getReviews = functions.https.onRequest(reviewsRoutes.getReviews);
+exports.addReview = functions.https.onRequest(reviewsRoutes.addReview);
+exports.updateReview = functions.https.onRequest(reviewsRoutes.updateReview);
+exports.deleteReview = functions.https.onRequest(reviewsRoutes.deleteReview);
+
+// 📌 Rooms
+exports.getRooms = functions.https.onRequest(roomsRoutes.getRooms);
+exports.createRoom = functions.https.onRequest(roomsRoutes.createRoom);
+exports.updateRoom = functions.https.onRequest(roomsRoutes.updateRoom);
+exports.deleteRoom = functions.https.onRequest(roomsRoutes.deleteRoom);
+
+// 📌 Settings
+exports.getPreferences = functions.https.onRequest(
+  settingsRoutes.preferencesSettings
 );
-exports.getSuppliersReports = secureFunction(
-  require("./suppliersReportsRoutes").getSuppliersReports
+exports.updatePreferences = functions.https.onRequest(
+  settingsRoutes.preferencesSettings
 );
-exports.addSupplierReport = secureFunction(
-  require("./suppliersReportsRoutes").addSupplierReport
+exports.getStructureSettings = functions.https.onRequest(
+  settingsRoutes.structureSettings
 );
-exports.getSuppliers = secureFunction(
-  require("./suppliersRoutes").getSuppliers
+exports.updateStructureSettings = functions.https.onRequest(
+  settingsRoutes.structureSettings
 );
-exports.addSupplier = secureFunction(require("./suppliersRoutes").addSupplier);
-exports.chatWithAI = secureFunction(require("./aiRoutes").chatWithAI);
+exports.getSecuritySettings = functions.https.onRequest(
+  settingsRoutes.securitySettings
+);
+
+// 📌 Suppliers
+exports.getSuppliers = functions.https.onRequest(suppliersRoutes.getSuppliers);
+exports.addSupplier = functions.https.onRequest(suppliersRoutes.addSupplier);
+exports.updateSupplier = functions.https.onRequest(
+  suppliersRoutes.updateSupplier
+);
+exports.deleteSupplier = functions.https.onRequest(
+  suppliersRoutes.deleteSupplier
+);
+
+// 📌 Suppliers Reports
+exports.getSuppliersReports = functions.https.onRequest(
+  suppliersReportsRoutes.getSuppliersReports
+);
+exports.addSupplierReport = functions.https.onRequest(
+  suppliersReportsRoutes.addSupplierReport
+);
+
+// 📌 AI Chat (hub e chat dell'AI)
+exports.chatWithAI = functions.https.onRequest(aiRoutes.chatWithAI);

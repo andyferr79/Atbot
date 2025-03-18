@@ -7,53 +7,53 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// Middleware: verifica token
-const verifyToken = async (req, res) => {
+// ✅ Middleware autenticazione riutilizzabile
+async function authenticate(req) {
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    res.status(403).json({ error: "❌ Token mancante" });
-    return false;
-  }
+  if (!token) throw { status: 403, message: "❌ Token mancante" };
   try {
-    await admin.auth().verifyIdToken(token);
-    return true;
+    return await admin.auth().verifyIdToken(token);
   } catch (error) {
     functions.logger.error("❌ Token non valido:", error);
-    res.status(401).json({ error: "❌ Token non valido" });
-    return false;
+    throw { status: 401, message: "❌ Token non valido" };
   }
-};
+}
 
-// Middleware: rate limiting via Firestore
-const checkRateLimit = async (req, res, windowMs = 10 * 60 * 1000) => {
-  const ip =
-    req.headers["x-forwarded-for"] ||
-    req.connection?.remoteAddress ||
-    "unknown_ip";
-  const now = Date.now();
+// ✅ Middleware Rate Limiting avanzato
+async function checkRateLimit(ip, maxRequests, windowMs) {
   const rateDocRef = db.collection("RateLimits").doc(ip);
   const rateDoc = await rateDocRef.get();
+  const now = Date.now();
 
-  if (rateDoc.exists && now - rateDoc.data().lastRequest < windowMs) {
-    res.status(429).json({ error: "❌ Troppe richieste. Riprova più tardi." });
-    return false;
+  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
+
+  if (now - data.firstRequest < windowMs) {
+    if (data.count >= maxRequests) {
+      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
+    }
+    data.count++;
+  } else {
+    data = { count: 1, firstRequest: now };
   }
 
-  await rateDocRef.set({ lastRequest: now });
-  return true;
-};
+  await rateDocRef.set(data);
+}
 
-// 📌 Recupera tariffe attuali camere
+// 📌 GET - Recuperare tutte le tariffe delle camere
 exports.getRoomPricing = functions.https.onRequest(async (req, res) => {
   if (req.method !== "GET")
     return res.status(405).json({ error: "❌ Usa GET." });
-  if (!(await verifyToken(req, res))) return;
-  if (!(await checkRateLimit(req, res))) return;
 
   try {
-    const pricingSnapshot = await db.collection("RoomPricing").get();
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 50, 10 * 60 * 1000);
 
-    const prices = pricingSnapshot.docs.map((doc) => ({
+    const snapshot = await db.collection("RoomPricing").get();
+    const prices = snapshot.docs.map((doc) => ({
       id: doc.id,
       roomType: doc.data().roomType || "N/A",
       currentPrice: doc.data().currentPrice || 0,
@@ -61,46 +61,112 @@ exports.getRoomPricing = functions.https.onRequest(async (req, res) => {
       lastUpdated: doc.data().lastUpdated?.toDate().toISOString() || "N/A",
     }));
 
-    res.json({ prices });
+    res.json(prices);
   } catch (error) {
-    functions.logger.error("❌ Errore recupero tariffe camere:", error);
-    res.status(500).json({
-      error: "Errore nel recupero delle tariffe",
-      details: error.message,
-    });
+    functions.logger.error("❌ Errore recupero tariffe:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 Aggiorna tariffa manualmente
+// 📌 POST - Aggiungi nuova tariffa camera
+exports.addRoomPricing = functions.https.onRequest(async (req, res) => {
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "❌ Usa POST." });
+
+  try {
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 30, 10 * 60 * 1000);
+
+    const { roomType, currentPrice } = req.body;
+
+    if (
+      !roomType ||
+      !currentPrice ||
+      isNaN(currentPrice) ||
+      currentPrice <= 0
+    ) {
+      return res.status(400).json({ error: "❌ Dati non validi." });
+    }
+
+    const newPricing = {
+      roomType,
+      currentPrice: parseFloat(currentPrice),
+      suggestedPrice: null,
+      lastUpdated: new Date(),
+    };
+
+    const docRef = await db.collection("RoomPricing").add(newPricing);
+    res.json({ id: docRef.id, ...newPricing });
+  } catch (error) {
+    functions.logger.error("❌ Errore aggiunta tariffa:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
+  }
+});
+
+// 📌 PUT - Aggiorna tariffa esistente
 exports.updateRoomPricing = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT")
+  if (req.method !== "PUT") {
     return res.status(405).json({ error: "❌ Usa PUT." });
-  if (!(await verifyToken(req, res))) return;
-  if (!(await checkRateLimit(req, res))) return;
-
-  const { id, newPrice } = req.body;
-
-  if (!id || !newPrice || isNaN(newPrice) || parseFloat(newPrice) <= 0) {
-    return res
-      .status(400)
-      .json({ error: "❌ ID e nuovo prezzo valido obbligatori." });
   }
 
   try {
-    await db
-      .collection("RoomPricing")
-      .doc(id)
-      .update({
-        currentPrice: parseFloat(newPrice),
-        lastUpdated: new Date(),
-      });
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 30, 10 * 60 * 1000);
 
-    res.json({ message: "✅ Tariffa aggiornata con successo", id });
+    const { pricingId, updates } = req.body;
+    if (!pricingId || !updates || updates.currentPrice <= 0) {
+      return res.status(400).json({ error: "❌ Dati mancanti o invalidi." });
+    }
+
+    updates.lastUpdated = new Date();
+
+    await db.collection("RoomPricing").doc(pricingId).update(updates);
+    res.json({ message: "✅ Tariffa aggiornata." });
   } catch (error) {
     functions.logger.error("❌ Errore aggiornamento tariffa:", error);
-    res.status(500).json({
-      error: "Errore nell'aggiornamento della tariffa",
-      details: error.message,
-    });
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
+  }
+});
+
+// 📌 DELETE - Eliminare una tariffa
+exports.deleteRoomPricing = functions.https.onRequest(async (req, res) => {
+  if (req.method !== "DELETE") {
+    return res.status(405).json({ error: "❌ Usa DELETE." });
+  }
+
+  try {
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 20, 10 * 60 * 1000);
+
+    const { pricingId } = req.query;
+    if (!pricingId) {
+      return res.status(400).json({ error: "❌ pricingId richiesto." });
+    }
+
+    await db.collection("RoomPricing").doc(pricingId).delete();
+    return res.json({ message: "✅ Tariffa eliminata." });
+  } catch (error) {
+    functions.logger.error("❌ Errore eliminazione tariffa:", error);
+    return res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
   }
 });

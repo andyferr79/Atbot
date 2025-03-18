@@ -2,93 +2,163 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const axios = require("axios");
 
-// ✅ Inizializzazione Firebase Admin
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
 const db = admin.firestore();
-
-// 📌 URL backend AI (da aggiornare in produzione)
 const AI_BACKEND_URL = "http://127.0.0.1:8000";
 
-// Middleware: verifica token
-const verifyToken = async (req, res) => {
+// ✅ Middleware autenticazione riutilizzabile
+const authenticate = async (req) => {
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    res.status(403).json({ error: "❌ Token mancante" });
-    return false;
-  }
+  if (!token) throw { status: 403, message: "❌ Token mancante" };
   try {
     await admin.auth().verifyIdToken(token);
-    return true;
   } catch (error) {
     functions.logger.error("❌ Token non valido:", error);
-    res.status(401).json({ error: "❌ Token non valido" });
-    return false;
+    throw { status: 401, message: "❌ Token non valido" };
   }
 };
 
-// Middleware: rate limiting Firestore
-const checkRateLimit = async (req, res, windowMs = 10 * 60 * 1000) => {
-  const ip =
-    req.headers["x-forwarded-for"] ||
-    req.connection?.remoteAddress ||
-    "unknown_ip";
-  const now = Date.now();
+// ✅ Middleware Rate Limiting riutilizzabile
+const checkRateLimit = async (ip, maxRequests, windowMs) => {
   const rateDocRef = db.collection("RateLimits").doc(ip);
   const rateDoc = await rateDocRef.get();
+  const now = Date.now();
 
-  if (rateDoc.exists && now - rateDoc.data().lastRequest < windowMs) {
-    res
-      .status(429)
-      .json({ error: "❌ Troppe richieste. Attendi prima di riprovare." });
-    return false;
+  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
+
+  if (now - data.firstRequest < windowMs) {
+    if (data.count >= maxRequests) {
+      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
+    }
+    data.count++;
+  } else {
+    data = { count: 1, firstRequest: now };
   }
 
-  await rateDocRef.set({ lastRequest: now });
-  return true;
+  await rateDocRef.set(data);
 };
 
-// 📌 Ottiene raccomandazioni pricing con AI
+// 📌 GET - Ottiene raccomandazioni prezzi AI
 exports.getPricingRecommendations = functions.https.onRequest(
   async (req, res) => {
-    if (req.method !== "GET")
+    if (req.method !== "GET") {
       return res.status(405).json({ error: "❌ Usa GET." });
-    if (!(await verifyToken(req, res))) return;
-    if (!(await checkRateLimit(req, res))) return;
+    }
 
     try {
-      // 📌 Recupero tariffe attuali da Firestore
+      await authenticate(req);
+      const ip =
+        req.headers["x-forwarded-for"] ||
+        req.connection?.remoteAddress ||
+        "unknown_ip";
+      await checkRateLimit(ip, 50, 10 * 60 * 1000);
+
       const pricingSnapshot = await db.collection("RoomPricing").get();
       const pricingData = pricingSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
 
-      // 📡 Chiamata backend AI per ottimizzazione pricing
       const aiResponse = await axios.post(
         `${AI_BACKEND_URL}/pricing/optimize`,
         { pricingData }
       );
 
       if (aiResponse.status !== 200 || !aiResponse.data) {
-        throw new Error("Risposta non valida dal backend AI.");
+        throw {
+          status: 500,
+          message: "❌ Risposta non valida dal backend AI.",
+        };
       }
 
-      return res.json({
-        message: "✅ Raccomandazioni di prezzo ottenute con successo!",
+      res.json({
+        message: "✅ Raccomandazioni di prezzo ottenute!",
         recommendations: aiResponse.data.recommendations,
+        generatedAt: new Date().toISOString(),
       });
     } catch (error) {
-      functions.logger.error(
-        "❌ Errore recupero raccomandazioni pricing:",
-        error
-      );
-      return res.status(500).json({
-        error: "Errore nel recupero delle raccomandazioni di prezzo",
-        details: error.message,
+      functions.logger.error("❌ Errore raccomandazioni pricing:", error);
+      res
+        .status(error.status || 500)
+        .json({ error: error.message || "Errore interno" });
+    }
+  }
+);
+
+// 📌 POST - Salva manualmente le raccomandazioni di pricing in Firestore
+exports.savePricingRecommendations = functions.https.onRequest(
+  async (req, res) => {
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "❌ Usa POST." });
+    }
+
+    try {
+      await authenticate(req);
+      const ip =
+        req.headers["x-forwarded-for"] ||
+        req.connection?.remoteAddress ||
+        "unknown_ip";
+      await checkRateLimit(ip, 30, 10 * 60 * 1000);
+
+      const { recommendations } = req.body;
+      if (!recommendations) {
+        return res.status(400).json({ error: "❌ recommendations richieste." });
+      }
+
+      await db.collection("PricingRecommendations").doc("latest").set({
+        recommendations,
+        savedAt: new Date(),
       });
+
+      res.json({ message: "✅ Raccomandazioni prezzi salvate con successo." });
+    } catch (error) {
+      functions.logger.error("❌ Errore salvataggio raccomandazioni:", error);
+      res
+        .status(error.status || 500)
+        .json({ error: error.message || "Errore interno" });
+    }
+  }
+);
+
+// 📌 GET - Recupera ultime raccomandazioni salvate
+exports.getLatestPricingRecommendations = functions.https.onRequest(
+  async (req, res) => {
+    if (req.method !== "GET") {
+      return res.status(405).json({ error: "❌ Usa GET." });
+    }
+
+    try {
+      await authenticate(req);
+      const ip =
+        req.headers["x-forwarded-for"] ||
+        req.connection?.remoteAddress ||
+        "unknown_ip";
+      await checkRateLimit(ip, 50, 10 * 60 * 1000);
+
+      const recommendationsDoc = await db
+        .collection("PricingRecommendations")
+        .doc("latest")
+        .get();
+
+      if (!recommendationsDoc.exists) {
+        return res
+          .status(404)
+          .json({ error: "⚠️ Nessuna raccomandazione trovata." });
+      }
+
+      const data = recommendationsDoc.data();
+      res.json({
+        recommendations: data.recommendations,
+        generatedAt: data.generatedAt?.toDate().toISOString() || "N/A",
+      });
+    } catch (error) {
+      functions.logger.error("❌ Errore recupero raccomandazioni:", error);
+      res
+        .status(error.status || 500)
+        .json({ error: error.message || "Errore interno" });
     }
   }
 );

@@ -39,123 +39,134 @@ async function checkRateLimit(ip, maxRequests, windowMs) {
   await rateDocRef.set(data);
 }
 
-// 📌 GET - Recupera tutti i fornitori
-exports.getSuppliers = functions.https.onRequest(async (req, res) => {
+// 📌 GET - Recupera tutte le camere
+exports.getRooms = functions.https.onRequest(async (req, res) => {
   if (req.method !== "GET")
     return res.status(405).json({ error: "❌ Usa GET." });
 
   try {
     await authenticate(req);
-    const snapshot = await db.collection("Suppliers").get();
-    const suppliers = snapshot.docs.map((doc) => ({
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 50, 10 * 60 * 1000);
+
+    const roomsSnapshot = await db.collection("Rooms").get();
+    const rooms = roomsSnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate().toISOString() || "N/A",
     }));
 
-    res.json({ suppliers });
+    res.json({ totalRooms: rooms.length, rooms });
   } catch (error) {
-    functions.logger.error("❌ Errore recupero fornitori:", error);
+    functions.logger.error("❌ Errore recupero camere:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 GET - Ottiene un fornitore per ID
-exports.getSupplierById = functions.https.onRequest(async (req, res) => {
+// 📌 GET - Recupera camera per ID
+exports.getRoomById = functions.https.onRequest(async (req, res) => {
   if (req.method !== "GET")
     return res.status(405).json({ error: "❌ Usa GET." });
 
   try {
     await authenticate(req);
     const { id } = req.query;
-    if (!id) return res.status(400).json({ error: "❌ ID mancante." });
+    if (!id)
+      return res.status(400).json({ error: "❌ ID della camera mancante." });
 
-    const doc = await db.collection("Suppliers").doc(id).get();
-    if (!doc.exists)
-      return res.status(404).json({ error: "❌ Fornitore non trovato." });
+    const roomDoc = await db.collection("Rooms").doc(id).get();
+    if (!roomDoc.exists)
+      return res.status(404).json({ error: "❌ Camera non trovata." });
 
-    res.json({ id: doc.id, ...doc.data() });
+    res.json({ id: roomDoc.id, ...roomDoc.data() });
   } catch (error) {
-    functions.logger.error("❌ Errore recupero fornitore:", error);
+    functions.logger.error("❌ Errore recupero camera:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 POST - Aggiunge nuovo fornitore
-exports.addSupplier = functions.https.onRequest(async (req, res) => {
+// 📌 POST - Crea nuova camera
+exports.createRoom = functions.https.onRequest(async (req, res) => {
   if (req.method !== "POST")
     return res.status(405).json({ error: "❌ Usa POST." });
 
   try {
     await authenticate(req);
-    const { name, contact, email, phone } = req.body;
+    const { name, type, price, status } = req.body;
+    if (!name || !type || !price || !status) {
+      return res.status(400).json({ error: "❌ Tutti i campi obbligatori." });
+    }
 
-    if (!name || !contact)
-      return res.status(400).json({ error: "❌ Campi obbligatori mancanti." });
-
-    const supplier = {
+    const newRoom = {
       name,
-      contact,
-      email: email || "",
-      phone: phone || "",
+      type,
+      price: parseFloat(price),
+      status,
       createdAt: new Date(),
     };
 
-    const docRef = await db.collection("Suppliers").add(supplier);
-    res.json({ id: docRef.id, ...supplier });
+    const docRef = await db.collection("Rooms").add(newRoom);
+    res.status(201).json({ id: docRef.id, ...newRoom });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiunta fornitore:", error);
+    functions.logger.error("❌ Errore creazione camera:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 PUT - Aggiorna un fornitore
-exports.updateSupplier = functions.https.onRequest(async (req, res) => {
+// 📌 PUT - Aggiorna camera
+exports.updateRoom = functions.https.onRequest(async (req, res) => {
   if (req.method !== "PUT")
     return res.status(405).json({ error: "❌ Usa PUT." });
 
   try {
     await authenticate(req);
-    const { id, updates } = req.body;
-    if (!id || !updates) {
+    const { roomId, updates } = req.body;
+    if (!roomId || !updates) {
       return res
         .status(400)
-        .json({ error: "❌ ID e aggiornamenti richiesti." });
+        .json({ error: "❌ roomId e aggiornamenti richiesti." });
     }
 
     await db
-      .collection("Suppliers")
-      .doc(id)
-      .update({ ...updates, updatedAt: new Date() });
-    res.json({ message: "✅ Fornitore aggiornato." });
+      .collection("Rooms")
+      .doc(roomId)
+      .update({
+        ...updates,
+        updatedAt: new Date(),
+      });
+
+    res.json({ message: "✅ Camera aggiornata." });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento fornitore:", error);
+    functions.logger.error("❌ Errore aggiornamento camera:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 DELETE - Elimina fornitore
-exports.deleteSupplier = functions.https.onRequest(async (req, res) => {
+// 📌 DELETE - Elimina camera
+exports.deleteRoom = functions.https.onRequest(async (req, res) => {
   if (req.method !== "DELETE")
     return res.status(405).json({ error: "❌ Usa DELETE." });
 
   try {
     await authenticate(req);
-    const { id } = req.query;
-    if (!id) return res.status(400).json({ error: "❌ ID mancante." });
+    const { roomId } = req.query;
+    if (!roomId) return res.status(400).json({ error: "❌ roomId richiesto." });
 
-    await db.collection("Suppliers").doc(id).delete();
-    res.json({ message: "✅ Fornitore eliminato con successo." });
+    await db.collection("Rooms").doc(roomId).delete();
+    res.json({ message: "✅ Camera eliminata." });
   } catch (error) {
-    functions.logger.error("❌ Errore eliminazione fornitore:", error);
+    functions.logger.error("❌ Errore eliminazione camera:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });

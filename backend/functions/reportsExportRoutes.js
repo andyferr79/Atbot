@@ -10,113 +10,120 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// Middleware verifica token
-const verifyToken = async (req, res) => {
+// ✅ Middleware autenticazione riutilizzabile
+async function authenticate(req) {
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    res.status(403).json({ error: "❌ Token mancante" });
-    return false;
-  }
+  if (!token) throw { status: 403, message: "❌ Token mancante" };
   try {
-    await admin.auth().verifyIdToken(token);
-    return true;
+    return await admin.auth().verifyIdToken(token);
   } catch (error) {
     functions.logger.error("❌ Token non valido:", error);
-    res.status(401).json({ error: "❌ Token non valido" });
-    return false;
+    throw { status: 401, message: "❌ Token non valido" };
   }
-};
+}
 
-// Middleware rate limiting Firestore
-const checkRateLimit = async (req, res, windowMs = 10 * 60 * 1000) => {
-  const ip =
-    req.headers["x-forwarded-for"] ||
-    req.connection?.remoteAddress ||
-    "unknown_ip";
-  const now = Date.now();
+// ✅ Middleware Rate Limiting
+async function checkRateLimit(ip, maxRequests, windowMs) {
   const rateDocRef = db.collection("RateLimits").doc(ip);
   const rateDoc = await rateDocRef.get();
+  const now = Date.now();
 
-  if (rateDoc.exists && now - rateDoc.data().lastRequest < windowMs) {
-    res
-      .status(429)
-      .json({ error: "❌ Troppe richieste. Attendi prima di riprovare." });
-    return false;
+  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
+
+  if (now - data.firstRequest < windowMs) {
+    if (data.count >= maxRequests) {
+      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
+    }
+    data.count++;
+  } else {
+    data = { count: 1, firstRequest: now };
   }
 
-  await rateDocRef.set({ lastRequest: now });
-  return true;
-};
+  await rateDocRef.set(data);
+}
 
-// 📌 Esportazione report in PDF, CSV, Excel
+// 📌 Esporta report in formato PDF, CSV, Excel
 exports.exportReports = functions.https.onRequest(async (req, res) => {
   if (req.method !== "GET")
     return res.status(405).json({ error: "❌ Usa GET." });
-  if (!(await verifyToken(req, res))) return;
-  if (!(await checkRateLimit(req, res, 10 * 60 * 1000))) return;
-
-  const { format, reportType } = req.query;
-  const allowedFormats = ["pdf", "csv", "excel"];
-
-  if (!format || !allowedFormats.includes(format.toLowerCase())) {
-    return res
-      .status(400)
-      .json({ error: "❌ Formato non valido. Usa 'pdf', 'csv' o 'excel'." });
-  }
 
   try {
-    const snapshot = await db
-      .collection("Reports")
-      .where("type", "==", reportType)
-      .get();
-    if (snapshot.empty) {
-      return res.status(404).json({ error: "❌ Nessun report trovato." });
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 30, 10 * 60 * 1000);
+
+    const { format, type } = req.query;
+
+    if (!["pdf", "csv", "excel"].includes(format?.toLowerCase())) {
+      return res.status(400).json({ error: "❌ Formato non valido." });
     }
 
-    const reports = snapshot.docs.map((doc) => doc.data());
+    const snapshot = await db
+      .collection("Reports")
+      .where("type", "==", type)
+      .get();
+    if (snapshot.empty) {
+      return res.status(404).json({ error: "⚠️ Nessun report trovato." });
+    }
 
-    if (format.toLowerCase() === "csv") {
+    const reports = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate().toISOString() || "N/A",
+    }));
+
+    if (format === "csv") {
       const csv = json2csv(reports);
       res.setHeader("Content-disposition", "attachment; filename=report.csv");
       res.setHeader("Content-Type", "text/csv");
-      res.status(200).send(csv);
-    } else if (format.toLowerCase() === "excel") {
-      const workbook = new excelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Report");
+      return res.status(200).send(csv);
+    }
 
-      worksheet.columns = Object.keys(reports[0]).map((key) => ({
+    if (format === "excel") {
+      const workbook = new excelJS.Workbook();
+      const sheet = workbook.addWorksheet("Report");
+
+      sheet.columns = Object.keys(reports[0]).map((key) => ({
         header: key,
         key,
       }));
-      reports.forEach((data) => worksheet.addRow(data));
+      sheet.addRows(reports);
 
-      res.setHeader("Content-disposition", "attachment; filename=report.xlsx");
       res.setHeader(
         "Content-Type",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       );
+      res.setHeader("Content-Disposition", "attachment; filename=report.xlsx");
       await workbook.xlsx.write(res);
-      res.end();
-    } else if (format.toLowerCase() === "pdf") {
-      const doc = new PDFDocument();
-      res.setHeader("Content-disposition", "attachment; filename=report.pdf");
-      res.setHeader("Content-Type", "application/pdf");
-      doc.pipe(res);
-      doc.fontSize(16).text("Report Esportato", { underline: true }).moveDown();
+      return res.end();
+    }
 
+    if (format === "pdf") {
+      const doc = new PDFDocument();
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "attachment; filename=report.pdf");
+      doc.pipe(res);
+
+      doc.fontSize(18).text("Report StayPro", { underline: true });
       reports.forEach((report) => {
+        doc.moveDown();
         Object.entries(report).forEach(([key, value]) => {
           doc.fontSize(12).text(`${key}: ${value}`);
         });
-        doc.moveDown();
       });
+
       doc.end();
+      return;
     }
+
+    res.status(400).json({ error: "❌ Formato non valido." });
   } catch (error) {
     functions.logger.error("❌ Errore esportazione report:", error);
-    res.status(500).json({
-      error: "Errore nell'esportazione del report",
-      details: error.message,
-    });
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
   }
 });

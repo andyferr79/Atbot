@@ -7,153 +7,142 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// Middleware per verifica token
-const verifyToken = async (req, res) => {
+// ✅ Middleware autenticazione riutilizzabile
+async function authenticate(req) {
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    res.status(403).json({ error: "❌ Token mancante" });
-    return false;
-  }
+  if (!token) throw { status: 403, message: "❌ Token mancante" };
   try {
     await admin.auth().verifyIdToken(token);
-    return true;
   } catch (error) {
     functions.logger.error("❌ Token non valido:", error);
-    res.status(401).json({ error: "❌ Token non valido" });
-    return false;
+    throw { status: 401, message: "❌ Token non valido" };
   }
-};
+}
 
-// Middleware rate limiting Firestore
-const checkRateLimit = async (req, res, windowMs = 10 * 60 * 1000) => {
-  const ip =
-    req.headers["x-forwarded-for"] ||
-    req.connection?.remoteAddress ||
-    "unknown_ip";
-  const now = Date.now();
+// ✅ Middleware Rate Limiting avanzato
+async function checkRateLimit(ip, maxRequests, windowMs) {
   const rateDocRef = db.collection("RateLimits").doc(ip);
   const rateDoc = await rateDocRef.get();
+  const now = Date.now();
 
-  if (rateDoc.exists && now - rateDoc.data().lastRequest < windowMs) {
+  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
+
+  if (now - data.firstRequest < windowMs) {
+    if (data.count >= maxRequests) {
+      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
+    }
+    data.count++;
+  } else {
+    data = { count: 1, firstRequest: now };
+  }
+
+  await rateDocRef.set(data);
+}
+
+// ✅ Funzione generica per recuperare impostazioni
+async function getSettings(docName) {
+  const doc = await db.collection("Settings").doc(docName).get();
+  if (!doc.exists)
+    throw { status: 404, message: "⚠️ Impostazioni non trovate." };
+  return doc.data();
+}
+
+// ✅ Funzione generica per aggiornare impostazioni
+async function updateSettings(docName, data) {
+  await db.collection("Settings").doc(docName).set(data, { merge: true });
+}
+
+// 📌 GET/PUT - Preferenze generali
+exports.preferencesSettings = functions.https.onRequest(async (req, res) => {
+  try {
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 50, 10 * 60 * 1000);
+
+    if (req.method === "GET") {
+      const preferences = await getSettings("preferences");
+      res.json(preferences);
+    } else if (req.method === "PUT") {
+      const preferences = req.body;
+      if (!preferences || typeof preferences !== "object") {
+        return res
+          .status(400)
+          .json({ error: "❌ Dati preferenze non validi." });
+      }
+      await updateSettings("preferences", preferences);
+      res.json({ message: "✅ Preferenze aggiornate." });
+    } else {
+      res.status(405).json({ error: "❌ Metodo non consentito." });
+    }
+  } catch (error) {
+    functions.logger.error("❌ Errore preferenze:", error);
     res
-      .status(429)
-      .json({ error: "❌ Troppe richieste. Attendi prima di riprovare." });
-    return false;
-  }
-
-  await rateDocRef.set({ lastRequest: now });
-  return true;
-};
-
-// 📌 Ottiene preferenze generali
-exports.getPreferences = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-  if (!(await verifyToken(req, res))) return;
-  if (!(await checkRateLimit(req, res))) return;
-
-  try {
-    const doc = await db.collection("Settings").doc("preferences").get();
-    if (!doc.exists)
-      return res.status(404).json({ error: "Preferenze non trovate" });
-    res.json(doc.data());
-  } catch (error) {
-    functions.logger.error("❌ Errore recupero preferenze:", error);
-    res.status(500).json({ error: error.message });
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 Aggiorna preferenze generali
-exports.updatePreferences = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT")
-    return res.status(405).json({ error: "❌ Usa PUT." });
-  if (!(await verifyToken(req, res))) return;
-  if (!(await checkRateLimit(req, res))) return;
-
-  const preferences = req.body;
-  if (!preferences || typeof preferences !== "object") {
-    return res.status(400).json({ error: "Dati preferenze non validi." });
-  }
-
+// 📌 GET/PUT - Configurazione struttura
+exports.structureSettings = functions.https.onRequest(async (req, res) => {
   try {
-    await db
-      .collection("Settings")
-      .doc("preferences")
-      .set(preferences, { merge: true });
-    res.json({ message: "✅ Preferenze aggiornate con successo." });
-  } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento preferenze:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 50, 10 * 60 * 1000);
 
-// 📌 Ottiene configurazione struttura
-exports.getStructureSettings = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-  if (!(await verifyToken(req, res))) return;
-  if (!(await checkRateLimit(req, res))) return;
-
-  try {
-    const doc = await db.collection("Settings").doc("structure").get();
-    if (!doc.exists)
-      return res
-        .status(404)
-        .json({ error: "Configurazione struttura non trovata" });
-    res.json(doc.data());
-  } catch (error) {
-    functions.logger.error(
-      "❌ Errore recupero configurazione struttura:",
-      error
-    );
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// 📌 Aggiorna configurazione struttura
-exports.updateStructureSettings = functions.https.onRequest(
-  async (req, res) => {
-    if (req.method !== "PUT")
-      return res.status(405).json({ error: "❌ Usa PUT." });
-    if (!(await verifyToken(req, res))) return;
-    if (!(await checkRateLimit(req, res))) return;
-
-    const structure = req.body;
-    if (!structure || typeof structure !== "object") {
-      return res.status(400).json({ error: "❌ Dati struttura non validi." });
+    if (req.method === "GET") {
+      const structure = await getSettings("structure");
+      res.json(structure);
+    } else if (req.method === "PUT") {
+      const structure = req.body;
+      if (!structure || typeof structure !== "object") {
+        return res.status(400).json({ error: "❌ Dati struttura non validi." });
+      }
+      await updateSettings("structure", structure);
+      res.json({ message: "✅ Configurazione struttura aggiornata." });
+    } else {
+      res.status(405).json({ error: "❌ Metodo non consentito." });
     }
-
-    try {
-      await db
-        .collection("Settings")
-        .doc("structure")
-        .set(structure, { merge: true });
-      res.json({
-        message: "✅ Configurazione struttura aggiornata con successo.",
-      });
-    } catch (error) {
-      functions.logger.error("❌ Errore aggiornamento struttura:", error);
-      res.status(500).json({ error: error.message });
-    }
-  }
-);
-
-// 📌 Ottiene impostazioni di sicurezza
-exports.getSecuritySettings = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-  if (!(await verifyToken(req, res))) return;
-  if (!(await checkRateLimit(req, res))) return;
-
-  try {
-    const doc = await db.collection("Settings").doc("security").get();
-    if (!doc.exists)
-      return res
-        .status(404)
-        .json({ error: "Impostazioni sicurezza non trovate" });
-    res.json(doc.data());
   } catch (error) {
-    functions.logger.error("❌ Errore recupero impostazioni sicurezza:", error);
-    res.status(500).json({ error: error.message });
+    functions.logger.error("❌ Errore configurazione struttura:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
+  }
+});
+
+// 📌 GET/PUT - Impostazioni sicurezza
+exports.securitySettings = functions.https.onRequest(async (req, res) => {
+  try {
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 50, 10 * 60 * 1000);
+
+    if (req.method === "GET") {
+      const security = await getSettings("security");
+      res.json(security);
+    } else if (req.method === "PUT") {
+      const security = req.body;
+      if (!security || typeof security !== "object") {
+        return res.status(400).json({ error: "❌ Dati sicurezza non validi." });
+      }
+      await updateSettings("security", security);
+      res.json({ message: "✅ Impostazioni sicurezza aggiornate." });
+    } else {
+      res.status(405).json({ error: "❌ Metodo non consentito." });
+    }
+  } catch (error) {
+    functions.logger.error("❌ Errore impostazioni sicurezza:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
   }
 });
