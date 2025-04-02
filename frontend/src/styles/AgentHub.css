@@ -1,0 +1,161 @@
+/* 📄 AgentHub.css */
+.agent-hub-container {
+  padding: 24px;
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #ffffff, #f4f7fa);
+  display: flex;
+  flex-direction: column;
+}
+
+.hub-header-container {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.hub-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 6px;
+}
+
+.hub-subtitle {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.hub-tabs-list {
+  margin-bottom: 16px;
+  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.icon {
+  margin-right: 6px;
+}
+
+/* 🧩 Card */
+.hub-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hub-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* 🧾 Overview */
+.overview-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* 📜 Scroll Area */
+.hub-scroll {
+  height: 400px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* ✅ Liste */
+.action-list,
+.chat-list,
+.document-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* 🎯 Action & Chat Item */
+.action-item,
+.chat-item,
+.document-item {
+  border: 1px solid #e5e7eb;
+  padding: 14px;
+  border-radius: 8px;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.chat-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ⚙️ Impostazioni */
+.hub-settings-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.hub-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+/* 📁 Documenti */
+.document-item {
+  padding: 16px;
+}
+
+.document-item .font-medium {
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.document-item .text-muted-foreground {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+/* 🌟 Icone extra stile */
+.action-item::before {
+  content: "⚙️";
+  margin-right: 12px;
+}
+
+.chat-item::before {
+  content: "💬";
+  margin-right: 12px;
+}
+
+.document-item::before {
+  content: "📄";
+  margin-right: 12px;
+}
+
+.hub-card:nth-child(1)::before {
+  content: "🧠";
+  margin-right: 8px;
+}
+
+.hub-card:nth-child(2)::before {
+  content: "⏳";
+  margin-right: 8px;
+}
+
+.hub-card:nth-child(3)::before {
+  content: "📢";
+  margin-right: 8px;
+}
+
+.hub-card:nth-child(4)::before {
+  content: "🛠️";
+  margin-right: 8px;
+}

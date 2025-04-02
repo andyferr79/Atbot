@@ -1,5 +1,6 @@
+// 📂 E:\ATBot\frontend\src\components\Sidebar.js
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom"; // Usa Link di React Router
+import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHome,
@@ -11,12 +12,12 @@ import {
   faTruck,
   faCog,
   faLifeRing,
-  faRobot, // Chatbot
-  faBell, // 🔔 Notifiche
-  faEnvelopeOpenText, // 📢 Comunicazioni ufficiali
+  faRobot,
+  faBell,
+  faEnvelopeOpenText,
 } from "@fortawesome/free-solid-svg-icons";
-import api from "../services/api"; // Importa API per recuperare notifiche
-import "../styles/sidebar.css"; // Stili CSS
+import api from "../services/api";
+import "../styles/sidebar.css";
 
 const Sidebar = () => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -28,13 +29,10 @@ const Sidebar = () => {
 
   const fetchUnreadCounts = async () => {
     try {
-      // Recupera il numero di notifiche non lette
       const notificationsResponse = await api.get(
         "/notifications/unread-count"
       );
       setUnreadNotifications(notificationsResponse.data.count);
-
-      // Recupera il numero di comunicazioni ufficiali non lette
       const announcementsResponse = await api.get(
         "/notifications/announcements/unread-count"
       );
@@ -46,13 +44,10 @@ const Sidebar = () => {
 
   return (
     <div className="sidebar">
-      {/* Header con logo */}
       <div className="sidebar-header">
         <img src="/logo.png" alt="StayPro Logo" className="sidebar-logo" />
         <h1>StayPro</h1>
       </div>
-
-      {/* Menu principale */}
       <ul className="sidebar-menu">
         <li>
           <Link to="/">
@@ -97,11 +92,7 @@ const Sidebar = () => {
           </Link>
         </li>
       </ul>
-
-      {/* Linea di separazione */}
       <hr className="sidebar-divider" />
-
-      {/* Sezione Notifiche e Comunicazioni */}
       <ul className="sidebar-menu">
         <li>
           <Link to="/notifications">
@@ -122,11 +113,7 @@ const Sidebar = () => {
           </Link>
         </li>
       </ul>
-
-      {/* Linea di separazione */}
       <hr className="sidebar-divider" />
-
-      {/* Sezione impostazioni */}
       <ul className="sidebar-menu">
         <li>
           <Link to="/settings">
@@ -135,11 +122,7 @@ const Sidebar = () => {
           </Link>
         </li>
       </ul>
-
-      {/* Linea di separazione */}
       <hr className="sidebar-divider" />
-
-      {/* Sezione Assistenza e Chat */}
       <ul className="sidebar-menu">
         <li>
           <Link to="/support">
@@ -151,6 +134,12 @@ const Sidebar = () => {
           <Link to="/chatbox">
             <FontAwesomeIcon icon={faRobot} className="icon" />
             <span>Chat IA</span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/agent-hub">
+            <FontAwesomeIcon icon={faRobot} className="icon" />
+            <span>HUB Agente IA</span>
           </Link>
         </li>
       </ul>

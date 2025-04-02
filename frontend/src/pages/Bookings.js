@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../styles/bookings.css";
-import {
-  getBookings,
-  updateBooking,
-  deleteBooking,
-  addBooking,
-} from "../services/api";
+import { getBookings, deleteBooking, addBooking } from "../services/api";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -154,6 +149,23 @@ const Bookings = () => {
             onView={(view) => setCalendarView(view)}
             style={{ height: 500 }}
           />
+        </section>
+
+        <section className="booking-list">
+          <h3>Elenco Prenotazioni</h3>
+          <ul>
+            {filteredBookings.map((booking) => (
+              <li key={booking.id}>
+                <span>
+                  {booking.customerName} ({booking.checkInDate} -{" "}
+                  {booking.checkOutDate})
+                </span>
+                <button onClick={() => handleDelete(booking.id)}>
+                  Elimina
+                </button>
+              </li>
+            ))}
+          </ul>
         </section>
       </main>
     </div>

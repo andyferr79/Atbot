@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import "../styles/StayProDashboard.css";
 
-import "../styles/StayProDashboard.css"; // Stile aggiornato
 import {
   LineChart,
   Line,
@@ -18,7 +18,7 @@ import {
   ComposedChart,
 } from "recharts";
 
-// 📊 Dati per i grafici
+// 📊 Dati statici per i grafici
 const prenotazioniGiornaliere = [
   { giorno: "Lun", prenotazioni: 12 },
   { giorno: "Mar", prenotazioni: 18 },
@@ -55,7 +55,6 @@ const cancellazioniVsConfermate = [
   { mese: "Apr", confermate: 180, cancellazioni: 40 },
 ];
 
-// ⭐ Dati per le recensioni clienti
 const recensioniClienti = [
   {
     nome: "Andrea R.",
@@ -84,18 +83,19 @@ const recensioniClienti = [
   },
 ];
 
-// 🎨 Colori per il grafico a torta (PieChart)
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28"];
 
-// ⭐ Componente per generare le stelle di valutazione
-const RatingStars = ({ rating }) => (
-  <span className="stars">
-    {"★".repeat(rating)}
-    {"☆".repeat(5 - rating)}
-  </span>
-);
+// ⭐ FIX — Componente corretto che restituisce elementi React validi
+const RatingStars = ({ rating }) => {
+  return (
+    <span className="stars">
+      {[...Array(5)].map((_, index) => (
+        <span key={index}>{index < rating ? "★" : "☆"}</span>
+      ))}
+    </span>
+  );
+};
 
-// 📌 Sezione recensioni clienti
 const RecensioniClienti = () => (
   <section className="reviews-box">
     <h3>Ultime Recensioni dei Clienti</h3>
@@ -131,7 +131,8 @@ const KeyStats = () => (
 const Charts = () => (
   <section className="charts">
     <h2>Tendenze e Previsioni</h2>
-    {/* 📌 Prenotazioni Giornaliere */}
+
+    {/* Prenotazioni Giornaliere */}
     <div className="chart-box">
       <h3>Prenotazioni Giornaliere</h3>
       <ResponsiveContainer width="100%" height={250}>
@@ -145,7 +146,8 @@ const Charts = () => (
         </BarChart>
       </ResponsiveContainer>
     </div>
-    {/* 📌 Entrate Mensili */}
+
+    {/* Entrate Mensili */}
     <div className="chart-box">
       <h3>Entrate Mensili</h3>
       <ResponsiveContainer width="100%" height={250}>
@@ -160,7 +162,7 @@ const Charts = () => (
       </ResponsiveContainer>
     </div>
 
-    {/* 📌 Fonti di Prenotazione */}
+    {/* Fonti di Prenotazione */}
     <div className="chart-box">
       <h3>Fonti di Prenotazione</h3>
       <ResponsiveContainer width="100%" height={250}>
@@ -174,7 +176,8 @@ const Charts = () => (
         </BarChart>
       </ResponsiveContainer>
     </div>
-    {/* 📌 Tasso di Occupazione */}
+
+    {/* Tasso di Occupazione */}
     <div className="chart-box">
       <h3>Tasso di Occupazione per Tipo di Camera</h3>
       <ResponsiveContainer width="100%" height={250}>
@@ -199,7 +202,8 @@ const Charts = () => (
         </PieChart>
       </ResponsiveContainer>
     </div>
-    {/* 📌 Cancellazioni vs Confermate */}
+
+    {/* Cancellazioni vs Confermate */}
     <div className="chart-box">
       <h3>Cancellazioni vs Prenotazioni Confermate</h3>
       <ResponsiveContainer width="100%" height={250}>

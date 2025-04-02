@@ -1,10 +1,8 @@
-// 📂 E:\\ATBot\\frontend\\src\\pages\\auth\\Login.js
-// Creazione del file Login.js per la pagina di accesso
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../firebaseConfig"; // ✅ Assicurati che il path sia corretto
 import "../../styles/Login.css";
-import axios from "axios";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -14,20 +12,31 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Resetta eventuali errori precedenti
+    setError("");
+
     try {
-      const response = await axios.post(
-        "http://localhost:3001/api/auth/login",
-        {
-          email,
-          password,
-        }
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
       );
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data));
+      const user = userCredential.user;
+
+      // 🛡️ Controlla se l’email è verificata
+      if (!user.emailVerified) {
+        setError("Email non verificata. Controlla la tua casella di posta.");
+        return;
+      }
+
+      // ✅ Salva info base nel localStorage
+      localStorage.setItem("token", await user.getIdToken());
+      localStorage.setItem("user_id", user.uid);
+      localStorage.setItem("email", user.email);
+
       navigate("/dashboard");
     } catch (error) {
-      setError("Login fallito. Controlla le credenziali.");
+      console.error("Errore login Firebase:", error);
+      setError("Credenziali errate o utente non registrato.");
     }
   };
 

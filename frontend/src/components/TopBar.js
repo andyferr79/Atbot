@@ -1,10 +1,7 @@
-// 📂 E:\ATBot\frontend\src\components\TopBar.js
-// Correzione percorso logo con percorso relativo corretto
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { FaUser, FaUserPlus, FaSignOutAlt } from "react-icons/fa";
-import logo from "../assets/stayprologo.png"; // Percorso corretto
+import logo from "../assets/stayprologo.png";
 import "../styles/TopBar.css";
 
 const TopBar = () => {
@@ -16,13 +13,22 @@ const TopBar = () => {
       </div>
       <nav className="nav-links">
         <Link to="/login" className="top-link">
-          <FaUser /> Login
+          <span className="icon-wrapper">
+            <FaUser className="icon" />
+          </span>
+          <span>Login</span>
         </Link>
         <Link to="/signup" className="top-link">
-          <FaUserPlus /> Registrati
+          <span className="icon-wrapper">
+            <FaUserPlus className="icon" />
+          </span>
+          <span>Registrati</span>
         </Link>
         <Link to="/logout" className="top-link">
-          <FaSignOutAlt /> Logout
+          <span className="icon-wrapper">
+            <FaSignOutAlt className="icon" />
+          </span>
+          <span>Logout</span>
         </Link>
       </nav>
     </header>
@@ -30,6 +36,3 @@ const TopBar = () => {
 };
 
 export default TopBar;
-
-/* ✅ Nota: Il file logo deve essere in: */
-/* 📂 E:\ATBot\frontend\src\assets\stayprologo.png */

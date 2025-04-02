@@ -98,3 +98,41 @@ async def start_chat_session(request: StartSessionRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Errore creazione sessione: {str(e)}")
+
+from fastapi import Path
+
+@router.post("/chat_sessions/{session_id}/archive")
+async def archive_chat_session(session_id: str = Path(...)):
+    try:
+        session_ref = db.collection("chat_sessions").document(session_id)
+        session_doc = session_ref.get()
+
+        if not session_doc.exists:
+            raise HTTPException(status_code=404, detail="Sessione non trovata")
+
+        session_ref.update({"status": "archived"})
+        return {"message": "✅ Sessione archiviata con successo"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Errore archiviazione: {str(e)}")
+
+@router.delete("/chat_sessions/{session_id}")
+async def delete_chat_session(session_id: str = Path(...)):
+    try:
+        session_ref = db.collection("chat_sessions").document(session_id)
+        session_doc = session_ref.get()
+
+        if not session_doc.exists:
+            raise HTTPException(status_code=404, detail="Sessione non trovata")
+
+        # Elimina tutti i messaggi della sottocollezione
+        messages_ref = session_ref.collection("messages")
+        messages = messages_ref.stream()
+        for msg in messages:
+            msg.reference.delete()
+
+        # Elimina il documento della sessione
+        session_ref.delete()
+
+        return {"message": "🗑️ Sessione eliminata con successo"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Errore eliminazione: {str(e)}")

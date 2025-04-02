@@ -1,97 +1,188 @@
 /* Stile base */
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f5f5f5;
-    color: #333;
-  }
-  
-  /* Header */
-  .bookings-header {
-    background-color: #007BFF;
-    color: white;
-    padding: 20px;
-    text-align: center;
-  }
-  
-  /* Contenuto */
-  .bookings-content {
-    margin: 20px auto;
-    max-width: 1200px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-  }
-  
-  /* Filtri */
-  .filters {
-    margin-bottom: 20px;
-  }
-  
-  .filter-options {
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-  }
-  
-  .filter-options label {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .filter-button {
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.3s;
-  }
-  
-  .filter-button:hover {
-    background-color: #0056b3;
-  }
-  
-  /* Tabella */
-  .bookings-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .bookings-table th,
-  .bookings-table td {
-    padding: 10px;
-    border: 1px solid #ddd;
-    text-align: left;
-  }
-  
-  .bookings-table th {
-    background-color: #007BFF;
-    color: white;
-  }
-  
-  .action-button {
-    padding: 5px 10px;
-    margin: 2px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .action-button:hover {
-    background-color: #0056b3;
-    color: white;
-  }
-  
-  .action-button.delete {
-    background-color: #FF4D4D;
-  }
-  
-  .action-button.delete:hover {
-    background-color: #CC0000;
-  }
-  
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+/* Header */
+.bookings-header {
+  background-color: #007bff;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+/* Contenuto */
+.bookings-content {
+  margin: 20px auto;
+  max-width: 1200px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+/* Form Aggiunta Prenotazione */
+.add-booking {
+  margin-bottom: 30px;
+}
+
+.add-booking h2 {
+  margin-bottom: 10px;
+}
+
+.form-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"] {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  flex: 1;
+  min-width: 150px;
+}
+
+.form-group button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.form-group button:hover {
+  background-color: #0056b3;
+}
+
+/* Barra di ricerca */
+.search-bar {
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+/* Controlli calendario */
+.calendar-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.calendar-controls button {
+  padding: 8px 16px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.calendar-controls button:hover {
+  background-color: #0056b3;
+}
+
+/* Calendario */
+.calendar-container {
+  margin-bottom: 30px;
+}
+
+.calendar-container h2 {
+  margin-bottom: 15px;
+}
+
+/* Tabella */
+.bookings-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.bookings-table th,
+.bookings-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.bookings-table th {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Pulsanti azione */
+.action-button {
+  padding: 5px 10px;
+  margin: 2px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.action-button:hover {
+  background-color: #0056b3;
+  color: white;
+}
+
+.action-button.delete {
+  background-color: #ff4d4d;
+}
+
+.action-button.delete:hover {
+  background-color: #cc0000;
+}
+
+/* Lista prenotazioni (per sezione Elenco Prenotazioni) */
+.booking-list {
+  margin-top: 30px;
+  background-color: #f8f8f8;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.booking-list h3 {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.booking-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.booking-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.booking-list button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+}
+
+.booking-list button:hover {
+  background-color: #c0392b;
+}

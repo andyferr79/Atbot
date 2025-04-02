@@ -1,51 +1,121 @@
-// 📂 E:\\ATBot\\frontend\\src\\pages\\auth\\SignUp.js
-// Correzione import per firebaseConfig.js
+// 📂 E:/ATBot/frontend/src/pages/auth/SignUp.js
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  updateProfile,
+} from "firebase/auth";
+import {
+  doc,
+  setDoc,
+  serverTimestamp,
+  collection,
+  addDoc,
+} from "firebase/firestore";
+import { auth, db } from "../../firebaseConfig";
 import "../../styles/SignUp.css";
 
 const SignUp = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    firstName: "",
+    lastName: "",
+    company: "",
+    plan: "BASE",
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    try {
-      const response = await axios.post(
-        "http://localhost:3001/api/auth/register",
-        {
-          email,
-          password,
-        }
-      );
-      localStorage.setItem("token", response.data.token);
-      alert("✅ Registrazione completata! Controlla la tua email.");
-      navigate("/dashboard");
-    } catch (err) {
-      setError("❌ Errore: " + (err.response?.data?.error || err.message));
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
+    const {
+      email,
+      password,
+      confirmPassword,
+      firstName,
+      lastName,
+      company,
+      plan,
+    } = formData;
+
+    if (password.length < 6) {
+      setError("La password deve contenere almeno 6 caratteri.");
+      setLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Le password non corrispondono.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await axios.post(
-        "http://localhost:3001/api/auth/google"
+      // ✅ Crea utente su Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
       );
-      localStorage.setItem("token", response.data.token);
-      alert("✅ Accesso riuscito tramite Google!");
-      navigate("/dashboard");
+      const user = userCredential.user;
+
+      // ✅ Aggiorna il profilo utente
+      await updateProfile(user, {
+        displayName: `${firstName} ${lastName}`,
+      });
+
+      // ✅ Invia email di verifica
+      await sendEmailVerification(user);
+
+      // ✅ Salva su Firestore
+      const userRef = doc(db, "users", user.uid);
+      await setDoc(userRef, {
+        uid: user.uid,
+        email,
+        firstName,
+        lastName,
+        company,
+        plan,
+        role: "user",
+        createdAt: serverTimestamp(),
+      });
+
+      // ✅ Log evento in logs_signup
+      const logRef = collection(db, "logs_signup");
+      await addDoc(logRef, {
+        uid: user.uid,
+        email,
+        timestamp: serverTimestamp(),
+      });
+
+      alert(
+        "✅ Registrazione avvenuta con successo! Controlla la tua email per confermare l'account."
+      );
+      navigate("/login");
     } catch (err) {
-      setError("❌ Errore: " + (err.response?.data?.error || err.message));
+      console.error("❌ Errore nella registrazione:", err);
+      if (err.code === "auth/email-already-in-use") {
+        setError("Questa email è già registrata.");
+      } else {
+        setError(
+          "Registrazione fallita. " + (err.message || "Riprova più tardi.")
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -53,36 +123,64 @@ const SignUp = () => {
 
   return (
     <div className="signup-container">
-      <h2>🧪 Test della Registrazione StayPro</h2>
+      <h2>Registrazione</h2>
+      {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSignUp}>
         <input
+          type="text"
+          name="firstName"
+          placeholder="Nome"
+          value={formData.firstName}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="text"
+          name="lastName"
+          placeholder="Cognome"
+          value={formData.lastName}
+          onChange={handleChange}
+          required
+        />
+        <input
           type="email"
+          name="email"
           placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={formData.email}
+          onChange={handleChange}
           required
         />
         <input
           type="password"
+          name="password"
           placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={formData.password}
+          onChange={handleChange}
           required
         />
+        <input
+          type="password"
+          name="confirmPassword"
+          placeholder="Conferma Password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="text"
+          name="company"
+          placeholder="Azienda"
+          value={formData.company}
+          onChange={handleChange}
+        />
+        <select name="plan" value={formData.plan} onChange={handleChange}>
+          <option value="BASE">Piano BASE</option>
+          <option value="GOLD">Piano GOLD</option>
+        </select>
         <button type="submit" disabled={loading}>
-          {loading ? "Creating..." : "Create Account"}
+          {loading ? "Registrazione in corso..." : "Registrati"}
         </button>
-        <button
-          type="button"
-          className="google-button"
-          onClick={handleGoogleSignIn}
-          disabled={loading}
-        >
-          {loading ? "Connecting..." : "Sign up with Google"}
-        </button>
-        {error && <p className="error-message">{error}</p>}
       </form>
-      <p>📝 Controlla la console e Firebase Firestore dopo il test.</p>
     </div>
   );
 };

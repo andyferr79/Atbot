@@ -1,8 +1,13 @@
-// 📂 E:\\ATBot\\frontend\\src\\App.js
-// ✅ Correzione completa per la visibilità della Sidebar
+// 📂 E:/ATBot/frontend/src/App.js
 
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
 import StayProDashboard from "./pages/StayProDashboard";
@@ -25,43 +30,120 @@ import Chatbox from "./pages/Chatbox";
 import Notifications from "./pages/notifications/Notifications";
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
+import AgentHub from "./pages/AgentHub";
 import "./App.css";
+
+const ProtectedRoute = ({ element }) => {
+  const isAuthenticated = localStorage.getItem("token") !== null;
+  return isAuthenticated ? element : <Navigate to="/login" replace />;
+};
+
+const LayoutWrapper = ({ children }) => {
+  const location = useLocation();
+  const hideLayout = ["/login", "/signup"].includes(location.pathname);
+  return hideLayout ? (
+    <>{children}</>
+  ) : (
+    <div className="app-container" style={{ display: "flex" }}>
+      <Sidebar />
+      <div className="main-content" style={{ flex: 1, paddingLeft: "220px" }}>
+        <TopBar />
+        {children}
+      </div>
+    </div>
+  );
+};
 
 function App() {
   return (
     <Router>
-      <div className="app-container" style={{ display: "flex" }}>
-        <Sidebar />
-        <div className="main-content" style={{ flex: 1, paddingLeft: "220px" }}>
-          <TopBar />
-          <Routes>
-            <Route path="/" element={<StayProDashboard />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/bookings" element={<Bookings />} />
-            <Route path="/guests" element={<Guests />} />
-            <Route path="/rooms" element={<Rooms />} />
-            <Route path="/suppliers" element={<Suppliers />} />
-            <Route path="/marketing" element={<Marketing />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/reports/bookings" element={<BookingsReport />} />
-            <Route path="/reports/financial" element={<FinancialReport />} />
-            <Route path="/reports/general" element={<GeneralReport />} />
-            <Route path="/reports/suppliers" element={<SuppliersReport />} />
-            <Route path="/reports/cleaning" element={<CleaningReport />} />
-            <Route path="/reports/marketing" element={<MarketingReport />} />
-            <Route path="/reports/customers" element={<CustomersReport />} />
-            <Route path="/reports/ai-insights" element={<AIInsights />} />
-            <Route path="/chatbox" element={<Chatbox />} />
-            <Route path="/notifications" element={<Notifications />} />
-          </Routes>
-        </div>
-      </div>
+      <LayoutWrapper>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+
+          <Route
+            path="/"
+            element={<ProtectedRoute element={<StayProDashboard />} />}
+          />
+          <Route
+            path="/bookings"
+            element={<ProtectedRoute element={<Bookings />} />}
+          />
+          <Route
+            path="/guests"
+            element={<ProtectedRoute element={<Guests />} />}
+          />
+          <Route
+            path="/rooms"
+            element={<ProtectedRoute element={<Rooms />} />}
+          />
+          <Route
+            path="/suppliers"
+            element={<ProtectedRoute element={<Suppliers />} />}
+          />
+          <Route
+            path="/marketing"
+            element={<ProtectedRoute element={<Marketing />} />}
+          />
+          <Route
+            path="/settings"
+            element={<ProtectedRoute element={<Settings />} />}
+          />
+          <Route
+            path="/reports"
+            element={<ProtectedRoute element={<Reports />} />}
+          />
+
+          <Route
+            path="/reports/bookings"
+            element={<ProtectedRoute element={<BookingsReport />} />}
+          />
+          <Route
+            path="/reports/financial"
+            element={<ProtectedRoute element={<FinancialReport />} />}
+          />
+          <Route
+            path="/reports/general"
+            element={<ProtectedRoute element={<GeneralReport />} />}
+          />
+          <Route
+            path="/reports/suppliers"
+            element={<ProtectedRoute element={<SuppliersReport />} />}
+          />
+          <Route
+            path="/reports/cleaning"
+            element={<ProtectedRoute element={<CleaningReport />} />}
+          />
+          <Route
+            path="/reports/marketing"
+            element={<ProtectedRoute element={<MarketingReport />} />}
+          />
+          <Route
+            path="/reports/customers"
+            element={<ProtectedRoute element={<CustomersReport />} />}
+          />
+          <Route
+            path="/reports/ai-insights"
+            element={<ProtectedRoute element={<AIInsights />} />}
+          />
+
+          <Route
+            path="/chatbox"
+            element={<ProtectedRoute element={<Chatbox />} />}
+          />
+          <Route
+            path="/notifications"
+            element={<ProtectedRoute element={<Notifications />} />}
+          />
+          <Route
+            path="/agent-hub"
+            element={<ProtectedRoute element={<AgentHub />} />}
+          />
+        </Routes>
+      </LayoutWrapper>
     </Router>
   );
 }
 
 export default App;
-
-/* 📂 Nota: Il layout è stato corretto con flexbox per garantire la visibilità della Sidebar. */

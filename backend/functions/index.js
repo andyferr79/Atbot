@@ -1,11 +1,27 @@
+// 🔥 Hardcoded API key (bypass .env)
+const FIREBASE_API_KEY = "AIzaSyDtcXEcXxQJqHzQB5Hjat82grMrOMQiwAM";
+
+// ❌ Disattiviamo dotenv per evitare conflitti
+// require("dotenv").config();
+
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const cors = require("cors")({ origin: true });
 
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-// ✅ Importazione di tutti i file delle route aggiornate
+// ✅ Middleware per CORS
+function withCors(fn) {
+  return functions.https.onRequest((req, res) => {
+    cors(req, res, () => {
+      fn(req, res);
+    });
+  });
+}
+
+// ✅ Importa tutte le route
 const bookingsRoutes = require("./bookingsRoutes");
 const bookingsReportsRoutes = require("./bookingsReportsRoutes");
 const channelManagerRoutes = require("./channelManagerRoutes");
@@ -32,198 +48,101 @@ const suppliersReportsRoutes = require("./suppliersReportsRoutes");
 const suppliersRoutes = require("./suppliersRoutes");
 const aiRoutes = require("./aiRoutes");
 
-// ==================== 🚀 ESPORTAZIONE API ==================== //
+// 🔐 Login (modificato per passare l'API key hardcoded)
+const loginRoute = require("./loginRoutes");
+loginRoute.setApiKey(FIREBASE_API_KEY);
 
-// 📌 Bookings
-exports.getBookings = functions.https.onRequest(bookingsRoutes.getBookings);
-exports.getBookingsReports = functions.https.onRequest(
-  bookingsRoutes.getBookingsReports
-);
-
-// 📌 Channel Manager
-exports.syncChannelManager = functions.https.onRequest(
-  channelManagerRoutes.syncChannelManager
-);
-
-// 📌 Cleaning Reports
-exports.getCleaningReports = functions.https.onRequest(
-  cleaningReportsRoutes.getCleaningReports
-);
-exports.addCleaningReport = functions.https.onRequest(
-  cleaningReportsRoutes.addCleaningReport
-);
-
-// 📌 Customers
-exports.getCustomers = functions.https.onRequest(
-  customersRoutes.getCustomersData
-);
-exports.addCustomer = functions.https.onRequest(customersRoutes.addCustomer);
-exports.updateCustomer = functions.https.onRequest(
-  customersRoutes.updateCustomer
-);
-exports.deleteCustomer = functions.https.onRequest(
-  customersRoutes.deleteCustomer
-);
-
-// 📌 Customers Reports
-exports.getCustomersReports = functions.https.onRequest(
+// ✅ Esportazione delle Cloud Functions
+exports.getBookings = withCors(bookingsRoutes.getBookings);
+exports.getBookingsReports = withCors(bookingsRoutes.getBookingsReports);
+exports.syncChannelManager = withCors(channelManagerRoutes.syncChannelManager);
+exports.getCleaningReports = withCors(cleaningReportsRoutes.getCleaningReports);
+exports.addCleaningReport = withCors(cleaningReportsRoutes.addCleaningReport);
+exports.getCustomers = withCors(customersRoutes.getCustomersData);
+exports.addCustomer = withCors(customersRoutes.addCustomer);
+exports.updateCustomer = withCors(customersRoutes.updateCustomer);
+exports.deleteCustomer = withCors(customersRoutes.deleteCustomer);
+exports.getCustomersReports = withCors(
   customersReportsRoutes.getCustomersReports
 );
-exports.addCustomerReport = functions.https.onRequest(
-  customersReportsRoutes.addCustomerReport
-);
-
-// 📌 Dashboard Overview
-exports.getDashboardOverview = functions.https.onRequest(
+exports.addCustomerReport = withCors(customersReportsRoutes.addCustomerReport);
+exports.getDashboardOverview = withCors(
   dashboardOverviewRoutes.getDashboardOverview
 );
-
-// 📌 Expenses
-exports.getExpenses = functions.https.onRequest(expensesRoutes.getExpenses);
-exports.addExpense = functions.https.onRequest(expensesRoutes.addExpense);
-
-// 📌 Financial Reports
-exports.importFinancialReports = functions.https.onRequest(
+exports.getExpenses = withCors(expensesRoutes.getExpenses);
+exports.addExpense = withCors(expensesRoutes.addExpense);
+exports.importFinancialReports = withCors(
   financialReportsRoutes.importFinancialReports
 );
-
-// 📌 Housekeeping
-exports.getHousekeepingStatus = functions.https.onRequest(
+exports.getHousekeepingStatus = withCors(
   housekeepingRoutes.getHousekeepingStatus
 );
-
-// 📌 Housekeeping Schedule
-exports.getHousekeepingSchedule = functions.https.onRequest(
+exports.getHousekeepingSchedule = withCors(
   housekeepingScheduleRoutes.generateHousekeepingSchedule
 );
-exports.updateHousekeepingSchedule = functions.https.onRequest(
+exports.updateHousekeepingSchedule = withCors(
   housekeepingScheduleRoutes.updateHousekeepingSchedule
 );
-
-// 📌 Marketing Reports
-exports.getMarketingReports = functions.https.onRequest(
+exports.getMarketingReports = withCors(
   marketingReportsRoutes.getMarketingReports
 );
-exports.addMarketingReport = functions.https.onRequest(
+exports.addMarketingReport = withCors(
   marketingReportsRoutes.addMarketingReport
 );
-exports.updateMarketingReport = functions.https.onRequest(
+exports.updateMarketingReport = withCors(
   marketingReportsRoutes.updateMarketingReport
 );
-exports.deleteMarketingReport = functions.https.onRequest(
+exports.deleteMarketingReport = withCors(
   marketingReportsRoutes.deleteMarketingReport
 );
-
-// 📌 Marketing (Campagne, Post Social)
-exports.getMarketingCampaigns = functions.https.onRequest(
-  marketingRoutes.getMarketingCampaigns
-);
-exports.addMarketingCampaign = functions.https.onRequest(
-  marketingRoutes.addMarketingCampaign
-);
-exports.getSocialMediaPosts = functions.https.onRequest(
-  marketingRoutes.getSocialMediaPosts
-);
-exports.createSocialPost = functions.https.onRequest(
-  marketingRoutes.createSocialPost
-);
-exports.deleteSocialPost = functions.https.onRequest(
-  marketingRoutes.deleteSocialPost
-);
-
-// 📌 Notifications
-exports.getNotifications = functions.https.onRequest(
-  notificationsRoutes.getNotifications
-);
-exports.getUnreadNotificationsCount = functions.https.onRequest(
+exports.getMarketingCampaigns = withCors(marketingRoutes.getMarketingCampaigns);
+exports.addMarketingCampaign = withCors(marketingRoutes.addMarketingCampaign);
+exports.getSocialMediaPosts = withCors(marketingRoutes.getSocialMediaPosts);
+exports.createSocialPost = withCors(marketingRoutes.createSocialPost);
+exports.deleteSocialPost = withCors(marketingRoutes.deleteSocialPost);
+exports.getNotifications = withCors(notificationsRoutes.getNotifications);
+exports.getUnreadNotificationsCount = withCors(
   notificationsRoutes.getUnreadNotificationsCount
 );
-exports.markNotificationAsRead = functions.https.onRequest(
+exports.markNotificationAsRead = withCors(
   notificationsRoutes.markNotificationAsRead
 );
-exports.markAllNotificationsAsRead = functions.https.onRequest(
+exports.markAllNotificationsAsRead = withCors(
   notificationsRoutes.markAllNotificationsAsRead
 );
-
-// 📌 Pricing
-exports.getPricingRecommendations = functions.https.onRequest(
+exports.getPricingRecommendations = withCors(
   aiRoutes.getPricingRecommendations
 );
-exports.getRoomPricing = functions.https.onRequest(
-  pricingRoutes.getRoomPricing
-);
-exports.updateRoomPricing = functions.https.onRequest(
-  pricingRoutes.updateRoomPricing
-);
-exports.addRoomPricing = functions.https.onRequest(
-  pricingRoutes.addRoomPricing
-);
-exports.deleteRoomPricing = functions.https.onRequest(
-  pricingRoutes.deleteRoomPricing
-);
-
-// 📌 Reports
-exports.getReports = functions.https.onRequest(reportsRoutes.getReports);
-exports.createReport = functions.https.onRequest(reportsRoutes.createReport);
-exports.updateReport = functions.https.onRequest(reportsRoutes.updateReport);
-exports.deleteReport = functions.https.onRequest(reportsRoutes.deleteReport);
-
-// 📌 Reports Export
-exports.exportReports = functions.https.onRequest(
-  reportsExportRoutes.exportReports
-);
-
-// 📌 Reports Stats
-exports.getReportsStats = functions.https.onRequest(
-  reportsStatsRoutes.getReportsStats
-);
-
-// 📌 Reviews
-exports.getReviews = functions.https.onRequest(reviewsRoutes.getReviews);
-exports.addReview = functions.https.onRequest(reviewsRoutes.addReview);
-exports.updateReview = functions.https.onRequest(reviewsRoutes.updateReview);
-exports.deleteReview = functions.https.onRequest(reviewsRoutes.deleteReview);
-
-// 📌 Rooms
-exports.getRooms = functions.https.onRequest(roomsRoutes.getRooms);
-exports.createRoom = functions.https.onRequest(roomsRoutes.createRoom);
-exports.updateRoom = functions.https.onRequest(roomsRoutes.updateRoom);
-exports.deleteRoom = functions.https.onRequest(roomsRoutes.deleteRoom);
-
-// 📌 Settings
-exports.getPreferences = functions.https.onRequest(
-  settingsRoutes.preferencesSettings
-);
-exports.updatePreferences = functions.https.onRequest(
-  settingsRoutes.preferencesSettings
-);
-exports.getStructureSettings = functions.https.onRequest(
-  settingsRoutes.structureSettings
-);
-exports.updateStructureSettings = functions.https.onRequest(
-  settingsRoutes.structureSettings
-);
-exports.getSecuritySettings = functions.https.onRequest(
-  settingsRoutes.securitySettings
-);
-
-// 📌 Suppliers
-exports.getSuppliers = functions.https.onRequest(suppliersRoutes.getSuppliers);
-exports.addSupplier = functions.https.onRequest(suppliersRoutes.addSupplier);
-exports.updateSupplier = functions.https.onRequest(
-  suppliersRoutes.updateSupplier
-);
-exports.deleteSupplier = functions.https.onRequest(
-  suppliersRoutes.deleteSupplier
-);
-
-// 📌 Suppliers Reports
-exports.getSuppliersReports = functions.https.onRequest(
+exports.getRoomPricing = withCors(pricingRoutes.getRoomPricing);
+exports.updateRoomPricing = withCors(pricingRoutes.updateRoomPricing);
+exports.addRoomPricing = withCors(pricingRoutes.addRoomPricing);
+exports.deleteRoomPricing = withCors(pricingRoutes.deleteRoomPricing);
+exports.getReports = withCors(reportsRoutes.getReports);
+exports.createReport = withCors(reportsRoutes.createReport);
+exports.updateReport = withCors(reportsRoutes.updateReport);
+exports.deleteReport = withCors(reportsRoutes.deleteReport);
+exports.exportReports = withCors(reportsExportRoutes.exportReports);
+exports.getReportsStats = withCors(reportsStatsRoutes.getReportsStats);
+exports.getReviews = withCors(reviewsRoutes.getReviews);
+exports.addReview = withCors(reviewsRoutes.addReview);
+exports.updateReview = withCors(reviewsRoutes.updateReview);
+exports.deleteReview = withCors(reviewsRoutes.deleteReview);
+exports.getRooms = withCors(roomsRoutes.getRooms);
+exports.createRoom = withCors(roomsRoutes.createRoom);
+exports.updateRoom = withCors(roomsRoutes.updateRoom);
+exports.deleteRoom = withCors(roomsRoutes.deleteRoom);
+exports.getPreferences = withCors(settingsRoutes.preferencesSettings);
+exports.updatePreferences = withCors(settingsRoutes.preferencesSettings);
+exports.getStructureSettings = withCors(settingsRoutes.structureSettings);
+exports.updateStructureSettings = withCors(settingsRoutes.structureSettings);
+exports.getSecuritySettings = withCors(settingsRoutes.securitySettings);
+exports.getSuppliers = withCors(suppliersRoutes.getSuppliers);
+exports.addSupplier = withCors(suppliersRoutes.addSupplier);
+exports.updateSupplier = withCors(suppliersRoutes.updateSupplier);
+exports.deleteSupplier = withCors(suppliersRoutes.deleteSupplier);
+exports.getSuppliersReports = withCors(
   suppliersReportsRoutes.getSuppliersReports
 );
-exports.addSupplierReport = functions.https.onRequest(
-  suppliersReportsRoutes.addSupplierReport
-);
-
-// 📌 AI Chat (hub e chat dell'AI)
-exports.chatWithAI = functions.https.onRequest(aiRoutes.chatWithAI);
+exports.addSupplierReport = withCors(suppliersReportsRoutes.addSupplierReport);
+exports.chatWithAI = withCors(aiRoutes.chatWithAI);
+exports.login = withCors(loginRoute.login);
