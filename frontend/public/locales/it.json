@@ -1,0 +1,152 @@
+{
+  "login": {
+    "title": "Accedi",
+    "email": "Email",
+    "password": "Password",
+    "button": "Login",
+    "error": "Credenziali errate o email non verificata."
+  },
+  "signup": {
+    "title": "Crea il tuo account",
+    "firstName": "Nome",
+    "lastName": "Cognome",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Conferma Password",
+    "plan": "Scegli il tuo piano",
+    "company": "Nome Azienda",
+    "button": "Registrati"
+  },
+  "topbar": {
+    "welcome": "Benvenuto",
+    "logout": "Esci"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "bookings": "Prenotazioni",
+    "guests": "Ospiti",
+    "rooms": "Camere",
+    "reports": "Report",
+    "marketing": "Marketing",
+    "suppliers": "Fornitori",
+    "notifications": "Notifiche",
+    "officialAnnouncements": "Comunicazioni Ufficiali",
+    "settings": "Impostazioni",
+    "support": "Assistenza",
+    "chatIA": "Chat IA",
+    "agentHub": "HUB Agente IA"
+  },
+  "dashboard": {
+    "title": "Panoramica Dashboard",
+    "bookings": "Prenotazioni Totali",
+    "guests": "Ospiti Totali",
+    "revenue": "Entrate",
+    "reviews": "Recensioni",
+    "welcomeBack": "Bentornato,",
+    "todayStats": "Statistiche di oggi"
+  },
+  "bookings": {
+    "title": "Prenotazioni",
+    "add": "Aggiungi Prenotazione",
+    "edit": "Modifica Prenotazione",
+    "delete": "Elimina Prenotazione",
+    "checkIn": "Data Check-in",
+    "checkOut": "Data Check-out",
+    "guestName": "Nome Ospite",
+    "room": "Camera",
+    "status": "Stato",
+    "actions": "Azioni"
+  },
+  "guests": {
+    "title": "Ospiti",
+    "add": "Aggiungi Ospite",
+    "edit": "Modifica Ospite",
+    "delete": "Elimina Ospite",
+    "name": "Nome Completo",
+    "email": "Email",
+    "phone": "Telefono",
+    "actions": "Azioni"
+  },
+  "rooms": {
+    "title": "Camere",
+    "add": "Aggiungi Camera",
+    "edit": "Modifica Camera",
+    "delete": "Elimina Camera",
+    "roomNumber": "Numero Camera",
+    "type": "Tipologia",
+    "price": "Prezzo",
+    "availability": "Disponibilità",
+    "actions": "Azioni"
+  },
+  "suppliers": {
+    "title": "Fornitori",
+    "add": "Aggiungi Fornitore",
+    "edit": "Modifica Fornitore",
+    "delete": "Elimina Fornitore",
+    "name": "Nome Fornitore",
+    "contact": "Contatto",
+    "email": "Email",
+    "phone": "Telefono",
+    "category": "Categoria",
+    "actions": "Azioni"
+  },
+  "marketing": {
+    "title": "Marketing",
+    "campaigns": "Campagne",
+    "socialPosts": "Post Social",
+    "budget": "Budget",
+    "target": "Target",
+    "platforms": "Piattaforme",
+    "createCampaign": "Crea Campagna",
+    "optimizeWithAI": "Ottimizza con IA"
+  },
+  "reports": {
+    "title": "Report",
+    "bookings": "Report Prenotazioni",
+    "financial": "Report Finanziario",
+    "general": "Report Generale",
+    "suppliers": "Report Fornitori",
+    "cleaning": "Report Pulizie",
+    "marketing": "Report Marketing",
+    "customers": "Report Clienti",
+    "aiInsights": "Approfondimenti IA",
+    "export": "Esporta Report"
+  },
+  "notifications": {
+    "title": "Notifiche",
+    "markAllRead": "Segna tutto come letto",
+    "noNotifications": "Nessuna notifica"
+  },
+  "chatbox": {
+    "title": "Chat IA",
+    "placeholder": "Scrivi la tua domanda...",
+    "send": "Invia",
+    "thinking": "L’IA sta ragionando..."
+  },
+  "agentHub": {
+    "title": "HUB Agente IA",
+    "overview": "Panoramica",
+    "actions": "Azioni IA",
+    "documents": "Documenti Generati",
+    "settings": "Impostazioni Automazioni",
+    "autonomyLevel": "Livello Autonomia",
+    "chatHistory": "Cronologia Chat",
+    "archived": "Archiviato",
+    "delete": "Elimina",
+    "confirmDelete": "Sei sicuro di voler eliminare questo elemento?"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "profile": "Profilo",
+    "preferences": "Preferenze",
+    "security": "Sicurezza",
+    "structure": "Impostazioni Struttura",
+    "notifications": "Notifiche"
+  },
+  "support": {
+    "title": "Assistenza",
+    "contact": "Contatta il Supporto",
+    "faq": "Domande Frequenti",
+    "guides": "Guide e Tutorial"
+  }
+}

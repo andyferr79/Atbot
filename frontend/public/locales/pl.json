@@ -1,0 +1,152 @@
+{
+  "login": {
+    "title": "Zaloguj się",
+    "email": "E-mail",
+    "password": "Hasło",
+    "button": "Zaloguj się",
+    "error": "Nieprawidłowe dane logowania lub niezweryfikowany e-mail."
+  },
+  "signup": {
+    "title": "Utwórz konto",
+    "firstName": "Imię",
+    "lastName": "Nazwisko",
+    "email": "E-mail",
+    "password": "Hasło",
+    "confirmPassword": "Potwierdź hasło",
+    "plan": "Wybierz plan",
+    "company": "Nazwa firmy",
+    "button": "Zarejestruj się"
+  },
+  "topbar": {
+    "welcome": "Witamy",
+    "logout": "Wyloguj się"
+  },
+  "sidebar": {
+    "dashboard": "Panel",
+    "bookings": "Rezerwacje",
+    "guests": "Goście",
+    "rooms": "Pokoje",
+    "reports": "Raporty",
+    "marketing": "Marketing",
+    "suppliers": "Dostawcy",
+    "notifications": "Powiadomienia",
+    "officialAnnouncements": "Oficjalne ogłoszenia",
+    "settings": "Ustawienia",
+    "support": "Wsparcie",
+    "chatIA": "Czat AI",
+    "agentHub": "Centrum Agenta AI"
+  },
+  "dashboard": {
+    "title": "Przegląd panelu",
+    "bookings": "Łączne rezerwacje",
+    "guests": "Łączni goście",
+    "revenue": "Przychód",
+    "reviews": "Opinie",
+    "welcomeBack": "Witamy ponownie,",
+    "todayStats": "Dzisiejsze statystyki"
+  },
+  "bookings": {
+    "title": "Rezerwacje",
+    "addBooking": "Dodaj rezerwację",
+    "editBooking": "Edytuj rezerwację",
+    "deleteBooking": "Usuń rezerwację",
+    "checkIn": "Data zameldowania",
+    "checkOut": "Data wymeldowania",
+    "guestName": "Imię i nazwisko gościa",
+    "room": "Pokój",
+    "status": "Status",
+    "actions": "Działania"
+  },
+  "guests": {
+    "title": "Goście",
+    "addGuest": "Dodaj gościa",
+    "editGuest": "Edytuj gościa",
+    "deleteGuest": "Usuń gościa",
+    "name": "Imię i nazwisko",
+    "email": "E-mail",
+    "phone": "Telefon",
+    "actions": "Działania"
+  },
+  "rooms": {
+    "title": "Pokoje",
+    "addRoom": "Dodaj pokój",
+    "editRoom": "Edytuj pokój",
+    "deleteRoom": "Usuń pokój",
+    "roomNumber": "Numer pokoju",
+    "type": "Typ",
+    "price": "Cena",
+    "availability": "Dostępność",
+    "actions": "Działania"
+  },
+  "suppliers": {
+    "title": "Dostawcy",
+    "addSupplier": "Dodaj dostawcę",
+    "editSupplier": "Edytuj dostawcę",
+    "deleteSupplier": "Usuń dostawcę",
+    "name": "Nazwa dostawcy",
+    "contact": "Kontakt",
+    "email": "E-mail",
+    "phone": "Telefon",
+    "category": "Kategoria",
+    "actions": "Działania"
+  },
+  "marketing": {
+    "title": "Marketing",
+    "campaigns": "Kampanie",
+    "socialPosts": "Posty w mediach społecznościowych",
+    "budget": "Budżet",
+    "target": "Grupa docelowa",
+    "platforms": "Platformy",
+    "createCampaign": "Utwórz kampanię",
+    "optimizeWithAI": "Optymalizuj za pomocą AI"
+  },
+  "reports": {
+    "title": "Raporty",
+    "bookings": "Raport rezerwacji",
+    "financial": "Raport finansowy",
+    "general": "Raport ogólny",
+    "suppliers": "Raport dostawców",
+    "cleaning": "Raport sprzątania",
+    "marketing": "Raport marketingowy",
+    "customers": "Raport klientów",
+    "aiInsights": "Wnioski AI",
+    "export": "Eksportuj raport"
+  },
+  "notifications": {
+    "title": "Powiadomienia",
+    "markAllRead": "Oznacz wszystkie jako przeczytane",
+    "noNotifications": "Brak powiadomień"
+  },
+  "chatbox": {
+    "title": "Czat AI",
+    "placeholder": "Zadaj pytanie...",
+    "send": "Wyślij",
+    "thinking": "AI przetwarza odpowiedź..."
+  },
+  "agentHub": {
+    "title": "Centrum Agenta AI",
+    "overview": "Przegląd",
+    "actions": "Akcje AI",
+    "documents": "Wygenerowane dokumenty",
+    "settings": "Ustawienia automatyzacji",
+    "autonomyLevel": "Poziom autonomii",
+    "chatHistory": "Historia czatu",
+    "archived": "Zarchiwizowane",
+    "delete": "Usuń",
+    "confirmDelete": "Czy na pewno chcesz usunąć ten element?"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "profile": "Profil",
+    "preferences": "Preferencje",
+    "security": "Bezpieczeństwo",
+    "structure": "Ustawienia struktury",
+    "notifications": "Ustawienia powiadomień"
+  },
+  "support": {
+    "title": "Wsparcie",
+    "contact": "Skontaktuj się ze wsparciem",
+    "faq": "Często zadawane pytania",
+    "guides": "Przewodniki i samouczki"
+  }
+}

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "../components/ui/card";
 import {
   Tabs,
   TabsContent,
@@ -8,9 +7,12 @@ import {
 } from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
 import { Switch } from "../components/ui/switch";
-import { ScrollArea } from "../components/ui/scroll-area";
 import { Button } from "../components/ui/button";
-import { Archive, Trash2, Settings, Bot } from "lucide-react";
+import { Settings, Bot } from "lucide-react";
+import OverviewTab from "../components/AgentHub/OverviewTab";
+import ActionsTab from "../components/AgentHub/ActionsTab";
+import ChatTab from "../components/AgentHub/ChatTab";
+import DocumentsTab from "../components/AgentHub/DocumentsTab";
 import "../styles/AgentHub.css";
 
 const AgentHub = () => {
@@ -19,32 +21,78 @@ const AgentHub = () => {
   const [documents, setDocuments] = useState([]);
   const [autonomyLevel, setAutonomyLevel] = useState("base");
   const [settings, setSettings] = useState({});
+  const [plan, setPlan] = useState("BASE");
   const userId = "test-user-001";
+
+  const automations = [
+    {
+      key: "welcomeMessage",
+      label: "Automatic check-in message",
+      plan: "BASE",
+    },
+    {
+      key: "autoReport",
+      label: "Automatic performance report generation",
+      plan: "BASE",
+    },
+    { key: "smartSuggestions", label: "Smart suggestions", plan: "GOLD" },
+    { key: "autoCheckin", label: "Complete AI Auto Check-in", plan: "GOLD" },
+    {
+      key: "cleaningReminder",
+      label: "Free room cleaning reminder",
+      plan: "BASE",
+    },
+    {
+      key: "bookingConfirm",
+      label: "Automatic booking confirmation",
+      plan: "BASE",
+    },
+    { key: "autoArchiveChats", label: "Auto archive chats", plan: "BASE" },
+    {
+      key: "offerSuggestions",
+      label: "Offer suggestions (manual)",
+      plan: "BASE",
+    },
+    { key: "weeklySummary", label: "Weekly summary email", plan: "BASE" },
+    {
+      key: "autoCleaningSchedule",
+      label: "Staff cleaning schedule (AI)",
+      plan: "GOLD",
+    },
+    { key: "lastminuteOffersAi", label: "Last minute AI offers", plan: "GOLD" },
+    {
+      key: "competitorAnalysis",
+      label: "OTA competitor analysis",
+      plan: "GOLD",
+    },
+    { key: "socialPostAi", label: "AI social post generation", plan: "GOLD" },
+    { key: "reviewAnalysis", label: "Customer review analysis", plan: "GOLD" },
+  ];
 
   useEffect(() => {
     fetch(`/api/chat_sessions/${userId}`)
       .then((res) => res.json())
-      .then((data) => {
-        console.log("✅ chatSessions:", data);
-        setChatSessions(data);
-      })
-      .catch((err) => console.error("❌ Errore caricamento chat:", err));
+      .then((data) => setChatSessions(data))
+      .catch((err) => console.error("❌ Error loading chat:", err));
 
     fetch(`/api/agent/actions/${userId}`)
       .then((res) => res.json())
-      .then((data) => {
-        console.log("✅ actions:", data);
-        setActions(data);
-      })
-      .catch((err) => console.error("❌ Errore caricamento azioni:", err));
+      .then((data) => setActions(data))
+      .catch((err) => console.error("❌ Error loading actions:", err));
 
     fetch(`/api/agent/documents/${userId}`)
       .then((res) => res.json())
+      .then((data) => setDocuments(data))
+      .catch((err) => console.error("❌ Error loading documents:", err));
+
+    fetch(`/api/agent/config/${userId}`)
+      .then((res) => res.json())
       .then((data) => {
-        console.log("✅ documents:", data);
-        setDocuments(data);
+        setAutonomyLevel(data.autonomyLevel || "base");
+        setSettings(data.enabledAutomations || {});
+        setPlan(data.plan || "BASE");
       })
-      .catch((err) => console.error("❌ Errore caricamento documenti:", err));
+      .catch((err) => console.error("❌ Error loading config:", err));
   }, []);
 
   const handleArchive = async (sessionId) => {
@@ -58,7 +106,7 @@ const AgentHub = () => {
         )
       );
     } catch (err) {
-      console.error("Errore archiviazione:", err);
+      console.error("Archive error:", err);
     }
   };
 
@@ -71,162 +119,59 @@ const AgentHub = () => {
         prev.filter((chat) => chat.sessionId !== sessionId)
       );
     } catch (err) {
-      console.error("Errore eliminazione:", err);
+      console.error("Delete error:", err);
     }
   };
 
   return (
     <div className="agent-hub-container">
       <div className="hub-header-container">
-        <h1 className="hub-title">HUB Agente IA</h1>
+        <h1 className="hub-title">AI Agent HUB</h1>
         <p className="hub-subtitle">
-          Gestisci tutte le funzioni della tua IA con un solo click.
+          Manage all your AI functions with one click.
         </p>
       </div>
 
       <Tabs defaultValue="overview">
         <TabsList className="hub-tabs-list">
           <TabsTrigger value="overview">
-            <Bot className="icon" /> Panoramica
+            <Bot className="icon" /> Overview
           </TabsTrigger>
-          <TabsTrigger value="actions">Azioni</TabsTrigger>
+          <TabsTrigger value="actions">Actions</TabsTrigger>
           <TabsTrigger value="chat">Chat</TabsTrigger>
-          <TabsTrigger value="documents">Documenti</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="settings">
-            <Settings className="icon" /> Impostazioni
+            <Settings className="icon" /> Settings
           </TabsTrigger>
         </TabsList>
 
-        {/* PANORAMICA */}
         <TabsContent value="overview">
-          <div className="overview-grid">
-            <Card className="hub-card">
-              <CardContent>
-                Ultima azione: <strong>Report Settimanale</strong>
-              </CardContent>
-            </Card>
-            <Card className="hub-card">
-              <CardContent>
-                Azioni pendenti: <strong>{actions.length}</strong>
-              </CardContent>
-            </Card>
-            <Card className="hub-card">
-              <CardContent>
-                Chat attive: <strong>{chatSessions.length}</strong>
-              </CardContent>
-            </Card>
-            <Card className="hub-card">
-              <CardContent>
-                Modalità IA: <Badge>{String(autonomyLevel)}</Badge>
-              </CardContent>
-            </Card>
-          </div>
+          <OverviewTab
+            actions={actions}
+            chatSessions={chatSessions}
+            autonomyLevel={autonomyLevel}
+          />
         </TabsContent>
 
-        {/* AZIONI */}
         <TabsContent value="actions">
-          <ScrollArea className="hub-scroll">
-            <ul className="action-list">
-              {actions.map((action) => {
-                try {
-                  return (
-                    <li key={action.actionId} className="action-item">
-                      <div className="font-semibold">{String(action.type)}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {String(action.context?.note || "Nessuna descrizione")}
-                      </div>
-                      <Badge
-                        variant={
-                          action.status === "completed" ? "default" : "outline"
-                        }
-                      >
-                        {String(action.status)}
-                      </Badge>
-                    </li>
-                  );
-                } catch (e) {
-                  console.error("🔥 ERRORE render action:", action, e);
-                  return null;
-                }
-              })}
-            </ul>
-          </ScrollArea>
+          <ActionsTab actions={actions} />
         </TabsContent>
 
-        {/* CHAT */}
         <TabsContent value="chat">
-          <ScrollArea className="hub-scroll">
-            <ul className="chat-list">
-              {chatSessions.map((chat) => {
-                try {
-                  return (
-                    <li key={chat.sessionId} className="chat-item">
-                      <div>
-                        <div className="font-medium">{String(chat.title)}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {String(chat.summary)}
-                        </div>
-                      </div>
-                      <div className="chat-actions">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleArchive(chat.sessionId)}
-                        >
-                          <Archive className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(chat.sessionId)}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </li>
-                  );
-                } catch (e) {
-                  console.error("🔥 ERRORE render chat:", chat, e);
-                  return null;
-                }
-              })}
-            </ul>
-          </ScrollArea>
+          <ChatTab
+            chatSessions={chatSessions}
+            onArchive={handleArchive}
+            onDelete={handleDelete}
+          />
         </TabsContent>
 
-        {/* DOCUMENTI */}
         <TabsContent value="documents">
-          <ScrollArea className="hub-scroll">
-            <ul className="document-list">
-              {documents.map((doc) => {
-                try {
-                  return (
-                    <li key={doc.id} className="document-item">
-                      <div className="font-medium">{String(doc.title)}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {String(doc.description)}
-                      </div>
-                      <Button
-                        variant="link"
-                        onClick={() => window.open(doc.downloadUrl, "_blank")}
-                      >
-                        Scarica
-                      </Button>
-                    </li>
-                  );
-                } catch (e) {
-                  console.error("🔥 ERRORE render document:", doc, e);
-                  return null;
-                }
-              })}
-            </ul>
-          </ScrollArea>
+          <DocumentsTab documents={documents} />
         </TabsContent>
 
-        {/* IMPOSTAZIONI */}
         <TabsContent value="settings">
           <div className="mb-4">
-            <h2 className="hub-settings-title">Livello di Autonomia</h2>
+            <h2 className="hub-settings-title">Autonomy Level</h2>
             <div className="flex gap-4">
               <Badge
                 variant={autonomyLevel === "base" ? "default" : "outline"}
@@ -244,50 +189,52 @@ const AgentHub = () => {
               </Badge>
             </div>
           </div>
+
           <div className="grid gap-4">
-            <Card className="hub-card">
-              <CardContent className="space-y-3">
-                <div className="hub-toggle-row">
-                  <span>Messaggio automatico al check-in</span>
-                  <Switch
-                    checked={settings.welcomeMessage}
-                    onCheckedChange={() =>
-                      setSettings((s) => ({
-                        ...s,
-                        welcomeMessage: !s.welcomeMessage,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="hub-toggle-row">
-                  <span>Generazione automatica report performance</span>
-                  <Switch
-                    checked={settings.autoReport}
-                    onCheckedChange={() =>
-                      setSettings((s) => ({
-                        ...s,
-                        autoReport: !s.autoReport,
-                      }))
-                    }
-                  />
-                </div>
-                {autonomyLevel === "gold" && (
-                  <div className="hub-toggle-row">
-                    <span>Invio suggerimenti personalizzati</span>
-                    <Switch
-                      checked={settings.smartSuggestions}
-                      onCheckedChange={() =>
-                        setSettings((s) => ({
-                          ...s,
-                          smartSuggestions: !s.smartSuggestions,
-                        }))
-                      }
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <div className="hub-card">
+              <div className="card-content space-y-3">
+                {automations.map(({ key, label, plan: requiredPlan }) => {
+                  const isDisabled = requiredPlan === "GOLD" && plan === "BASE";
+                  return (
+                    <div key={key} className="hub-toggle-row">
+                      <span>
+                        {label}{" "}
+                        {isDisabled && (
+                          <Badge variant="outline" className="ml-2">
+                            Gold
+                          </Badge>
+                        )}
+                      </span>
+                      <Switch
+                        checked={!!settings[key]}
+                        onCheckedChange={(val) =>
+                          setSettings((prev) => ({ ...prev, [key]: val }))
+                        }
+                        disabled={isDisabled}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
+
+          <Button
+            className="mt-4"
+            onClick={() => {
+              fetch(`/api/agent/config/${userId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  autonomyLevel,
+                  enabledAutomations: settings,
+                  plan,
+                }),
+              });
+            }}
+          >
+            Save Settings
+          </Button>
         </TabsContent>
       </Tabs>
     </div>

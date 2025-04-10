@@ -1,0 +1,152 @@
+{
+  "login": {
+    "title": "เข้าสู่ระบบ",
+    "email": "อีเมล",
+    "password": "รหัสผ่าน",
+    "button": "เข้าสู่ระบบ",
+    "error": "ข้อมูลเข้าสู่ระบบไม่ถูกต้องหรืออีเมลยังไม่ได้รับการยืนยัน"
+  },
+  "signup": {
+    "title": "สร้างบัญชีของคุณ",
+    "firstName": "ชื่อจริง",
+    "lastName": "นามสกุล",
+    "email": "อีเมล",
+    "password": "รหัสผ่าน",
+    "confirmPassword": "ยืนยันรหัสผ่าน",
+    "plan": "เลือกแผนของคุณ",
+    "company": "ชื่อบริษัท",
+    "button": "สมัครสมาชิก"
+  },
+  "topbar": {
+    "welcome": "ยินดีต้อนรับ",
+    "logout": "ออกจากระบบ"
+  },
+  "sidebar": {
+    "dashboard": "แดชบอร์ด",
+    "bookings": "การจอง",
+    "guests": "ผู้เข้าพัก",
+    "rooms": "ห้องพัก",
+    "reports": "รายงาน",
+    "marketing": "การตลาด",
+    "suppliers": "ซัพพลายเออร์",
+    "notifications": "การแจ้งเตือน",
+    "officialAnnouncements": "ประกาศอย่างเป็นทางการ",
+    "settings": "การตั้งค่า",
+    "support": "ฝ่ายสนับสนุน",
+    "chatIA": "แชท AI",
+    "agentHub": "ศูนย์ AI Agent"
+  },
+  "dashboard": {
+    "title": "ภาพรวมแดชบอร์ด",
+    "bookings": "การจองทั้งหมด",
+    "guests": "ผู้เข้าพักทั้งหมด",
+    "revenue": "รายได้",
+    "reviews": "รีวิว",
+    "welcomeBack": "ยินดีต้อนรับกลับมา,",
+    "todayStats": "สถิติวันนี้"
+  },
+  "bookings": {
+    "title": "การจอง",
+    "addBooking": "เพิ่มการจอง",
+    "editBooking": "แก้ไขการจอง",
+    "deleteBooking": "ลบการจอง",
+    "checkIn": "วันที่เช็คอิน",
+    "checkOut": "วันที่เช็คเอาท์",
+    "guestName": "ชื่อผู้เข้าพัก",
+    "room": "ห้องพัก",
+    "status": "สถานะ",
+    "actions": "การดำเนินการ"
+  },
+  "guests": {
+    "title": "ผู้เข้าพัก",
+    "addGuest": "เพิ่มผู้เข้าพัก",
+    "editGuest": "แก้ไขผู้เข้าพัก",
+    "deleteGuest": "ลบผู้เข้าพัก",
+    "name": "ชื่อเต็ม",
+    "email": "อีเมล",
+    "phone": "โทรศัพท์",
+    "actions": "การดำเนินการ"
+  },
+  "rooms": {
+    "title": "ห้องพัก",
+    "addRoom": "เพิ่มห้องพัก",
+    "editRoom": "แก้ไขห้องพัก",
+    "deleteRoom": "ลบห้องพัก",
+    "roomNumber": "หมายเลขห้อง",
+    "type": "ประเภท",
+    "price": "ราคา",
+    "availability": "ความพร้อมใช้งาน",
+    "actions": "การดำเนินการ"
+  },
+  "suppliers": {
+    "title": "ซัพพลายเออร์",
+    "addSupplier": "เพิ่มซัพพลายเออร์",
+    "editSupplier": "แก้ไขซัพพลายเออร์",
+    "deleteSupplier": "ลบซัพพลายเออร์",
+    "name": "ชื่อซัพพลายเออร์",
+    "contact": "ผู้ติดต่อ",
+    "email": "อีเมล",
+    "phone": "โทรศัพท์",
+    "category": "หมวดหมู่",
+    "actions": "การดำเนินการ"
+  },
+  "marketing": {
+    "title": "การตลาด",
+    "campaigns": "แคมเปญ",
+    "socialPosts": "โพสต์โซเชียล",
+    "budget": "งบประมาณ",
+    "target": "กลุ่มเป้าหมาย",
+    "platforms": "แพลตฟอร์ม",
+    "createCampaign": "สร้างแคมเปญ",
+    "optimizeWithAI": "เพิ่มประสิทธิภาพด้วย AI"
+  },
+  "reports": {
+    "title": "รายงาน",
+    "bookings": "รายงานการจอง",
+    "financial": "รายงานการเงิน",
+    "general": "รายงานทั่วไป",
+    "suppliers": "รายงานซัพพลายเออร์",
+    "cleaning": "รายงานการทำความสะอาด",
+    "marketing": "รายงานการตลาด",
+    "customers": "รายงานลูกค้า",
+    "aiInsights": "ข้อมูลเชิงลึกจาก AI",
+    "export": "ส่งออกรายงาน"
+  },
+  "notifications": {
+    "title": "การแจ้งเตือน",
+    "markAllRead": "ทำเครื่องหมายว่าอ่านทั้งหมดแล้ว",
+    "noNotifications": "ไม่มีการแจ้งเตือน"
+  },
+  "chatbox": {
+    "title": "แชท AI",
+    "placeholder": "พิมพ์คำถามของคุณ...",
+    "send": "ส่ง",
+    "thinking": "AI กำลังคิด..."
+  },
+  "agentHub": {
+    "title": "ศูนย์ AI Agent",
+    "overview": "ภาพรวม",
+    "actions": "การกระทำของ AI",
+    "documents": "เอกสารที่สร้างขึ้น",
+    "settings": "การตั้งค่าอัตโนมัติ",
+    "autonomyLevel": "ระดับอัตโนมัติ",
+    "chatHistory": "ประวัติแชท",
+    "archived": "เก็บถาวรแล้ว",
+    "delete": "ลบ",
+    "confirmDelete": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?"
+  },
+  "settings": {
+    "title": "การตั้งค่า",
+    "profile": "โปรไฟล์",
+    "preferences": "การตั้งค่าลักษณะการใช้งาน",
+    "security": "ความปลอดภัย",
+    "structure": "การตั้งค่าโครงสร้าง",
+    "notifications": "การตั้งค่าการแจ้งเตือน"
+  },
+  "support": {
+    "title": "ฝ่ายสนับสนุน",
+    "contact": "ติดต่อฝ่ายสนับสนุน",
+    "faq": "คำถามที่พบบ่อย",
+    "guides": "คู่มือ & บทเรียน"
+  }
+}

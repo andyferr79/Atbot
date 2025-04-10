@@ -1,0 +1,152 @@
+{
+  "login": {
+    "title": "Iniciar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "button": "Iniciar sesión",
+    "error": "Credenciales inválidas o correo electrónico no verificado."
+  },
+  "signup": {
+    "title": "Crear tu cuenta",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "plan": "Elige tu plan",
+    "company": "Nombre de la empresa",
+    "button": "Registrarse"
+  },
+  "topbar": {
+    "welcome": "Bienvenido",
+    "logout": "Cerrar sesión"
+  },
+  "sidebar": {
+    "dashboard": "Panel",
+    "bookings": "Reservas",
+    "guests": "Huéspedes",
+    "rooms": "Habitaciones",
+    "reports": "Informes",
+    "marketing": "Marketing",
+    "suppliers": "Proveedores",
+    "notifications": "Notificaciones",
+    "officialAnnouncements": "Comunicados Oficiales",
+    "settings": "Configuración",
+    "support": "Soporte",
+    "chatIA": "Chat IA",
+    "agentHub": "Centro del Agente IA"
+  },
+  "dashboard": {
+    "title": "Resumen del Panel",
+    "bookings": "Reservas Totales",
+    "guests": "Total de Huéspedes",
+    "revenue": "Ingresos",
+    "reviews": "Reseñas",
+    "welcomeBack": "Bienvenido de nuevo,",
+    "todayStats": "Estadísticas de hoy"
+  },
+  "bookings": {
+    "title": "Reservas",
+    "addBooking": "Agregar Reserva",
+    "editBooking": "Editar Reserva",
+    "deleteBooking": "Eliminar Reserva",
+    "checkIn": "Fecha de entrada",
+    "checkOut": "Fecha de salida",
+    "guestName": "Nombre del huésped",
+    "room": "Habitación",
+    "status": "Estado",
+    "actions": "Acciones"
+  },
+  "guests": {
+    "title": "Huéspedes",
+    "addGuest": "Agregar Huésped",
+    "editGuest": "Editar Huésped",
+    "deleteGuest": "Eliminar Huésped",
+    "name": "Nombre Completo",
+    "email": "Correo electrónico",
+    "phone": "Teléfono",
+    "actions": "Acciones"
+  },
+  "rooms": {
+    "title": "Habitaciones",
+    "addRoom": "Agregar Habitación",
+    "editRoom": "Editar Habitación",
+    "deleteRoom": "Eliminar Habitación",
+    "roomNumber": "Número de Habitación",
+    "type": "Tipo",
+    "price": "Precio",
+    "availability": "Disponibilidad",
+    "actions": "Acciones"
+  },
+  "suppliers": {
+    "title": "Proveedores",
+    "addSupplier": "Agregar Proveedor",
+    "editSupplier": "Editar Proveedor",
+    "deleteSupplier": "Eliminar Proveedor",
+    "name": "Nombre del Proveedor",
+    "contact": "Contacto",
+    "email": "Correo electrónico",
+    "phone": "Teléfono",
+    "category": "Categoría",
+    "actions": "Acciones"
+  },
+  "marketing": {
+    "title": "Marketing",
+    "campaigns": "Campañas",
+    "socialPosts": "Publicaciones Sociales",
+    "budget": "Presupuesto",
+    "target": "Objetivo",
+    "platforms": "Plataformas",
+    "createCampaign": "Crear Campaña",
+    "optimizeWithAI": "Optimizar con IA"
+  },
+  "reports": {
+    "title": "Informes",
+    "bookings": "Informe de Reservas",
+    "financial": "Informe Financiero",
+    "general": "Informe General",
+    "suppliers": "Informe de Proveedores",
+    "cleaning": "Informe de Limpieza",
+    "marketing": "Informe de Marketing",
+    "customers": "Informe de Clientes",
+    "aiInsights": "Análisis con IA",
+    "export": "Exportar Informe"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "noNotifications": "No hay notificaciones"
+  },
+  "chatbox": {
+    "title": "Chat IA",
+    "placeholder": "Escribe tu pregunta...",
+    "send": "Enviar",
+    "thinking": "La IA está pensando..."
+  },
+  "agentHub": {
+    "title": "Centro del Agente IA",
+    "overview": "Resumen",
+    "actions": "Acciones de la IA",
+    "documents": "Documentos Generados",
+    "settings": "Configuraciones de Automatización",
+    "autonomyLevel": "Nivel de Autonomía",
+    "chatHistory": "Historial de Chat",
+    "archived": "Archivado",
+    "delete": "Eliminar",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar este elemento?"
+  },
+  "settings": {
+    "title": "Configuración",
+    "profile": "Perfil",
+    "preferences": "Preferencias",
+    "security": "Seguridad",
+    "structure": "Configuración de Estructura",
+    "notifications": "Configuración de Notificaciones"
+  },
+  "support": {
+    "title": "Soporte",
+    "contact": "Contactar Soporte",
+    "faq": "Preguntas Frecuentes",
+    "guides": "Guías y Tutoriales"
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "login": {
+    "title": "Logga in",
+    "email": "E-post",
+    "password": "Lösenord",
+    "button": "Logga in",
+    "error": "Ogiltiga uppgifter eller e-post ej verifierad."
+  },
+  "signup": {
+    "title": "Skapa ditt konto",
+    "firstName": "Förnamn",
+    "lastName": "Efternamn",
+    "email": "E-post",
+    "password": "Lösenord",
+    "confirmPassword": "Bekräfta lösenord",
+    "plan": "Välj din plan",
+    "company": "Företagsnamn",
+    "button": "Registrera dig"
+  },
+  "topbar": {
+    "welcome": "Välkommen",
+    "logout": "Logga ut"
+  },
+  "sidebar": {
+    "dashboard": "Instrumentpanel",
+    "bookings": "Bokningar",
+    "guests": "Gäster",
+    "rooms": "Rum",
+    "reports": "Rapporter",
+    "marketing": "Marknadsföring",
+    "suppliers": "Leverantörer",
+    "notifications": "Aviseringar",
+    "officialAnnouncements": "Officiella Meddelanden",
+    "settings": "Inställningar",
+    "support": "Support",
+    "chatIA": "AI-chatt",
+    "agentHub": "AI-agentnav"
+  },
+  "dashboard": {
+    "title": "Översikt instrumentpanel",
+    "bookings": "Totala bokningar",
+    "guests": "Totala gäster",
+    "revenue": "Intäkter",
+    "reviews": "Recensioner",
+    "welcomeBack": "Välkommen tillbaka,",
+    "todayStats": "Dagens statistik"
+  },
+  "bookings": {
+    "title": "Bokningar",
+    "addBooking": "Lägg till bokning",
+    "editBooking": "Redigera bokning",
+    "deleteBooking": "Radera bokning",
+    "checkIn": "Incheckningsdatum",
+    "checkOut": "Utcheckningsdatum",
+    "guestName": "Gästnamn",
+    "room": "Rum",
+    "status": "Status",
+    "actions": "Åtgärder"
+  },
+  "guests": {
+    "title": "Gäster",
+    "addGuest": "Lägg till gäst",
+    "editGuest": "Redigera gäst",
+    "deleteGuest": "Radera gäst",
+    "name": "Fullständigt namn",
+    "email": "E-post",
+    "phone": "Telefon",
+    "actions": "Åtgärder"
+  },
+  "rooms": {
+    "title": "Rum",
+    "addRoom": "Lägg till rum",
+    "editRoom": "Redigera rum",
+    "deleteRoom": "Radera rum",
+    "roomNumber": "Rumsnummer",
+    "type": "Typ",
+    "price": "Pris",
+    "availability": "Tillgänglighet",
+    "actions": "Åtgärder"
+  },
+  "suppliers": {
+    "title": "Leverantörer",
+    "addSupplier": "Lägg till leverantör",
+    "editSupplier": "Redigera leverantör",
+    "deleteSupplier": "Radera leverantör",
+    "name": "Leverantörsnamn",
+    "contact": "Kontakt",
+    "email": "E-post",
+    "phone": "Telefon",
+    "category": "Kategori",
+    "actions": "Åtgärder"
+  },
+  "marketing": {
+    "title": "Marknadsföring",
+    "campaigns": "Kampanjer",
+    "socialPosts": "Sociala inlägg",
+    "budget": "Budget",
+    "target": "Målgrupp",
+    "platforms": "Plattformar",
+    "createCampaign": "Skapa kampanj",
+    "optimizeWithAI": "Optimera med AI"
+  },
+  "reports": {
+    "title": "Rapporter",
+    "bookings": "Bokningsrapport",
+    "financial": "Finansiell rapport",
+    "general": "Allmän rapport",
+    "suppliers": "Leverantörsrapport",
+    "cleaning": "Städrappport",
+    "marketing": "Marknadsrapport",
+    "customers": "Kundrapport",
+    "aiInsights": "AI-insikter",
+    "export": "Exportera rapport"
+  },
+  "notifications": {
+    "title": "Aviseringar",
+    "markAllRead": "Markera alla som lästa",
+    "noNotifications": "Inga aviseringar"
+  },
+  "chatbox": {
+    "title": "AI-chatt",
+    "placeholder": "Skriv din fråga...",
+    "send": "Skicka",
+    "thinking": "AI tänker..."
+  },
+  "agentHub": {
+    "title": "AI-agentnav",
+    "overview": "Översikt",
+    "actions": "AI-åtgärder",
+    "documents": "Genererade dokument",
+    "settings": "Automatiseringsinställningar",
+    "autonomyLevel": "Autonominivå",
+    "chatHistory": "Chatt-historik",
+    "archived": "Arkiverade",
+    "delete": "Radera",
+    "confirmDelete": "Är du säker på att du vill radera detta objekt?"
+  },
+  "settings": {
+    "title": "Inställningar",
+    "profile": "Profil",
+    "preferences": "Preferenser",
+    "security": "Säkerhet",
+    "structure": "Strukturinställningar",
+    "notifications": "Aviseringsinställningar"
+  },
+  "support": {
+    "title": "Support",
+    "contact": "Kontakta support",
+    "faq": "Vanliga frågor",
+    "guides": "Guider & handledningar"
+  }
+}

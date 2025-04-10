@@ -1,4 +1,3 @@
-// 📂 E:\ATBot\frontend\src\components\Sidebar.js
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -16,10 +15,13 @@ import {
   faBell,
   faEnvelopeOpenText,
 } from "@fortawesome/free-solid-svg-icons";
+import { useTranslation } from "react-i18next";
 import api from "../services/api";
 import "../styles/sidebar.css";
 
 const Sidebar = () => {
+  const { t } = useTranslation();
+
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
 
@@ -30,13 +32,9 @@ const Sidebar = () => {
   const fetchUnreadCounts = async () => {
     try {
       const notificationsResponse = await api.get(
-        "/notifications/unread-count"
+        "/getUnreadNotificationsCount"
       );
-      setUnreadNotifications(notificationsResponse.data.count);
-      const announcementsResponse = await api.get(
-        "/notifications/announcements/unread-count"
-      );
-      setUnreadAnnouncements(announcementsResponse.data.count);
+      setUnreadNotifications(notificationsResponse.data.unreadCount || 0);
     } catch (error) {
       console.error("Errore nel recupero delle notifiche:", error);
     }
@@ -48,56 +46,59 @@ const Sidebar = () => {
         <img src="/logo.png" alt="StayPro Logo" className="sidebar-logo" />
         <h1>StayPro</h1>
       </div>
+
       <ul className="sidebar-menu">
         <li>
           <Link to="/">
             <FontAwesomeIcon icon={faHome} className="icon" />
-            <span>Dashboard</span>
+            <span>{t("sidebar.dashboard")}</span>
           </Link>
         </li>
         <li>
           <Link to="/bookings">
             <FontAwesomeIcon icon={faBook} className="icon" />
-            <span>Prenotazioni</span>
+            <span>{t("sidebar.bookings")}</span>
           </Link>
         </li>
         <li>
           <Link to="/guests">
             <FontAwesomeIcon icon={faUser} className="icon" />
-            <span>Ospiti</span>
+            <span>{t("sidebar.guests")}</span>
           </Link>
         </li>
         <li>
           <Link to="/rooms">
             <FontAwesomeIcon icon={faBed} className="icon" />
-            <span>Camere</span>
+            <span>{t("sidebar.rooms")}</span>
           </Link>
         </li>
         <li>
           <Link to="/reports">
             <FontAwesomeIcon icon={faChartBar} className="icon" />
-            <span>Report</span>
+            <span>{t("sidebar.reports")}</span>
           </Link>
         </li>
         <li>
           <Link to="/marketing">
             <FontAwesomeIcon icon={faBullhorn} className="icon" />
-            <span>Marketing</span>
+            <span>{t("sidebar.marketing")}</span>
           </Link>
         </li>
         <li>
           <Link to="/suppliers">
             <FontAwesomeIcon icon={faTruck} className="icon" />
-            <span>Fornitori</span>
+            <span>{t("sidebar.suppliers")}</span>
           </Link>
         </li>
       </ul>
+
       <hr className="sidebar-divider" />
+
       <ul className="sidebar-menu">
         <li>
           <Link to="/notifications">
             <FontAwesomeIcon icon={faBell} className="icon" />
-            <span>Notifiche</span>
+            <span>{t("sidebar.notifications")}</span>
             {unreadNotifications > 0 && (
               <span className="badge">{unreadNotifications}</span>
             )}
@@ -106,43 +107,55 @@ const Sidebar = () => {
         <li>
           <Link to="/announcements">
             <FontAwesomeIcon icon={faEnvelopeOpenText} className="icon" />
-            <span>Comunicazioni Ufficiali</span>
-            {unreadAnnouncements > 0 && (
-              <span className="badge">{unreadAnnouncements}</span>
-            )}
+            <span>{t("sidebar.officialAnnouncements")}</span>
           </Link>
         </li>
       </ul>
+
       <hr className="sidebar-divider" />
+
       <ul className="sidebar-menu">
         <li>
           <Link to="/settings">
             <FontAwesomeIcon icon={faCog} className="icon" />
-            <span>Impostazioni</span>
+            <span>{t("sidebar.settings")}</span>
           </Link>
         </li>
       </ul>
+
       <hr className="sidebar-divider" />
+
       <ul className="sidebar-menu">
         <li>
           <Link to="/support">
             <FontAwesomeIcon icon={faLifeRing} className="icon" />
-            <span>Assistenza</span>
+            <span>{t("sidebar.support")}</span>
           </Link>
         </li>
         <li>
           <Link to="/chatbox">
             <FontAwesomeIcon icon={faRobot} className="icon" />
-            <span>Chat IA</span>
+            <span>{t("sidebar.chatIA")}</span>
           </Link>
         </li>
         <li>
           <Link to="/agent-hub">
             <FontAwesomeIcon icon={faRobot} className="icon" />
-            <span>HUB Agente IA</span>
+            <span>{t("sidebar.agentHub")}</span>
           </Link>
         </li>
       </ul>
+
+      {/* 🔥 Upgrade Banner in fondo */}
+      <div className="sidebar-upgrade">
+        <div className="upgrade-content">
+          <img src="/gold-icon.png" alt="Gold Plan" className="upgrade-icon" />
+          <p>{t("upgrade.message")}</p>
+          <Link to="/upgrade" className="upgrade-btn">
+            {t("upgrade.button")}
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };

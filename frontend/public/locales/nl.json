@@ -1,0 +1,152 @@
+{
+  "login": {
+    "title": "Inloggen",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "button": "Inloggen",
+    "error": "Ongeldige inloggegevens of niet-geverifieerde e-mail."
+  },
+  "signup": {
+    "title": "Account aanmaken",
+    "firstName": "Voornaam",
+    "lastName": "Achternaam",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "confirmPassword": "Bevestig wachtwoord",
+    "plan": "Kies je abonnement",
+    "company": "Bedrijfsnaam",
+    "button": "Registreren"
+  },
+  "topbar": {
+    "welcome": "Welkom",
+    "logout": "Uitloggen"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "bookings": "Boekingen",
+    "guests": "Gasten",
+    "rooms": "Kamers",
+    "reports": "Rapporten",
+    "marketing": "Marketing",
+    "suppliers": "Leveranciers",
+    "notifications": "Meldingen",
+    "officialAnnouncements": "Officiële mededelingen",
+    "settings": "Instellingen",
+    "support": "Ondersteuning",
+    "chatIA": "AI Chat",
+    "agentHub": "AI Agent Hub"
+  },
+  "dashboard": {
+    "title": "Dashboard Overzicht",
+    "bookings": "Totale boekingen",
+    "guests": "Totale gasten",
+    "revenue": "Omzet",
+    "reviews": "Beoordelingen",
+    "welcomeBack": "Welkom terug,",
+    "todayStats": "Statistieken van vandaag"
+  },
+  "bookings": {
+    "title": "Boekingen",
+    "addBooking": "Boeking toevoegen",
+    "editBooking": "Boeking bewerken",
+    "deleteBooking": "Boeking verwijderen",
+    "checkIn": "Incheckdatum",
+    "checkOut": "Uitcheckdatum",
+    "guestName": "Naam gast",
+    "room": "Kamer",
+    "status": "Status",
+    "actions": "Acties"
+  },
+  "guests": {
+    "title": "Gasten",
+    "addGuest": "Gast toevoegen",
+    "editGuest": "Gast bewerken",
+    "deleteGuest": "Gast verwijderen",
+    "name": "Volledige naam",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "actions": "Acties"
+  },
+  "rooms": {
+    "title": "Kamers",
+    "addRoom": "Kamer toevoegen",
+    "editRoom": "Kamer bewerken",
+    "deleteRoom": "Kamer verwijderen",
+    "roomNumber": "Kamernummer",
+    "type": "Type",
+    "price": "Prijs",
+    "availability": "Beschikbaarheid",
+    "actions": "Acties"
+  },
+  "suppliers": {
+    "title": "Leveranciers",
+    "addSupplier": "Leverancier toevoegen",
+    "editSupplier": "Leverancier bewerken",
+    "deleteSupplier": "Leverancier verwijderen",
+    "name": "Naam leverancier",
+    "contact": "Contact",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "category": "Categorie",
+    "actions": "Acties"
+  },
+  "marketing": {
+    "title": "Marketing",
+    "campaigns": "Campagnes",
+    "socialPosts": "Sociale berichten",
+    "budget": "Budget",
+    "target": "Doelgroep",
+    "platforms": "Platformen",
+    "createCampaign": "Campagne aanmaken",
+    "optimizeWithAI": "Optimaliseren met AI"
+  },
+  "reports": {
+    "title": "Rapporten",
+    "bookings": "Boekingsrapport",
+    "financial": "Financieel rapport",
+    "general": "Algemeen rapport",
+    "suppliers": "Leveranciersrapport",
+    "cleaning": "Schoonmaakrapport",
+    "marketing": "Marketingrapport",
+    "customers": "Klantrapport",
+    "aiInsights": "AI-inzichten",
+    "export": "Rapport exporteren"
+  },
+  "notifications": {
+    "title": "Meldingen",
+    "markAllRead": "Alles als gelezen markeren",
+    "noNotifications": "Geen meldingen"
+  },
+  "chatbox": {
+    "title": "AI Chat",
+    "placeholder": "Typ je vraag...",
+    "send": "Verzenden",
+    "thinking": "AI denkt na..."
+  },
+  "agentHub": {
+    "title": "AI Agent Hub",
+    "overview": "Overzicht",
+    "actions": "AI Acties",
+    "documents": "Gegenereerde documenten",
+    "settings": "Automatiseringsinstellingen",
+    "autonomyLevel": "Autonomieniveau",
+    "chatHistory": "Chatgeschiedenis",
+    "archived": "Gearchiveerd",
+    "delete": "Verwijderen",
+    "confirmDelete": "Weet je zeker dat je dit item wilt verwijderen?"
+  },
+  "settings": {
+    "title": "Instellingen",
+    "profile": "Profiel",
+    "preferences": "Voorkeuren",
+    "security": "Beveiliging",
+    "structure": "Structuurinstellingen",
+    "notifications": "Meldingsinstellingen"
+  },
+  "support": {
+    "title": "Ondersteuning",
+    "contact": "Neem contact op met ondersteuning",
+    "faq": "Veelgestelde vragen",
+    "guides": "Handleidingen & tutorials"
+  }
+}

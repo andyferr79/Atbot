@@ -1,0 +1,152 @@
+{
+  "login": {
+    "title": "Mag-login",
+    "email": "Email",
+    "password": "Password",
+    "button": "Mag-login",
+    "error": "Di-wastong kredensyal o hindi pa na-verify ang email."
+  },
+  "signup": {
+    "title": "Gumawa ng iyong account",
+    "firstName": "Pangalan",
+    "lastName": "Apelyido",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Kumpirmahin ang Password",
+    "plan": "Pumili ng Plano",
+    "company": "Pangalan ng Kompanya",
+    "button": "Mag-sign up"
+  },
+  "topbar": {
+    "welcome": "Maligayang Pagdating",
+    "logout": "Mag-logout"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "bookings": "Mga Booking",
+    "guests": "Mga Bisita",
+    "rooms": "Mga Kwarto",
+    "reports": "Mga Ulat",
+    "marketing": "Marketing",
+    "suppliers": "Mga Supplier",
+    "notifications": "Mga Abiso",
+    "officialAnnouncements": "Opisyal na Anunsyo",
+    "settings": "Mga Setting",
+    "support": "Suporta",
+    "chatIA": "Chat AI",
+    "agentHub": "AI Agent Hub"
+  },
+  "dashboard": {
+    "title": "Pangkalahatang-ideya ng Dashboard",
+    "bookings": "Kabuuang Booking",
+    "guests": "Kabuuang Bisita",
+    "revenue": "Kita",
+    "reviews": "Mga Review",
+    "welcomeBack": "Maligayang pagbabalik,",
+    "todayStats": "Estadistika Ngayon"
+  },
+  "bookings": {
+    "title": "Mga Booking",
+    "addBooking": "Magdagdag ng Booking",
+    "editBooking": "I-edit ang Booking",
+    "deleteBooking": "Tanggalin ang Booking",
+    "checkIn": "Petsa ng Check-in",
+    "checkOut": "Petsa ng Check-out",
+    "guestName": "Pangalan ng Bisita",
+    "room": "Kwarto",
+    "status": "Status",
+    "actions": "Mga Aksyon"
+  },
+  "guests": {
+    "title": "Mga Bisita",
+    "addGuest": "Magdagdag ng Bisita",
+    "editGuest": "I-edit ang Bisita",
+    "deleteGuest": "Tanggalin ang Bisita",
+    "name": "Buong Pangalan",
+    "email": "Email",
+    "phone": "Telepono",
+    "actions": "Mga Aksyon"
+  },
+  "rooms": {
+    "title": "Mga Kwarto",
+    "addRoom": "Magdagdag ng Kwarto",
+    "editRoom": "I-edit ang Kwarto",
+    "deleteRoom": "Tanggalin ang Kwarto",
+    "roomNumber": "Numero ng Kwarto",
+    "type": "Uri",
+    "price": "Presyo",
+    "availability": "Availability",
+    "actions": "Mga Aksyon"
+  },
+  "suppliers": {
+    "title": "Mga Supplier",
+    "addSupplier": "Magdagdag ng Supplier",
+    "editSupplier": "I-edit ang Supplier",
+    "deleteSupplier": "Tanggalin ang Supplier",
+    "name": "Pangalan ng Supplier",
+    "contact": "Contact",
+    "email": "Email",
+    "phone": "Telepono",
+    "category": "Kategorya",
+    "actions": "Mga Aksyon"
+  },
+  "marketing": {
+    "title": "Marketing",
+    "campaigns": "Mga Kampanya",
+    "socialPosts": "Mga Social Post",
+    "budget": "Badyet",
+    "target": "Target",
+    "platforms": "Mga Platform",
+    "createCampaign": "Gumawa ng Kampanya",
+    "optimizeWithAI": "I-optimize gamit ang AI"
+  },
+  "reports": {
+    "title": "Mga Ulat",
+    "bookings": "Ulat ng Booking",
+    "financial": "Ulat ng Pananalapi",
+    "general": "Pangkalahatang Ulat",
+    "suppliers": "Ulat ng Supplier",
+    "cleaning": "Ulat ng Paglilinis",
+    "marketing": "Ulat ng Marketing",
+    "customers": "Ulat ng Customer",
+    "aiInsights": "AI Insights",
+    "export": "I-export ang Ulat"
+  },
+  "notifications": {
+    "title": "Mga Abiso",
+    "markAllRead": "Markahan lahat bilang nabasa",
+    "noNotifications": "Walang mga abiso"
+  },
+  "chatbox": {
+    "title": "Chat AI",
+    "placeholder": "I-type ang iyong tanong...",
+    "send": "Ipadala",
+    "thinking": "Nag-iisip ang AI..."
+  },
+  "agentHub": {
+    "title": "AI Agent Hub",
+    "overview": "Pangkalahatang-ideya",
+    "actions": "Mga Aksyon ng AI",
+    "documents": "Mga Nabuong Dokumento",
+    "settings": "Mga Setting ng Automation",
+    "autonomyLevel": "Antas ng Autonomy",
+    "chatHistory": "Kasaysayan ng Chat",
+    "archived": "Na-archive",
+    "delete": "Tanggalin",
+    "confirmDelete": "Sigurado ka bang gusto mong tanggalin ang item na ito?"
+  },
+  "settings": {
+    "title": "Mga Setting",
+    "profile": "Profile",
+    "preferences": "Mga Kagustuhan",
+    "security": "Seguridad",
+    "structure": "Mga Setting ng Istraktura",
+    "notifications": "Mga Setting ng Abiso"
+  },
+  "support": {
+    "title": "Suporta",
+    "contact": "Makipag-ugnayan sa Suporta",
+    "faq": "Mga Madalas Itanong",
+    "guides": "Mga Gabay at Tutorial"
+  }
+}

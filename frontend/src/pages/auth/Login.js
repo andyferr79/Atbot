@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebaseConfig"; // ✅ Assicurati che il path sia corretto
+import { useTranslation } from "react-i18next";
+import { auth } from "../../firebaseConfig";
 import "../../styles/Login.css";
 
 function Login() {
+  const { t } = useTranslation();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -22,44 +25,46 @@ function Login() {
       );
       const user = userCredential.user;
 
-      // 🛡️ Controlla se l’email è verificata
       if (!user.emailVerified) {
-        setError("Email non verificata. Controlla la tua casella di posta.");
+        setError("email_not_verified");
         return;
       }
 
-      // ✅ Salva info base nel localStorage
-      localStorage.setItem("token", await user.getIdToken());
+      const token = await user.getIdToken(true);
+      if (!token) throw new Error("Token non ricevuto");
+
+      localStorage.setItem("firebaseToken", token);
+      localStorage.setItem("token", token);
       localStorage.setItem("user_id", user.uid);
       localStorage.setItem("email", user.email);
 
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Errore login Firebase:", error);
-      setError("Credenziali errate o utente non registrato.");
+      navigate("/");
+    } catch (err) {
+      console.error("❌ Errore login:", err.code, err.message);
+      setError("invalid_credentials");
     }
   };
 
   return (
     <div className="login-container">
-      <h2>Accedi</h2>
-      {error && <p className="error-message">{error}</p>}
+      <h2>{t("login")}</h2>
+      {error && <p className="error-message">{t(error)}</p>}
       <form onSubmit={handleSubmit}>
         <input
           type="email"
-          placeholder="Email"
+          placeholder={t("email")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input
           type="password"
-          placeholder="Password"
+          placeholder={t("password")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button type="submit">Login</button>
+        <button type="submit">{t("login")}</button>
       </form>
     </div>
   );

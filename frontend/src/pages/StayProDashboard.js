@@ -1,6 +1,6 @@
-import React from "react";
+// 📂 src/pages/StayProDashboard.js
+import React, { useEffect, useState } from "react";
 import "../styles/StayProDashboard.css";
-
 import {
   LineChart,
   Line,
@@ -17,126 +17,66 @@ import {
   Cell,
   ComposedChart,
 } from "recharts";
-
-// 📊 Dati statici per i grafici
-const prenotazioniGiornaliere = [
-  { giorno: "Lun", prenotazioni: 12 },
-  { giorno: "Mar", prenotazioni: 18 },
-  { giorno: "Mer", prenotazioni: 15 },
-  { giorno: "Gio", prenotazioni: 20 },
-  { giorno: "Ven", prenotazioni: 25 },
-  { giorno: "Sab", prenotazioni: 30 },
-  { giorno: "Dom", prenotazioni: 28 },
-];
-
-const entrateMensili = [
-  { mese: "Gen", entrate: 12000 },
-  { mese: "Feb", entrate: 15000 },
-  { mese: "Mar", entrate: 18000 },
-  { mese: "Apr", entrate: 21000 },
-];
-
-const tassoOccupazione = [
-  { tipo: "Singola", valore: 35 },
-  { tipo: "Doppia", valore: 50 },
-  { tipo: "Suite", valore: 15 },
-];
-
-const fontiPrenotazione = [
-  { fonte: "Booking", ricavi: 5000 },
-  { fonte: "Expedia", ricavi: 3500 },
-  { fonte: "Sito Web", ricavi: 7000 },
-];
-
-const cancellazioniVsConfermate = [
-  { mese: "Gen", confermate: 120, cancellazioni: 20 },
-  { mese: "Feb", confermate: 140, cancellazioni: 25 },
-  { mese: "Mar", confermate: 160, cancellazioni: 30 },
-  { mese: "Apr", confermate: 180, cancellazioni: 40 },
-];
-
-const recensioniClienti = [
-  {
-    nome: "Andrea R.",
-    rating: 5,
-    commento: "Servizio impeccabile, tutto perfetto!",
-  },
-  {
-    nome: "Giulia M.",
-    rating: 4,
-    commento: "Ottima esperienza, ci tornerò sicuramente!",
-  },
-  {
-    nome: "Luca T.",
-    rating: 3,
-    commento: "Buona struttura, ma c'è spazio per migliorare.",
-  },
-  {
-    nome: "Martina B.",
-    rating: 5,
-    commento: "Hotel favoloso, personale gentile e disponibile!",
-  },
-  {
-    nome: "Riccardo P.",
-    rating: 4,
-    commento: "Molto bene, solo qualche dettaglio da migliorare.",
-  },
-];
+import { getDashboardOverview } from "../services/api";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28"];
 
-// ⭐ FIX — Componente corretto che restituisce elementi React validi
-const RatingStars = ({ rating }) => {
-  return (
-    <span className="stars">
-      {[...Array(5)].map((_, index) => (
-        <span key={index}>{index < rating ? "★" : "☆"}</span>
-      ))}
-    </span>
-  );
-};
+const RatingStars = ({ rating }) => (
+  <span className="stars">
+    {[...Array(5)].map((_, index) => (
+      <span key={index}>{index < rating ? "★" : "☆"}</span>
+    ))}
+  </span>
+);
 
-const RecensioniClienti = () => (
+const RecensioniClienti = ({ recensioni }) => (
   <section className="reviews-box">
     <h3>Ultime Recensioni dei Clienti</h3>
     <div className="reviews-list">
-      {recensioniClienti.map((recensione, index) => (
-        <div className="review" key={index}>
-          <h4>{recensione.nome}</h4>
-          <RatingStars rating={recensione.rating} />
-          <p>"{recensione.commento}"</p>
-        </div>
-      ))}
+      {recensioni.length === 0 ? (
+        <p>Nessuna recensione disponibile al momento.</p>
+      ) : (
+        recensioni.map((recensione, index) => (
+          <div className="review" key={index}>
+            <h4>{recensione.nome}</h4>
+            <RatingStars rating={recensione.rating} />
+            <p>"{recensione.commento}"</p>
+          </div>
+        ))
+      )}
     </div>
   </section>
 );
 
-const KeyStats = () => (
+const KeyStats = ({ stats }) => (
   <section className="key-stats">
     <div className="stat">
       <h2>Entrate</h2>
-      <p>€12,000</p>
+      <p>€{stats.totalRevenue.toLocaleString()}</p>
     </div>
     <div className="stat">
       <h2>Tasso di Occupazione</h2>
-      <p>75%</p>
+      <p>{stats.occupancyRate}%</p>
     </div>
     <div className="stat">
       <h2>Prenotazioni</h2>
-      <p>120</p>
+      <p>{stats.totalBookings}</p>
+    </div>
+    <div className="stat">
+      <h2>Clienti Attivi</h2>
+      <p>{stats.activeCustomers}</p>
     </div>
   </section>
 );
 
-const Charts = () => (
+const Charts = ({ charts }) => (
   <section className="charts">
     <h2>Tendenze e Previsioni</h2>
 
-    {/* Prenotazioni Giornaliere */}
     <div className="chart-box">
       <h3>Prenotazioni Giornaliere</h3>
       <ResponsiveContainer width="100%" height={250}>
-        <BarChart data={prenotazioniGiornaliere}>
+        <BarChart data={charts.dailyBookings}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="giorno" />
           <YAxis />
@@ -147,11 +87,10 @@ const Charts = () => (
       </ResponsiveContainer>
     </div>
 
-    {/* Entrate Mensili */}
     <div className="chart-box">
       <h3>Entrate Mensili</h3>
       <ResponsiveContainer width="100%" height={250}>
-        <LineChart data={entrateMensili}>
+        <LineChart data={charts.monthlyRevenue}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="mese" />
           <YAxis />
@@ -162,11 +101,10 @@ const Charts = () => (
       </ResponsiveContainer>
     </div>
 
-    {/* Fonti di Prenotazione */}
     <div className="chart-box">
       <h3>Fonti di Prenotazione</h3>
       <ResponsiveContainer width="100%" height={250}>
-        <BarChart data={fontiPrenotazione}>
+        <BarChart data={charts.bookingSources}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="fonte" />
           <YAxis />
@@ -177,13 +115,12 @@ const Charts = () => (
       </ResponsiveContainer>
     </div>
 
-    {/* Tasso di Occupazione */}
     <div className="chart-box">
       <h3>Tasso di Occupazione per Tipo di Camera</h3>
       <ResponsiveContainer width="100%" height={250}>
         <PieChart>
           <Pie
-            data={tassoOccupazione}
+            data={charts.roomOccupancy}
             dataKey="valore"
             nameKey="tipo"
             cx="50%"
@@ -191,7 +128,7 @@ const Charts = () => (
             outerRadius={100}
             label
           >
-            {tassoOccupazione.map((entry, index) => (
+            {charts.roomOccupancy.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={COLORS[index % COLORS.length]}
@@ -203,11 +140,10 @@ const Charts = () => (
       </ResponsiveContainer>
     </div>
 
-    {/* Cancellazioni vs Confermate */}
     <div className="chart-box">
       <h3>Cancellazioni vs Prenotazioni Confermate</h3>
       <ResponsiveContainer width="100%" height={250}>
-        <ComposedChart data={cancellazioniVsConfermate}>
+        <ComposedChart data={charts.cancellationsVsConfirmed}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="mese" />
           <YAxis />
@@ -221,15 +157,35 @@ const Charts = () => (
   </section>
 );
 
-const StayProDashboard = () => (
-  <div className="dashboard-container">
-    <header className="dashboard-header">
-      <h1>Dashboard StayPro</h1>
-    </header>
-    <KeyStats />
-    <Charts />
-    <RecensioniClienti />
-  </div>
-);
+const StayProDashboard = () => {
+  const [overview, setOverview] = useState(null);
+  const userId = localStorage.getItem("userId");
+
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const { data } = await getDashboardOverview(userId);
+        setOverview(data);
+      } catch (error) {
+        console.error("Errore nel caricamento della dashboard:", error);
+      }
+    };
+    if (userId) fetchOverview();
+  }, [userId]);
+
+  if (!overview) return <div className="loading">Caricamento dashboard...</div>;
+
+  return (
+    <div className="dashboard-container">
+      <header className="dashboard-header">
+        <h1>Dashboard StayPro</h1>
+        <p>Benvenuto! Qui trovi un riepilogo completo della tua attività.</p>
+      </header>
+      <KeyStats stats={overview} />
+      <Charts charts={overview} />
+      <RecensioniClienti recensioni={overview.reviews || []} />
+    </div>
+  );
+};
 
 export default StayProDashboard;

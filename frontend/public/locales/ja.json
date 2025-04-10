@@ -1,0 +1,152 @@
+{
+  "login": {
+    "title": "ログイン",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "button": "ログイン",
+    "error": "無効な資格情報、またはメールが確認されていません。"
+  },
+  "signup": {
+    "title": "アカウント作成",
+    "firstName": "名",
+    "lastName": "姓",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "confirmPassword": "パスワードの確認",
+    "plan": "プランを選択",
+    "company": "会社名",
+    "button": "登録"
+  },
+  "topbar": {
+    "welcome": "ようこそ",
+    "logout": "ログアウト"
+  },
+  "sidebar": {
+    "dashboard": "ダッシュボード",
+    "bookings": "予約",
+    "guests": "ゲスト",
+    "rooms": "部屋",
+    "reports": "レポート",
+    "marketing": "マーケティング",
+    "suppliers": "サプライヤー",
+    "notifications": "通知",
+    "officialAnnouncements": "公式のお知らせ",
+    "settings": "設定",
+    "support": "サポート",
+    "chatIA": "AIチャット",
+    "agentHub": "AIエージェントハブ"
+  },
+  "dashboard": {
+    "title": "ダッシュボード概要",
+    "bookings": "総予約数",
+    "guests": "総ゲスト数",
+    "revenue": "収益",
+    "reviews": "レビュー",
+    "welcomeBack": "おかえりなさい、",
+    "todayStats": "今日の統計"
+  },
+  "bookings": {
+    "title": "予約",
+    "addBooking": "予約を追加",
+    "editBooking": "予約を編集",
+    "deleteBooking": "予約を削除",
+    "checkIn": "チェックイン日",
+    "checkOut": "チェックアウト日",
+    "guestName": "ゲスト名",
+    "room": "部屋",
+    "status": "ステータス",
+    "actions": "アクション"
+  },
+  "guests": {
+    "title": "ゲスト",
+    "addGuest": "ゲストを追加",
+    "editGuest": "ゲストを編集",
+    "deleteGuest": "ゲストを削除",
+    "name": "フルネーム",
+    "email": "メール",
+    "phone": "電話番号",
+    "actions": "アクション"
+  },
+  "rooms": {
+    "title": "部屋",
+    "addRoom": "部屋を追加",
+    "editRoom": "部屋を編集",
+    "deleteRoom": "部屋を削除",
+    "roomNumber": "部屋番号",
+    "type": "タイプ",
+    "price": "価格",
+    "availability": "空き状況",
+    "actions": "アクション"
+  },
+  "suppliers": {
+    "title": "サプライヤー",
+    "addSupplier": "サプライヤーを追加",
+    "editSupplier": "サプライヤーを編集",
+    "deleteSupplier": "サプライヤーを削除",
+    "name": "サプライヤー名",
+    "contact": "連絡先",
+    "email": "メール",
+    "phone": "電話",
+    "category": "カテゴリ",
+    "actions": "アクション"
+  },
+  "marketing": {
+    "title": "マーケティング",
+    "campaigns": "キャンペーン",
+    "socialPosts": "ソーシャル投稿",
+    "budget": "予算",
+    "target": "ターゲット",
+    "platforms": "プラットフォーム",
+    "createCampaign": "キャンペーンを作成",
+    "optimizeWithAI": "AIで最適化"
+  },
+  "reports": {
+    "title": "レポート",
+    "bookings": "予約レポート",
+    "financial": "財務レポート",
+    "general": "一般レポート",
+    "suppliers": "サプライヤーレポート",
+    "cleaning": "清掃レポート",
+    "marketing": "マーケティングレポート",
+    "customers": "顧客レポート",
+    "aiInsights": "AIインサイト",
+    "export": "レポートをエクスポート"
+  },
+  "notifications": {
+    "title": "通知",
+    "markAllRead": "すべて既読にする",
+    "noNotifications": "通知はありません"
+  },
+  "chatbox": {
+    "title": "AIチャット",
+    "placeholder": "質問を入力してください...",
+    "send": "送信",
+    "thinking": "AIが思考中..."
+  },
+  "agentHub": {
+    "title": "AIエージェントハブ",
+    "overview": "概要",
+    "actions": "AIアクション",
+    "documents": "生成されたドキュメント",
+    "settings": "自動化設定",
+    "autonomyLevel": "自律レベル",
+    "chatHistory": "チャット履歴",
+    "archived": "アーカイブ済み",
+    "delete": "削除",
+    "confirmDelete": "この項目を削除してもよろしいですか？"
+  },
+  "settings": {
+    "title": "設定",
+    "profile": "プロフィール",
+    "preferences": "設定",
+    "security": "セキュリティ",
+    "structure": "構造設定",
+    "notifications": "通知設定"
+  },
+  "support": {
+    "title": "サポート",
+    "contact": "サポートに連絡",
+    "faq": "よくある質問",
+    "guides": "ガイド & チュートリアル"
+  }
+}

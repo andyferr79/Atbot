@@ -174,3 +174,29 @@ exports.deleteNotification = functions.https.onRequest(async (req, res) => {
       .json({ error: error.message || "Errore interno" });
   }
 });
+
+// 🔔 GET: Numero notifiche non lette per l'utente
+exports.getUnreadNotificationsCount = functions.https.onRequest(
+  async (req, res) => {
+    if (req.method !== "GET")
+      return res.status(405).json({ error: "❌ Usa GET." });
+
+    try {
+      await authenticate(req);
+      const userId = req.user.uid;
+
+      const snapshot = await db
+        .collection("Notifications")
+        .where("userId", "==", userId)
+        .where("status", "==", "unread")
+        .get();
+
+      res.json({ unreadCount: snapshot.size });
+    } catch (error) {
+      functions.logger.error("❌ Errore conteggio notifiche non lette:", error);
+      res
+        .status(error.status || 500)
+        .json({ error: error.message || "Errore interno" });
+    }
+  }
+);

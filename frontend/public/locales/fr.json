@@ -1,0 +1,152 @@
+{
+  "login": {
+    "title": "Connexion",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "button": "Se connecter",
+    "error": "Identifiants invalides ou e-mail non vérifié."
+  },
+  "signup": {
+    "title": "Créer votre compte",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "plan": "Choisir votre forfait",
+    "company": "Nom de l’entreprise",
+    "button": "S'inscrire"
+  },
+  "topbar": {
+    "welcome": "Bienvenue",
+    "logout": "Déconnexion"
+  },
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "bookings": "Réservations",
+    "guests": "Invités",
+    "rooms": "Chambres",
+    "reports": "Rapports",
+    "marketing": "Marketing",
+    "suppliers": "Fournisseurs",
+    "notifications": "Notifications",
+    "officialAnnouncements": "Communications officielles",
+    "settings": "Paramètres",
+    "support": "Assistance",
+    "chatIA": "Chat IA",
+    "agentHub": "HUB Agent IA"
+  },
+  "dashboard": {
+    "title": "Vue d’ensemble du tableau de bord",
+    "bookings": "Réservations totales",
+    "guests": "Nombre total d’invités",
+    "revenue": "Revenus",
+    "reviews": "Avis",
+    "welcomeBack": "Bon retour,",
+    "todayStats": "Statistiques du jour"
+  },
+  "bookings": {
+    "title": "Réservations",
+    "addBooking": "Ajouter une réservation",
+    "editBooking": "Modifier la réservation",
+    "deleteBooking": "Supprimer la réservation",
+    "checkIn": "Date d’arrivée",
+    "checkOut": "Date de départ",
+    "guestName": "Nom de l’invité",
+    "room": "Chambre",
+    "status": "Statut",
+    "actions": "Actions"
+  },
+  "guests": {
+    "title": "Invités",
+    "addGuest": "Ajouter un invité",
+    "editGuest": "Modifier l’invité",
+    "deleteGuest": "Supprimer l’invité",
+    "name": "Nom complet",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "actions": "Actions"
+  },
+  "rooms": {
+    "title": "Chambres",
+    "addRoom": "Ajouter une chambre",
+    "editRoom": "Modifier la chambre",
+    "deleteRoom": "Supprimer la chambre",
+    "roomNumber": "Numéro de chambre",
+    "type": "Type",
+    "price": "Prix",
+    "availability": "Disponibilité",
+    "actions": "Actions"
+  },
+  "suppliers": {
+    "title": "Fournisseurs",
+    "addSupplier": "Ajouter un fournisseur",
+    "editSupplier": "Modifier le fournisseur",
+    "deleteSupplier": "Supprimer le fournisseur",
+    "name": "Nom du fournisseur",
+    "contact": "Contact",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "category": "Catégorie",
+    "actions": "Actions"
+  },
+  "marketing": {
+    "title": "Marketing",
+    "campaigns": "Campagnes",
+    "socialPosts": "Publications sociales",
+    "budget": "Budget",
+    "target": "Cible",
+    "platforms": "Plateformes",
+    "createCampaign": "Créer une campagne",
+    "optimizeWithAI": "Optimiser avec l’IA"
+  },
+  "reports": {
+    "title": "Rapports",
+    "bookings": "Rapport des réservations",
+    "financial": "Rapport financier",
+    "general": "Rapport général",
+    "suppliers": "Rapport des fournisseurs",
+    "cleaning": "Rapport de nettoyage",
+    "marketing": "Rapport marketing",
+    "customers": "Rapport clients",
+    "aiInsights": "Analyses IA",
+    "export": "Exporter le rapport"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "noNotifications": "Aucune notification"
+  },
+  "chatbox": {
+    "title": "Chat IA",
+    "placeholder": "Tapez votre question...",
+    "send": "Envoyer",
+    "thinking": "L’IA réfléchit..."
+  },
+  "agentHub": {
+    "title": "HUB Agent IA",
+    "overview": "Aperçu",
+    "actions": "Actions IA",
+    "documents": "Documents générés",
+    "settings": "Paramètres d’automatisation",
+    "autonomyLevel": "Niveau d’autonomie",
+    "chatHistory": "Historique de chat",
+    "archived": "Archivé",
+    "delete": "Supprimer",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "profile": "Profil",
+    "preferences": "Préférences",
+    "security": "Sécurité",
+    "structure": "Paramètres de la structure",
+    "notifications": "Paramètres des notifications"
+  },
+  "support": {
+    "title": "Assistance",
+    "contact": "Contacter le support",
+    "faq": "Questions fréquentes",
+    "guides": "Guides & Tutoriels"
+  }
+}

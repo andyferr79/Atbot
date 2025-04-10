@@ -1,25 +1,28 @@
-// 📂 src/services/api.js
-
 import axios from "axios";
+import { getAuth } from "firebase/auth";
 
-// 🔹 Imposta la base URL per le Firebase Cloud Functions locali o di produzione
+// 🔹 Crea l'istanza di Axios con la baseURL delle Firebase Functions
 const api = axios.create({
-  baseURL: "http://127.0.0.1:5001/autotaskerbot/us-central1", // 🔁 Cambiare se deployato
+  baseURL: "http://127.0.0.1:5001/autotaskerbot/us-central1", // Cambiare se deployato in produzione
 });
 
-// 🔹 Interceptor: aggiunge il token Firebase alle richieste (se presente)
+// 🔹 Interceptor: inserisce il token Firebase aggiornato in ogni richiesta
 api.interceptors.request.use(
   async (config) => {
-    const token = localStorage.getItem("firebaseToken"); // 🔐 Recupera il token dopo login
-    if (token) {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (user) {
+      const token = await user.getIdToken(true); // 🔁 Forza il refresh del token
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// ✅ TEST API
+// ✅ API - Test
 export const getTestFirebase = () => api.get("/getTestFirebase");
 
 // ✅ API - Chat AI
@@ -53,5 +56,13 @@ export const updateBooking = (bookingId, updatedData) =>
   api.put(`/updateBooking/${bookingId}`, updatedData);
 export const deleteBooking = (bookingId) =>
   api.delete(`/deleteBooking/${bookingId}`);
+
+// ✅ API - Dashboard Overview (🔧 con userId)
+export const getDashboardOverview = (userId) =>
+  api.get(`/getDashboardOverview?userId=${userId}`);
+
+// ✅ API - Notifiche
+export const getUnreadNotificationsCount = () =>
+  api.get("/getUnreadNotificationsCount");
 
 export default api;

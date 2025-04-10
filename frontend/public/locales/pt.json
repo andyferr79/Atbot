@@ -1,0 +1,152 @@
+{
+  "login": {
+    "title": "Entrar",
+    "email": "E-mail",
+    "password": "Senha",
+    "button": "Entrar",
+    "error": "Credenciais inválidas ou e-mail não verificado."
+  },
+  "signup": {
+    "title": "Crie sua conta",
+    "firstName": "Nome",
+    "lastName": "Sobrenome",
+    "email": "E-mail",
+    "password": "Senha",
+    "confirmPassword": "Confirmar Senha",
+    "plan": "Escolha seu plano",
+    "company": "Nome da empresa",
+    "button": "Registrar"
+  },
+  "topbar": {
+    "welcome": "Bem-vindo",
+    "logout": "Sair"
+  },
+  "sidebar": {
+    "dashboard": "Painel",
+    "bookings": "Reservas",
+    "guests": "Hóspedes",
+    "rooms": "Quartos",
+    "reports": "Relatórios",
+    "marketing": "Marketing",
+    "suppliers": "Fornecedores",
+    "notifications": "Notificações",
+    "officialAnnouncements": "Comunicados Oficiais",
+    "settings": "Configurações",
+    "support": "Suporte",
+    "chatIA": "Chat IA",
+    "agentHub": "Central do Agente IA"
+  },
+  "dashboard": {
+    "title": "Visão geral do painel",
+    "bookings": "Total de reservas",
+    "guests": "Total de hóspedes",
+    "revenue": "Receita",
+    "reviews": "Avaliações",
+    "welcomeBack": "Bem-vindo de volta,",
+    "todayStats": "Estatísticas de hoje"
+  },
+  "bookings": {
+    "title": "Reservas",
+    "addBooking": "Adicionar reserva",
+    "editBooking": "Editar reserva",
+    "deleteBooking": "Excluir reserva",
+    "checkIn": "Data de entrada",
+    "checkOut": "Data de saída",
+    "guestName": "Nome do hóspede",
+    "room": "Quarto",
+    "status": "Status",
+    "actions": "Ações"
+  },
+  "guests": {
+    "title": "Hóspedes",
+    "addGuest": "Adicionar hóspede",
+    "editGuest": "Editar hóspede",
+    "deleteGuest": "Excluir hóspede",
+    "name": "Nome completo",
+    "email": "E-mail",
+    "phone": "Telefone",
+    "actions": "Ações"
+  },
+  "rooms": {
+    "title": "Quartos",
+    "addRoom": "Adicionar quarto",
+    "editRoom": "Editar quarto",
+    "deleteRoom": "Excluir quarto",
+    "roomNumber": "Número do quarto",
+    "type": "Tipo",
+    "price": "Preço",
+    "availability": "Disponibilidade",
+    "actions": "Ações"
+  },
+  "suppliers": {
+    "title": "Fornecedores",
+    "addSupplier": "Adicionar fornecedor",
+    "editSupplier": "Editar fornecedor",
+    "deleteSupplier": "Excluir fornecedor",
+    "name": "Nome do fornecedor",
+    "contact": "Contato",
+    "email": "E-mail",
+    "phone": "Telefone",
+    "category": "Categoria",
+    "actions": "Ações"
+  },
+  "marketing": {
+    "title": "Marketing",
+    "campaigns": "Campanhas",
+    "socialPosts": "Postagens sociais",
+    "budget": "Orçamento",
+    "target": "Público-alvo",
+    "platforms": "Plataformas",
+    "createCampaign": "Criar campanha",
+    "optimizeWithAI": "Otimizar com IA"
+  },
+  "reports": {
+    "title": "Relatórios",
+    "bookings": "Relatório de reservas",
+    "financial": "Relatório financeiro",
+    "general": "Relatório geral",
+    "suppliers": "Relatório de fornecedores",
+    "cleaning": "Relatório de limpeza",
+    "marketing": "Relatório de marketing",
+    "customers": "Relatório de clientes",
+    "aiInsights": "Insights da IA",
+    "export": "Exportar relatório"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "markAllRead": "Marcar tudo como lido",
+    "noNotifications": "Sem notificações"
+  },
+  "chatbox": {
+    "title": "Chat IA",
+    "placeholder": "Digite sua pergunta...",
+    "send": "Enviar",
+    "thinking": "IA está pensando..."
+  },
+  "agentHub": {
+    "title": "Central do Agente IA",
+    "overview": "Visão geral",
+    "actions": "Ações IA",
+    "documents": "Documentos gerados",
+    "settings": "Configurações de automação",
+    "autonomyLevel": "Nível de autonomia",
+    "chatHistory": "Histórico do chat",
+    "archived": "Arquivados",
+    "delete": "Excluir",
+    "confirmDelete": "Tem certeza de que deseja excluir este item?"
+  },
+  "settings": {
+    "title": "Configurações",
+    "profile": "Perfil",
+    "preferences": "Preferências",
+    "security": "Segurança",
+    "structure": "Configurações da estrutura",
+    "notifications": "Configurações de notificações"
+  },
+  "support": {
+    "title": "Suporte",
+    "contact": "Contato com suporte",
+    "faq": "Perguntas frequentes",
+    "guides": "Guias e tutoriais"
+  }
+}

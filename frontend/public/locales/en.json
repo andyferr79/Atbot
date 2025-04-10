@@ -1,0 +1,152 @@
+{
+  "login": {
+    "title": "Login",
+    "email": "Email",
+    "password": "Password",
+    "button": "Log In",
+    "error": "Invalid credentials or unverified email."
+  },
+  "signup": {
+    "title": "Create your account",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "plan": "Choose your plan",
+    "company": "Company name",
+    "button": "Register"
+  },
+  "topbar": {
+    "welcome": "Welcome",
+    "logout": "Logout"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "bookings": "Bookings",
+    "guests": "Guests",
+    "rooms": "Rooms",
+    "reports": "Reports",
+    "marketing": "Marketing",
+    "suppliers": "Suppliers",
+    "notifications": "Notifications",
+    "officialAnnouncements": "Official Announcements",
+    "settings": "Settings",
+    "support": "Support",
+    "chatIA": "AI Chat",
+    "agentHub": "AI Agent Hub"
+  },
+  "dashboard": {
+    "title": "Dashboard Overview",
+    "bookings": "Total Bookings",
+    "guests": "Total Guests",
+    "revenue": "Revenue",
+    "reviews": "Reviews",
+    "welcomeBack": "Welcome back,",
+    "todayStats": "Today's statistics"
+  },
+  "bookings": {
+    "title": "Bookings",
+    "addBooking": "Add Booking",
+    "editBooking": "Edit Booking",
+    "deleteBooking": "Delete Booking",
+    "checkIn": "Check-in Date",
+    "checkOut": "Check-out Date",
+    "guestName": "Guest Name",
+    "room": "Room",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "guests": {
+    "title": "Guests",
+    "addGuest": "Add Guest",
+    "editGuest": "Edit Guest",
+    "deleteGuest": "Delete Guest",
+    "name": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "actions": "Actions"
+  },
+  "rooms": {
+    "title": "Rooms",
+    "addRoom": "Add Room",
+    "editRoom": "Edit Room",
+    "deleteRoom": "Delete Room",
+    "roomNumber": "Room Number",
+    "type": "Type",
+    "price": "Price",
+    "availability": "Availability",
+    "actions": "Actions"
+  },
+  "suppliers": {
+    "title": "Suppliers",
+    "addSupplier": "Add Supplier",
+    "editSupplier": "Edit Supplier",
+    "deleteSupplier": "Delete Supplier",
+    "name": "Supplier Name",
+    "contact": "Contact",
+    "email": "Email",
+    "phone": "Phone",
+    "category": "Category",
+    "actions": "Actions"
+  },
+  "marketing": {
+    "title": "Marketing",
+    "campaigns": "Campaigns",
+    "socialPosts": "Social Posts",
+    "budget": "Budget",
+    "target": "Target",
+    "platforms": "Platforms",
+    "createCampaign": "Create Campaign",
+    "optimizeWithAI": "Optimize with AI"
+  },
+  "reports": {
+    "title": "Reports",
+    "bookings": "Bookings Report",
+    "financial": "Financial Report",
+    "general": "General Report",
+    "suppliers": "Suppliers Report",
+    "cleaning": "Cleaning Report",
+    "marketing": "Marketing Report",
+    "customers": "Customers Report",
+    "aiInsights": "AI Insights",
+    "export": "Export Report"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No notifications"
+  },
+  "chatbox": {
+    "title": "AI Chat",
+    "placeholder": "Type your question...",
+    "send": "Send",
+    "thinking": "AI is thinking..."
+  },
+  "agentHub": {
+    "title": "AI Agent Hub",
+    "overview": "Overview",
+    "actions": "AI Actions",
+    "documents": "Generated Documents",
+    "settings": "Automation Settings",
+    "autonomyLevel": "Autonomy Level",
+    "chatHistory": "Chat History",
+    "archived": "Archived",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete this item?"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "preferences": "Preferences",
+    "security": "Security",
+    "structure": "Structure Settings",
+    "notifications": "Notification Settings"
+  },
+  "support": {
+    "title": "Support",
+    "contact": "Contact Support",
+    "faq": "Frequently Asked Questions",
+    "guides": "Guides & Tutorials"
+  }
+}

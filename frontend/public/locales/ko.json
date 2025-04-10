@@ -1,0 +1,152 @@
+{
+  "login": {
+    "title": "로그인",
+    "email": "이메일",
+    "password": "비밀번호",
+    "button": "로그인",
+    "error": "잘못된 자격 증명 또는 이메일이 인증되지 않았습니다."
+  },
+  "signup": {
+    "title": "계정 만들기",
+    "firstName": "이름",
+    "lastName": "성",
+    "email": "이메일",
+    "password": "비밀번호",
+    "confirmPassword": "비밀번호 확인",
+    "plan": "플랜 선택",
+    "company": "회사명",
+    "button": "가입하기"
+  },
+  "topbar": {
+    "welcome": "환영합니다",
+    "logout": "로그아웃"
+  },
+  "sidebar": {
+    "dashboard": "대시보드",
+    "bookings": "예약",
+    "guests": "게스트",
+    "rooms": "객실",
+    "reports": "보고서",
+    "marketing": "마케팅",
+    "suppliers": "공급업체",
+    "notifications": "알림",
+    "officialAnnouncements": "공식 공지",
+    "settings": "설정",
+    "support": "지원",
+    "chatIA": "AI 채팅",
+    "agentHub": "AI 에이전트 허브"
+  },
+  "dashboard": {
+    "title": "대시보드 개요",
+    "bookings": "총 예약 수",
+    "guests": "총 게스트 수",
+    "revenue": "수익",
+    "reviews": "리뷰",
+    "welcomeBack": "다시 오신 것을 환영합니다,",
+    "todayStats": "오늘의 통계"
+  },
+  "bookings": {
+    "title": "예약",
+    "addBooking": "예약 추가",
+    "editBooking": "예약 수정",
+    "deleteBooking": "예약 삭제",
+    "checkIn": "체크인 날짜",
+    "checkOut": "체크아웃 날짜",
+    "guestName": "게스트 이름",
+    "room": "객실",
+    "status": "상태",
+    "actions": "작업"
+  },
+  "guests": {
+    "title": "게스트",
+    "addGuest": "게스트 추가",
+    "editGuest": "게스트 수정",
+    "deleteGuest": "게스트 삭제",
+    "name": "전체 이름",
+    "email": "이메일",
+    "phone": "전화번호",
+    "actions": "작업"
+  },
+  "rooms": {
+    "title": "객실",
+    "addRoom": "객실 추가",
+    "editRoom": "객실 수정",
+    "deleteRoom": "객실 삭제",
+    "roomNumber": "객실 번호",
+    "type": "유형",
+    "price": "가격",
+    "availability": "이용 가능 여부",
+    "actions": "작업"
+  },
+  "suppliers": {
+    "title": "공급업체",
+    "addSupplier": "공급업체 추가",
+    "editSupplier": "공급업체 수정",
+    "deleteSupplier": "공급업체 삭제",
+    "name": "공급업체 이름",
+    "contact": "연락처",
+    "email": "이메일",
+    "phone": "전화번호",
+    "category": "카테고리",
+    "actions": "작업"
+  },
+  "marketing": {
+    "title": "마케팅",
+    "campaigns": "캠페인",
+    "socialPosts": "소셜 게시물",
+    "budget": "예산",
+    "target": "대상",
+    "platforms": "플랫폼",
+    "createCampaign": "캠페인 생성",
+    "optimizeWithAI": "AI로 최적화"
+  },
+  "reports": {
+    "title": "보고서",
+    "bookings": "예약 보고서",
+    "financial": "재무 보고서",
+    "general": "일반 보고서",
+    "suppliers": "공급업체 보고서",
+    "cleaning": "청소 보고서",
+    "marketing": "마케팅 보고서",
+    "customers": "고객 보고서",
+    "aiInsights": "AI 인사이트",
+    "export": "보고서 내보내기"
+  },
+  "notifications": {
+    "title": "알림",
+    "markAllRead": "모두 읽음으로 표시",
+    "noNotifications": "알림이 없습니다"
+  },
+  "chatbox": {
+    "title": "AI 채팅",
+    "placeholder": "질문을 입력하세요...",
+    "send": "보내기",
+    "thinking": "AI가 생각 중..."
+  },
+  "agentHub": {
+    "title": "AI 에이전트 허브",
+    "overview": "개요",
+    "actions": "AI 작업",
+    "documents": "생성된 문서",
+    "settings": "자동화 설정",
+    "autonomyLevel": "자율성 수준",
+    "chatHistory": "채팅 기록",
+    "archived": "보관됨",
+    "delete": "삭제",
+    "confirmDelete": "이 항목을 삭제하시겠습니까?"
+  },
+  "settings": {
+    "title": "설정",
+    "profile": "프로필",
+    "preferences": "환경설정",
+    "security": "보안",
+    "structure": "구조 설정",
+    "notifications": "알림 설정"
+  },
+  "support": {
+    "title": "지원",
+    "contact": "지원팀에 문의",
+    "faq": "자주 묻는 질문",
+    "guides": "가이드 및 튜토리얼"
+  }
+}
