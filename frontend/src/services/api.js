@@ -1,68 +1,76 @@
+// 📂 E:/ATBot/frontend/src/services/api.js
 import axios from "axios";
 import { getAuth } from "firebase/auth";
 
-// 🔹 Crea l'istanza di Axios con la baseURL delle Firebase Functions
-const api = axios.create({
-  baseURL: "http://127.0.0.1:5001/autotaskerbot/us-central1", // Cambiare se deployato in produzione
-});
+/*-------------------------------------------------------------
+  BASE URL delle Firebase Functions
+  – legge REACT_APP_FUNCTIONS_URL da .env.local
+  – ripiega sulla URL dell’emulatore se assente
+-------------------------------------------------------------*/
+const FUNCTIONS_URL =
+  process.env.REACT_APP_FUNCTIONS_URL ||
+  "http://127.0.0.1:5001/autotaskerbot/us-central1";
 
-// 🔹 Interceptor: inserisce il token Firebase aggiornato in ogni richiesta
+const api = axios.create({ baseURL: FUNCTIONS_URL });
+
+/*-------------------------------------------------------------
+  REQUEST INTERCEPTOR – appende il Firebase ID‑Token
+-------------------------------------------------------------*/
 api.interceptors.request.use(
   async (config) => {
     const auth = getAuth();
     const user = auth.currentUser;
 
     if (user) {
-      const token = await user.getIdToken(true); // 🔁 Forza il refresh del token
-      config.headers.Authorization = `Bearer ${token}`;
+      const token = await user.getIdToken(true);
+      config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
+    } else {
+      console.warn("⚠️ Nessun utente autenticato – chiamata senza token.");
     }
-
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// ✅ API - Test
-export const getTestFirebase = () => api.get("/getTestFirebase");
+/*-------------------------------------------------------------
+  PUBLIC ENDPOINTS
+-------------------------------------------------------------*/
 
-// ✅ API - Chat AI
-export const sendMessageToAI = (message, sessionId) =>
-  api.post("/chatWithAI", { user_message: message, session_id: sessionId });
+/* Chat IA */
+export const sendMessageToAI = (msg, sessionId) =>
+  api.post("/chatWithAI", { user_message: msg, session_id: sessionId });
 
-// ✅ API - Fornitori
+/* Fornitori */
 export const getSuppliers = () => api.get("/getSuppliers");
-export const addSupplier = (supplierData) =>
-  api.post("/addSupplier", supplierData);
-export const updateSupplier = (supplierId, updatedData) =>
-  api.put(`/updateSupplier/${supplierId}`, updatedData);
-export const deleteSupplier = (supplierId) =>
-  api.delete(`/deleteSupplier/${supplierId}`);
+export const addSupplier = (d) => api.post("/addSupplier", d);
+export const updateSupplier = (id, d) => api.put(`/updateSupplier/${id}`, d);
+export const deleteSupplier = (id) => api.delete(`/deleteSupplier/${id}`);
 
-// ✅ API - Ospiti
+/* Ospiti */
 export const getGuests = () => api.get("/getGuests");
-export const addGuest = (guestData) => api.post("/addGuest", guestData);
+export const addGuest = (d) => api.post("/addGuest", d);
 
-// ✅ API - Camere
+/* Camere */
 export const getRooms = () => api.get("/getRooms");
-export const addRoom = (roomData) => api.post("/addRoom", roomData);
-export const updateRoom = (roomId, updatedData) =>
-  api.put(`/updateRoom/${roomId}`, updatedData);
-export const deleteRoom = (roomId) => api.delete(`/deleteRoom/${roomId}`);
+export const addRoom = (d) => api.post("/addRoom", d);
+export const updateRoom = (id, d) => api.put(`/updateRoom/${id}`, d);
+export const deleteRoom = (id) => api.delete(`/deleteRoom/${id}`);
 
-// ✅ API - Prenotazioni
+/* Prenotazioni */
 export const getBookings = () => api.get("/getBookings");
-export const addBooking = (bookingData) => api.post("/addBooking", bookingData);
-export const updateBooking = (bookingId, updatedData) =>
-  api.put(`/updateBooking/${bookingId}`, updatedData);
-export const deleteBooking = (bookingId) =>
-  api.delete(`/deleteBooking/${bookingId}`);
+export const addBooking = (d) => api.post("/createBooking", d);
+export const updateBooking = (id, d) => api.patch(`/updateBooking?id=${id}`, d);
+export const deleteBooking = (id) => api.delete(`/deleteBooking?id=${id}`);
 
-// ✅ API - Dashboard Overview (🔧 con userId)
-export const getDashboardOverview = (userId) =>
-  api.get(`/getDashboardOverview?userId=${userId}`);
+/* Dashboard */
+export const getDashboardOverview = (uid) =>
+  api.get(`/getDashboardOverview?userId=${uid}`);
 
-// ✅ API - Notifiche
+/* Notifiche */
 export const getUnreadNotificationsCount = () =>
   api.get("/getUnreadNotificationsCount");
+
+/* Test */
+export const getTestFirebase = () => api.get("/getTestFirebase");
 
 export default api;

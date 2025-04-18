@@ -16,8 +16,19 @@ import { useTranslation } from "react-i18next";
 import { auth, db } from "../../firebaseConfig";
 import "../../styles/SignUp.css";
 
+/**
+ * ---------------------------------------------
+ *  SignUp.js – registrazione utente
+ *  ▸ Crea l’utenza in Firebase Auth
+ *  ▸ Invia e‑mail di verifica
+ *  ▸ Salva profilo di base su Firestore (collezione "users")
+ *  ▸ Logga l’evento in "logs_signup" per audit
+ * ---------------------------------------------
+ */
+
 const SignUp = () => {
   const { t } = useTranslation();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -25,22 +36,22 @@ const SignUp = () => {
     firstName: "",
     lastName: "",
     company: "",
-    plan: "BASE",
+    plan: "BASE", // BASE o GOLD
   });
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
+  /** Password policy: ≥8 caratteri, almeno una lettera & un numero */
+  const isPasswordStrong = (pwd) =>
+    /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(pwd);
+
+  const handleChange = (e) =>
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
     const {
@@ -53,59 +64,70 @@ const SignUp = () => {
       plan,
     } = formData;
 
-    if (password.length < 6) {
-      setError("password_too_short");
-      setLoading(false);
-      return;
-    }
-
+    /* 🔒 Validazioni lato client */
     if (password !== confirmPassword) {
       setError("passwords_do_not_match");
-      setLoading(false);
       return;
     }
 
+    if (!isPasswordStrong(password)) {
+      setError("password_too_weak");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const userCredential = await createUserWithEmailAndPassword(
+      // 1️⃣ Crea lʼutente in Firebase Auth
+      const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
-      const user = userCredential.user;
 
-      await updateProfile(user, {
-        displayName: `${firstName} ${lastName}`,
-      });
+      // 2️⃣ Aggiorna profilo con nome & cognome – utile per displayName
+      await updateProfile(user, { displayName: `${firstName} ${lastName}` });
 
+      // 3️⃣ Invia e‑mail di verifica (obbligatoria prima del login)
       await sendEmailVerification(user);
 
-      const userRef = doc(db, "users", user.uid);
-      await setDoc(userRef, {
+      // 4️⃣ Persisti info utente di base in Firestore
+      await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email,
         firstName,
         lastName,
         company,
-        plan,
+        plan: plan.toUpperCase(), // assicurarsi coerenza
         role: "user",
         createdAt: serverTimestamp(),
       });
 
-      const logRef = collection(db, "logs_signup");
-      await addDoc(logRef, {
+      // 5️⃣ Log di audit (facoltativo ma utile)
+      await addDoc(collection(db, "logs_signup"), {
         uid: user.uid,
         email,
-        timestamp: serverTimestamp(),
+        plan: plan.toUpperCase(),
+        ts: serverTimestamp(),
       });
 
-      alert(t("signup_success"));
+      alert(t("signup_success_check_email"));
       navigate("/login");
     } catch (err) {
-      console.error("❌ Errore nella registrazione:", err);
-      if (err.code === "auth/email-already-in-use") {
-        setError("email_already_registered");
-      } else {
-        setError("signup_failed");
+      console.error("❌ Sign‑up error:", err);
+
+      switch (err.code) {
+        case "auth/email-already-in-use":
+          setError("email_already_registered");
+          break;
+        case "auth/invalid-email":
+          setError("invalid_email_format");
+          break;
+        case "auth/weak-password":
+          setError("password_too_weak");
+          break;
+        default:
+          setError("signup_failed");
       }
     } finally {
       setLoading(false);
@@ -115,8 +137,10 @@ const SignUp = () => {
   return (
     <div className="signup-container">
       <h2>{t("signup")}</h2>
+
       {error && <p className="error-message">{t(error)}</p>}
-      <form onSubmit={handleSignUp}>
+
+      <form onSubmit={handleSignUp} noValidate>
         <input
           type="text"
           name="firstName"
@@ -125,6 +149,7 @@ const SignUp = () => {
           onChange={handleChange}
           required
         />
+
         <input
           type="text"
           name="lastName"
@@ -133,6 +158,7 @@ const SignUp = () => {
           onChange={handleChange}
           required
         />
+
         <input
           type="email"
           name="email"
@@ -141,6 +167,7 @@ const SignUp = () => {
           onChange={handleChange}
           required
         />
+
         <input
           type="password"
           name="password"
@@ -149,6 +176,7 @@ const SignUp = () => {
           onChange={handleChange}
           required
         />
+
         <input
           type="password"
           name="confirmPassword"
@@ -157,17 +185,21 @@ const SignUp = () => {
           onChange={handleChange}
           required
         />
+
         <input
           type="text"
           name="company"
           placeholder={t("company")}
           value={formData.company}
           onChange={handleChange}
+          autoComplete="organization"
         />
+
         <select name="plan" value={formData.plan} onChange={handleChange}>
           <option value="BASE">{t("plan_base")}</option>
           <option value="GOLD">{t("plan_gold")}</option>
         </select>
+
         <button type="submit" disabled={loading}>
           {loading ? t("signup_loading") : t("signup")}
         </button>

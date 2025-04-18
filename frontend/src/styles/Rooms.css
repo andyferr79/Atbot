@@ -1,355 +1,95 @@
 /* =========================================
-   LAYOUT GENERALE
+   LAYOUT GENERALE – 2 COLONNE
    ========================================= */
 .rooms-page {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  padding: 20px;
+  padding: 30px 40px;
   min-height: 100vh;
-  background: linear-gradient(145deg, #f5f5f5, #eaeaea);
+  background: linear-gradient(135deg, #f9f9f9, #e8e8e8);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
 }
 
-/* Titolo principale */
-.rooms-page h1 {
-  text-align: center;
-  font-size: 2.4rem;
-  color: #4caf50;
-  margin-bottom: 20px;
-  letter-spacing: 1px;
-  font-weight: bold;
-}
-
-/* Messaggio di caricamento generico */
-.rooms-page p {
-  font-size: 1.2rem;
-  color: #555;
-  text-align: center;
-}
-
-/* =========================================
-     HEADER E BOTTONE REFRESH
-     ========================================= */
 .rooms-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 25px;
 }
 
-/* Bottone di refresh (FaSync) */
+.rooms-header h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
 .refresh-button {
-  display: inline-flex;
-  align-items: center;
-  background-color: #6c757d;
-  color: #fff;
+  background-color: #4caf50;
+  color: white;
   border: none;
-  padding: 10px 16px;
+  padding: 10px 18px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
-  transition: background-color 0.3s ease;
-}
-
-.refresh-button:hover {
-  background-color: #5a6369;
-}
-
-.refresh-button svg {
-  margin-right: 8px;
-  font-size: 1.2rem;
-}
-
-/* =========================================
-     FILTRI (Tutte, Stanze, Alloggi)
-     ========================================= */
-.filter-options {
   display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 30px;
-}
-
-.filter-options button {
-  background-color: #ddd;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  color: #333;
-  transition: background-color 0.3s ease;
-}
-
-.filter-options button:hover {
-  background-color: #ccc;
-}
-
-.filter-options .active {
-  background-color: #4caf50;
-  color: #fff;
-}
-
-/* =========================================
-     SEZIONE ONBOARDING (no-data)
-     ========================================= */
-.onboarding-container {
-  text-align: center;
-  background-color: #fff;
-  padding: 30px 20px;
-  border-radius: 8px;
-  max-width: 600px;
-  margin: 40px auto;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-.onboarding-container img {
-  width: 120px;
-  margin-bottom: 15px;
-}
-
-.onboarding-container h2 {
-  font-size: 1.8rem;
-  color: #333;
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.onboarding-container p {
-  font-size: 1.1rem;
-  color: #555;
-  margin-bottom: 20px;
-}
-
-.onboarding-container button {
-  background-color: #4caf50;
-  color: #fff;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  display: inline-flex;
   align-items: center;
   gap: 8px;
   transition: background-color 0.3s ease;
 }
 
-.onboarding-container button:hover {
-  background-color: #43a047;
+.refresh-button:hover {
+  background-color: #388e3c;
 }
 
-/* =========================================
-     STANZE: cards layout
-     ========================================= */
-.rooms-section {
-  margin-bottom: 40px;
-}
-
-.rooms-section h2 {
-  font-size: 1.8rem;
-  margin-bottom: 15px;
-  color: #333;
-  text-align: center;
-  font-weight: 600;
-}
-
-.rooms-container {
+.rooms-content {
   display: flex;
+  gap: 40px;
+  justify-content: space-between;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
 }
 
-/* Card per ogni stanza */
-.room-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  width: 270px;
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.room-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-}
-
-/* Immagine della stanza */
-.room-card img {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-}
-
-/* Dettagli della stanza */
-.room-details {
-  padding: 15px;
-}
-
-.room-details h3 {
-  font-size: 1.4rem;
-  margin-bottom: 8px;
-  color: #333;
-}
-
-.room-details p {
-  font-size: 1rem;
-  color: #555;
-  margin: 4px 0;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.room-actions {
-  margin-top: 10px;
-  display: flex;
-  gap: 10px;
-}
-
-.room-actions button {
-  background-color: #ddd;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.room-actions button:hover {
-  background-color: #ccc;
+.column-left,
+.column-right {
+  flex: 1;
+  min-width: 300px;
 }
 
 /* =========================================
-     ALLOGGI: cards layout
-     ========================================= */
-.properties-section {
-  margin-bottom: 40px;
-}
-
-.properties-section h2 {
-  font-size: 1.8rem;
-  margin-bottom: 15px;
-  color: #333;
-  text-align: center;
-  font-weight: 600;
-}
-
-.properties-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-}
-
-/* Card per ogni alloggio */
-.property-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  width: 270px;
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.property-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-}
-
-/* Immagine dell'alloggio */
-.property-card img {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-}
-
-/* Dettagli dell'alloggio */
-.property-details {
-  padding: 15px;
-}
-
-.property-details h3 {
-  font-size: 1.4rem;
-  margin-bottom: 8px;
-  color: #333;
-}
-
-.property-details p {
-  font-size: 1rem;
-  color: #555;
-  margin: 4px 0;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.property-actions {
-  margin-top: 10px;
-  display: flex;
-  gap: 10px;
-}
-
-.property-actions button {
-  background-color: #ddd;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.property-actions button:hover {
-  background-color: #ccc;
-}
-
-/* =========================================
-     FORM DI AGGIUNTA
+     FORM A SINISTRA
      ========================================= */
 .add-room-form {
-  background-color: #fafafa;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  width: 380px;
-  margin: 0 auto 40px auto;
-  padding: 20px;
-  text-align: center;
+  background-color: #ffffff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .add-room-form h2 {
-  font-size: 1.6rem;
-  margin-bottom: 15px;
-  color: #333;
-  font-weight: 600;
+  color: #4caf50;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.add-room-form .form-hint {
+.form-hint {
   font-size: 0.95rem;
-  color: #666;
-  margin-bottom: 15px;
+  color: #555;
+  margin-bottom: 16px;
 }
 
 .add-room-form input,
 .add-room-form select {
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   padding: 10px;
-  font-size: 1rem;
   border: 1px solid #ccc;
   border-radius: 6px;
+  font-size: 1rem;
   outline: none;
-  transition: border-color 0.3s ease;
+  transition: border 0.2s;
 }
 
 .add-room-form input:focus,
@@ -362,46 +102,194 @@
   color: #fff;
   border: none;
   padding: 10px 16px;
+  font-size: 1rem;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   transition: background-color 0.3s ease;
+}
+
+.add-room-form button:hover {
+  background-color: #388e3c;
+}
+
+/* =========================================
+     ONBOARDING A DESTRA
+     ========================================= */
+.onboarding-container {
+  background-color: #ffffff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.onboarding-container img {
+  width: 100px;
+  margin-bottom: 10px;
+}
+
+.onboarding-container h2 {
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.onboarding-container p {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 14px;
+}
+
+.onboarding-container button {
+  background-color: #4caf50;
+  color: #fff;
+  padding: 10px 14px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.add-room-form button:hover {
+.onboarding-container button:hover {
   background-color: #43a047;
 }
 
 /* =========================================
-     RESPONSIVITÀ
+     FILTRI
      ========================================= */
-@media (max-width: 768px) {
-  .rooms-header {
+.filter-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 30px 0 20px;
+}
+
+.filter-options button {
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #ddd;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.filter-options button:hover {
+  background-color: #ccc;
+}
+
+.filter-options .active {
+  background-color: #4caf50;
+  color: white;
+}
+
+/* =========================================
+     LISTA STANZE E ALLOGGI
+     ========================================= */
+.rooms-section,
+.properties-section {
+  margin-top: 40px;
+}
+
+.rooms-section h2,
+.properties-section h2 {
+  font-size: 1.6rem;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #444;
+}
+
+.rooms-container,
+.properties-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.room-card,
+.property-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  width: 260px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.room-card:hover,
+.property-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.room-card img,
+.property-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.room-details,
+.property-details {
+  padding: 15px;
+}
+
+.room-details h3,
+.property-details h3 {
+  font-size: 1.2rem;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.room-details p,
+.property-details p {
+  font-size: 0.95rem;
+  color: #555;
+  margin: 3px 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.room-actions,
+.property-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.room-actions button,
+.property-actions button {
+  background-color: #eee;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.2s;
+}
+
+.room-actions button:hover,
+.property-actions button:hover {
+  background-color: #ddd;
+}
+
+/* =========================================
+     RESPONSIVE
+     ========================================= */
+@media (max-width: 860px) {
+  .rooms-content {
     flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
-  .rooms-header h1 {
-    margin-bottom: 0;
-  }
-  .filter-options {
-    flex-wrap: wrap;
-    gap: 5px;
-    justify-content: center;
-  }
-  .rooms-container,
-  .properties-container {
-    gap: 15px;
-  }
-  .room-card,
-  .property-card {
-    width: 100%;
-  }
-  .add-room-form {
-    width: 100%;
-    margin-bottom: 20px;
   }
 }

@@ -4,7 +4,13 @@
     "email": "Email",
     "password": "Password",
     "button": "Login",
-    "error": "Credenziali errate o email non verificata."
+    "error": "Credenziali errate o email non verificata.",
+    "resend": "Reinvia email di verifica",
+    "email_not_verified": "Email non verificata. Controlla la tua casella di posta.",
+    "invalid_credentials": "Credenziali errate o utente inesistente.",
+    "verification_email_sent": "Email di verifica inviata con successo.",
+    "error_sending_verification_email": "Errore nell'invio dell'email di verifica.",
+    "loading": "Accesso in corso..."
   },
   "signup": {
     "title": "Crea il tuo account",

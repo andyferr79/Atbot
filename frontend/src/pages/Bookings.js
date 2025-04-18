@@ -1,6 +1,13 @@
+// 📂 E:/ATBot/frontend/src/pages/Bookings.js
+
 import React, { useEffect, useState } from "react";
 import "../styles/bookings.css";
-import { getBookings, deleteBooking, addBooking } from "../services/api";
+import {
+  getBookings,
+  deleteBooking,
+  addBooking,
+  updateBooking,
+} from "../services/api";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -17,6 +24,7 @@ const Bookings = () => {
   const [bookings, setBookings] = useState([]);
   const [calendarView, setCalendarView] = useState("month");
   const [searchQuery, setSearchQuery] = useState("");
+  const [confirmationMessage, setConfirmationMessage] = useState("");
   const [newBooking, setNewBooking] = useState({
     customerName: "",
     checkInDate: "",
@@ -24,20 +32,23 @@ const Bookings = () => {
     status: "pending",
     channel: "direct",
   });
+  const [editingBookingId, setEditingBookingId] = useState(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         const response = await getBookings();
-        setBookings(response.data);
+        const data = response.data?.bookings || [];
+        setBookings(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Errore nel recupero delle prenotazioni:", error);
+        setBookings([]);
       }
     };
     fetchBookings();
   }, []);
 
-  const handleAddBooking = async () => {
+  const handleAddOrUpdateBooking = async () => {
     try {
       if (
         !newBooking.customerName ||
@@ -47,8 +58,24 @@ const Bookings = () => {
         alert("Tutti i campi devono essere compilati.");
         return;
       }
-      const response = await addBooking(newBooking);
-      setBookings((prev) => [...prev, response.data]);
+
+      if (editingBookingId) {
+        await updateBooking(editingBookingId, newBooking);
+        setBookings((prev) =>
+          prev.map((b) =>
+            b.id === editingBookingId ? { ...b, ...newBooking } : b
+          )
+        );
+        setConfirmationMessage("✅ Prenotazione aggiornata con successo.");
+      } else {
+        const response = await addBooking(newBooking);
+        setBookings((prev) => [
+          ...prev,
+          { ...newBooking, id: response.data.id },
+        ]);
+        setConfirmationMessage("✅ Prenotazione creata con successo.");
+      }
+
       setNewBooking({
         customerName: "",
         checkInDate: "",
@@ -56,9 +83,26 @@ const Bookings = () => {
         status: "pending",
         channel: "direct",
       });
+      setEditingBookingId(null);
+
+      setTimeout(() => setConfirmationMessage(""), 3000);
     } catch (error) {
-      console.error("Errore nella creazione della prenotazione:", error);
+      console.error(
+        "Errore nella creazione/modifica della prenotazione:",
+        error
+      );
     }
+  };
+
+  const handleEdit = (booking) => {
+    setNewBooking({
+      customerName: booking.customerName,
+      checkInDate: booking.checkInDate,
+      checkOutDate: booking.checkOutDate,
+      status: booking.status,
+      channel: booking.channel,
+    });
+    setEditingBookingId(booking.id);
   };
 
   const handleDelete = async (bookingId) => {
@@ -76,7 +120,7 @@ const Bookings = () => {
 
   const filteredBookings = bookings.filter(
     (booking) =>
-      booking.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       booking.id.includes(searchQuery)
   );
 
@@ -88,7 +132,11 @@ const Bookings = () => {
 
       <main className="bookings-content">
         <section className="add-booking">
-          <h2>Aggiungi Prenotazione</h2>
+          <h2>
+            {editingBookingId
+              ? "Modifica Prenotazione"
+              : "Aggiungi Prenotazione"}
+          </h2>
           <div className="form-group">
             <input
               type="text"
@@ -112,7 +160,12 @@ const Bookings = () => {
                 setNewBooking({ ...newBooking, checkOutDate: e.target.value })
               }
             />
-            <button onClick={handleAddBooking}>Aggiungi Prenotazione</button>
+            <button onClick={handleAddOrUpdateBooking}>
+              {editingBookingId ? "Salva Modifiche" : "Aggiungi Prenotazione"}
+            </button>
+            {confirmationMessage && (
+              <div className="confirmation-message">{confirmationMessage}</div>
+            )}
           </div>
         </section>
 
@@ -160,6 +213,7 @@ const Bookings = () => {
                   {booking.customerName} ({booking.checkInDate} -{" "}
                   {booking.checkOutDate})
                 </span>
+                <button onClick={() => handleEdit(booking)}>Modifica</button>
                 <button onClick={() => handleDelete(booking.id)}>
                   Elimina
                 </button>

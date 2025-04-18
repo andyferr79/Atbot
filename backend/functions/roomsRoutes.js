@@ -1,6 +1,7 @@
-const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const functions = require("firebase-functions");
 
+// 🔐 Inizializza Firebase Admin se non già fatto
 if (!admin.apps.length) {
   admin.initializeApp();
 }
@@ -40,7 +41,7 @@ async function checkRateLimit(ip, maxRequests, windowMs) {
 }
 
 // 📌 GET - Recupera tutte le camere
-exports.getRooms = functions.https.onRequest(async (req, res) => {
+exports.getRooms = async (req, res) => {
   if (req.method !== "GET")
     return res.status(405).json({ error: "❌ Usa GET." });
 
@@ -66,34 +67,10 @@ exports.getRooms = functions.https.onRequest(async (req, res) => {
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
-});
-
-// 📌 GET - Recupera camera per ID
-exports.getRoomById = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-
-  try {
-    await authenticate(req);
-    const { id } = req.query;
-    if (!id)
-      return res.status(400).json({ error: "❌ ID della camera mancante." });
-
-    const roomDoc = await db.collection("Rooms").doc(id).get();
-    if (!roomDoc.exists)
-      return res.status(404).json({ error: "❌ Camera non trovata." });
-
-    res.json({ id: roomDoc.id, ...roomDoc.data() });
-  } catch (error) {
-    functions.logger.error("❌ Errore recupero camera:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
-  }
-});
+};
 
 // 📌 POST - Crea nuova camera
-exports.createRoom = functions.https.onRequest(async (req, res) => {
+exports.createRoom = async (req, res) => {
   if (req.method !== "POST")
     return res.status(405).json({ error: "❌ Usa POST." });
 
@@ -120,10 +97,10 @@ exports.createRoom = functions.https.onRequest(async (req, res) => {
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
-});
+};
 
 // 📌 PUT - Aggiorna camera
-exports.updateRoom = functions.https.onRequest(async (req, res) => {
+exports.updateRoom = async (req, res) => {
   if (req.method !== "PUT")
     return res.status(405).json({ error: "❌ Usa PUT." });
 
@@ -151,10 +128,10 @@ exports.updateRoom = functions.https.onRequest(async (req, res) => {
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
-});
+};
 
 // 📌 DELETE - Elimina camera
-exports.deleteRoom = functions.https.onRequest(async (req, res) => {
+exports.deleteRoom = async (req, res) => {
   if (req.method !== "DELETE")
     return res.status(405).json({ error: "❌ Usa DELETE." });
 
@@ -171,4 +148,4 @@ exports.deleteRoom = functions.https.onRequest(async (req, res) => {
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
-});
+};

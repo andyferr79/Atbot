@@ -1,3 +1,4 @@
+// 📂 E:/ATBot/frontend/src/components/Sidebar.js
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -14,39 +15,65 @@ import {
   faRobot,
   faBell,
   faEnvelopeOpenText,
+  faCrown,
 } from "@fortawesome/free-solid-svg-icons";
 import { useTranslation } from "react-i18next";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import api from "../services/api";
 import "../styles/sidebar.css";
 
 const Sidebar = () => {
   const { t } = useTranslation();
-
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
+  const [role, setRole] = useState(null);
 
+  /* -------------------------------------------------------------
+   * Quando cambia l'autenticazione:
+   *  1. aggiorna il ruolo (localStorage)
+   *  2. ricarica contatori notifiche / annunci
+   * ----------------------------------------------------------- */
   useEffect(() => {
-    fetchUnreadCounts();
-  }, []);
+    const auth = getAuth();
 
-  const fetchUnreadCounts = async () => {
-    try {
-      const notificationsResponse = await api.get(
-        "/getUnreadNotificationsCount"
-      );
-      setUnreadNotifications(notificationsResponse.data.unreadCount || 0);
-    } catch (error) {
-      console.error("Errore nel recupero delle notifiche:", error);
-    }
-  };
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        // Logout → azzera contatori
+        setUnreadNotifications(0);
+        setUnreadAnnouncements(0);
+        setRole(null);
+        return;
+      }
+
+      // ruolo salvato al login
+      setRole(localStorage.getItem("role") || "user");
+
+      try {
+        // 🔔 Notifiche
+        const { data: notif } = await api.get("/getUnreadNotificationsCount");
+        setUnreadNotifications(notif.unreadCount || 0);
+
+        // 📬 Annunci ufficiali
+        const { data: ann } = await api.get("/getOfficialAnnouncements");
+        const unread = ann.filter((a) => !a.status?.read);
+        setUnreadAnnouncements(unread.length);
+      } catch (err) {
+        console.error("Errore notifiche/annunci:", err);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div className="sidebar">
+      {/* ------------ LOGO --------------- */}
       <div className="sidebar-header">
         <img src="/logo.png" alt="StayPro Logo" className="sidebar-logo" />
         <h1>StayPro</h1>
       </div>
 
+      {/* ------------ MENU PRINCIPALE --------------- */}
       <ul className="sidebar-menu">
         <li>
           <Link to="/">
@@ -94,6 +121,7 @@ const Sidebar = () => {
 
       <hr className="sidebar-divider" />
 
+      {/* ------------ NOTIFICHE / ANNUNCI --------------- */}
       <ul className="sidebar-menu">
         <li>
           <Link to="/notifications">
@@ -108,12 +136,26 @@ const Sidebar = () => {
           <Link to="/announcements">
             <FontAwesomeIcon icon={faEnvelopeOpenText} className="icon" />
             <span>{t("sidebar.officialAnnouncements")}</span>
+            {unreadAnnouncements > 0 && (
+              <span className="badge">{unreadAnnouncements}</span>
+            )}
           </Link>
         </li>
+
+        {/* Solo per admin */}
+        {role === "admin" && (
+          <li>
+            <Link to="/admin-dashboard">
+              <FontAwesomeIcon icon={faCrown} className="icon" />
+              <span>Amministrazione</span>
+            </Link>
+          </li>
+        )}
       </ul>
 
       <hr className="sidebar-divider" />
 
+      {/* ------------ SETTINGS --------------- */}
       <ul className="sidebar-menu">
         <li>
           <Link to="/settings">
@@ -125,6 +167,7 @@ const Sidebar = () => {
 
       <hr className="sidebar-divider" />
 
+      {/* ------------ HELP / AI --------------- */}
       <ul className="sidebar-menu">
         <li>
           <Link to="/support">
@@ -146,7 +189,7 @@ const Sidebar = () => {
         </li>
       </ul>
 
-      {/* 🔥 Upgrade Banner in fondo */}
+      {/* ------------ UPGRADE BANNER --------------- */}
       <div className="sidebar-upgrade">
         <div className="upgrade-content">
           <img src="/gold-icon.png" alt="Gold Plan" className="upgrade-icon" />

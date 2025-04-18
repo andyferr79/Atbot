@@ -1,242 +1,195 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
-// ✅ Inizializza Firebase Admin se non è già attivo
+// Inizializzazione Firebase
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
 const db = admin.firestore();
 
-// ✅ API per ottenere tutte le prenotazioni
-exports.getBookingsData = functions.https.onRequest(async (req, res) => {
+// 🔒 Middleware autenticazione
+async function authenticate(req) {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) throw { status: 403, message: "❌ Token mancante." };
+  try {
+    return await admin.auth().verifyIdToken(token);
+  } catch (error) {
+    functions.logger.error("❌ Errore autenticazione:", error);
+    throw { status: 401, message: "❌ Token non valido." };
+  }
+}
+
+// ✅ GET: Recupera tutte le prenotazioni dell'utente autenticato
+exports.getBookings = functions.https.onRequest(async (req, res) => {
   if (req.method !== "GET") {
-    return res
-      .status(405)
-      .json({ error: "❌ Metodo non consentito. Usa GET." });
+    return res.status(405).json({ error: "❌ Usa GET." });
   }
 
   try {
-    const bookingsSnapshot = await db.collection("Bookings").get();
-    if (bookingsSnapshot.empty) {
-      return res.json({
-        totalBookings: 0,
-        activeBookings: 0,
-        confirmedBookings: 0,
-        cancelledBookings: 0,
-        recentBookings: [],
-      });
-    }
+    const user = await authenticate(req);
+    const snapshot = await db
+      .collection("Bookings")
+      .where("userId", "==", user.uid)
+      .get();
 
-    let totalBookings = 0,
-      activeBookings = 0,
-      confirmedBookings = 0,
-      cancelledBookings = 0,
-      recentBookings = [];
+    const bookings = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate().toISOString(),
+    }));
 
-    bookingsSnapshot.forEach((doc) => {
-      const booking = doc.data();
-      totalBookings++;
-
-      if (booking.status === "active") activeBookings++;
-      if (booking.status === "confirmed") confirmedBookings++;
-      if (booking.status === "cancelled") cancelledBookings++;
-
-      recentBookings.push({
-        id: doc.id,
-        customerName: booking.customerName || "N/A",
-        checkInDate: booking.checkInDate?.toDate()?.toISOString() || null,
-        checkOutDate: booking.checkOutDate?.toDate()?.toISOString() || null,
-        amount: booking.amount || 0,
-        status: booking.status || "unknown",
-      });
-    });
-
-    recentBookings = recentBookings
-      .filter((b) => b.checkInDate !== null)
-      .sort((a, b) => new Date(b.checkInDate) - new Date(a.checkInDate))
-      .slice(0, 5);
-
-    return res.json({
-      totalBookings,
-      activeBookings,
-      confirmedBookings,
-      cancelledBookings,
-      recentBookings,
-    });
+    res.json({ bookings });
   } catch (error) {
-    functions.logger.error("❌ Errore nel recupero delle prenotazioni:", error);
-    return res
-      .status(500)
-      .json({
-        error: "Errore nel recupero delle prenotazioni",
-        details: error.message,
-      });
+    functions.logger.error("❌ Errore getBookings:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno." });
   }
 });
 
-// ✅ API per ottenere una singola prenotazione
+// ✅ GET: Ottieni singola prenotazione per ID
 exports.getBookingById = functions.https.onRequest(async (req, res) => {
   if (req.method !== "GET") {
-    return res
-      .status(405)
-      .json({ error: "❌ Metodo non consentito. Usa GET." });
+    return res.status(405).json({ error: "❌ Usa GET." });
   }
 
   try {
+    const user = await authenticate(req);
     const { id } = req.query;
     if (!id) {
-      return res
-        .status(400)
-        .json({ error: "❌ ID della prenotazione mancante" });
+      return res.status(400).json({ error: "❌ ID prenotazione mancante." });
     }
 
-    const bookingRef = db.collection("Bookings").doc(id);
-    const bookingDoc = await bookingRef.get();
-
-    if (!bookingDoc.exists) {
-      return res.status(404).json({ error: "❌ Prenotazione non trovata" });
+    const doc = await db.collection("Bookings").doc(id).get();
+    if (!doc.exists || doc.data().userId !== user.uid) {
+      return res.status(404).json({ error: "❌ Prenotazione non trovata." });
     }
 
-    return res.status(200).json({ id: bookingDoc.id, ...bookingDoc.data() });
+    res.json({ id: doc.id, ...doc.data() });
   } catch (error) {
-    functions.logger.error("❌ Errore nel recupero della prenotazione:", error);
-    return res
-      .status(500)
-      .json({ error: "Errore nel recupero della prenotazione" });
+    functions.logger.error("❌ Errore getBookingById:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno." });
   }
 });
 
-// ✅ API per creare una nuova prenotazione
+// ✅ POST: Creazione nuova prenotazione
 exports.createBooking = functions.https.onRequest(async (req, res) => {
   if (req.method !== "POST") {
-    return res
-      .status(405)
-      .json({ error: "❌ Metodo non consentito. Usa POST." });
+    return res.status(405).json({ error: "❌ Usa POST." });
   }
 
   try {
+    const user = await authenticate(req);
     const { customerName, checkInDate, checkOutDate, amount, status } =
       req.body;
+
     if (!customerName || !checkInDate || !checkOutDate || !amount || !status) {
-      return res
-        .status(400)
-        .json({ error: "❌ Tutti i campi sono obbligatori" });
+      return res.status(400).json({ error: "❌ Tutti i campi obbligatori." });
     }
 
-    const newBooking = {
+    const bookingData = {
       customerName,
       checkInDate: admin.firestore.Timestamp.fromDate(new Date(checkInDate)),
       checkOutDate: admin.firestore.Timestamp.fromDate(new Date(checkOutDate)),
       amount,
       status,
+      userId: user.uid,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
-    const bookingRef = await db.collection("Bookings").add(newBooking);
-    return res
-      .status(201)
-      .json({ message: "✅ Prenotazione creata", id: bookingRef.id });
+    const bookingRef = await db.collection("Bookings").add(bookingData);
+    const savedDoc = await bookingRef.get();
+    const savedData = savedDoc.data();
+
+    res.status(201).json({
+      id: savedDoc.id,
+      ...savedData,
+      checkInDate: savedData.checkInDate?.toDate().toISOString(),
+      checkOutDate: savedData.checkOutDate?.toDate().toISOString(),
+      createdAt: savedData.createdAt?.toDate().toISOString(),
+    });
   } catch (error) {
-    functions.logger.error(
-      "❌ Errore nella creazione della prenotazione:",
-      error
-    );
-    return res
-      .status(500)
-      .json({ error: "Errore nella creazione della prenotazione" });
+    functions.logger.error("❌ Errore createBooking:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno." });
   }
 });
 
-// ✅ API per aggiornare una prenotazione esistente
+// ✅ PATCH: Aggiornamento prenotazione esistente
 exports.updateBooking = functions.https.onRequest(async (req, res) => {
   if (req.method !== "PATCH") {
-    return res
-      .status(405)
-      .json({ error: "❌ Metodo non consentito. Usa PATCH." });
+    return res.status(405).json({ error: "❌ Usa PATCH." });
   }
 
   try {
+    const user = await authenticate(req);
     const { id } = req.query;
-    if (!id) {
-      return res
-        .status(400)
-        .json({ error: "❌ ID della prenotazione mancante" });
-    }
+    const updates = req.body;
 
-    const { customerName, checkInDate, checkOutDate, amount, status } =
-      req.body;
-    if (!customerName && !checkInDate && !checkOutDate && !amount && !status) {
-      return res.status(400).json({ error: "❌ Nessun dato da aggiornare" });
+    if (!id) {
+      return res.status(400).json({ error: "❌ ID prenotazione mancante." });
     }
 
     const bookingRef = db.collection("Bookings").doc(id);
-    const bookingDoc = await bookingRef.get();
-    if (!bookingDoc.exists) {
-      return res.status(404).json({ error: "❌ Prenotazione non trovata" });
+    const doc = await bookingRef.get();
+
+    if (!doc.exists || doc.data().userId !== user.uid) {
+      return res.status(404).json({ error: "❌ Prenotazione non trovata." });
     }
 
-    const updateData = {};
-    if (customerName) updateData.customerName = customerName;
-    if (checkInDate)
-      updateData.checkInDate = admin.firestore.Timestamp.fromDate(
-        new Date(checkInDate)
+    if (updates.checkInDate)
+      updates.checkInDate = admin.firestore.Timestamp.fromDate(
+        new Date(updates.checkInDate)
       );
-    if (checkOutDate)
-      updateData.checkOutDate = admin.firestore.Timestamp.fromDate(
-        new Date(checkOutDate)
+    if (updates.checkOutDate)
+      updates.checkOutDate = admin.firestore.Timestamp.fromDate(
+        new Date(updates.checkOutDate)
       );
-    if (amount) updateData.amount = amount;
-    if (status) updateData.status = status;
 
-    await bookingRef.update(updateData);
-    return res
-      .status(200)
-      .json({ message: "✅ Prenotazione aggiornata con successo", id });
+    await bookingRef.update({
+      ...updates,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    res.json({ message: "✅ Prenotazione aggiornata." });
   } catch (error) {
-    functions.logger.error(
-      "❌ Errore nell'aggiornamento della prenotazione:",
-      error
-    );
-    return res
-      .status(500)
-      .json({ error: "Errore nell'aggiornamento della prenotazione" });
+    functions.logger.error("❌ Errore updateBooking:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno." });
   }
 });
 
-// ✅ API per eliminare una prenotazione
+// ✅ DELETE: Elimina prenotazione
 exports.deleteBooking = functions.https.onRequest(async (req, res) => {
   if (req.method !== "DELETE") {
-    return res
-      .status(405)
-      .json({ error: "❌ Metodo non consentito. Usa DELETE." });
+    return res.status(405).json({ error: "❌ Usa DELETE." });
   }
 
   try {
+    const user = await authenticate(req);
     const { id } = req.query;
+
     if (!id) {
-      return res
-        .status(400)
-        .json({ error: "❌ ID della prenotazione mancante" });
+      return res.status(400).json({ error: "❌ ID prenotazione mancante." });
     }
 
     const bookingRef = db.collection("Bookings").doc(id);
-    const bookingDoc = await bookingRef.get();
-    if (!bookingDoc.exists) {
-      return res.status(404).json({ error: "❌ Prenotazione non trovata" });
+    const doc = await bookingRef.get();
+
+    if (!doc.exists || doc.data().userId !== user.uid) {
+      return res.status(404).json({ error: "❌ Prenotazione non trovata." });
     }
 
     await bookingRef.delete();
-    return res
-      .status(200)
-      .json({ message: "✅ Prenotazione eliminata con successo" });
+    res.json({ message: "✅ Prenotazione eliminata." });
   } catch (error) {
-    functions.logger.error(
-      "❌ Errore nell'eliminazione della prenotazione:",
-      error
-    );
-    return res
-      .status(500)
-      .json({ error: "Errore nell'eliminazione della prenotazione" });
+    functions.logger.error("❌ Errore deleteBooking:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno." });
   }
 });

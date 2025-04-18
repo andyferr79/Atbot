@@ -6,15 +6,28 @@ const FIREBASE_API_KEY = "AIzaSyDtcXEcXxQJqHzQB5Hjat82grMrOMQiwAM";
 
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const cors = require("cors")({ origin: true });
 
+// 🔐 Inizializza Firebase Admin
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-// ✅ Middleware per CORS
+const cors = require("cors")({ origin: true });
+
+// ✅ Middleware CORS completo con gestione OPTIONS
 function withCors(fn) {
   return functions.https.onRequest((req, res) => {
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.set(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    );
+
+    if (req.method === "OPTIONS") {
+      return res.status(204).send("");
+    }
+
     cors(req, res, () => {
       fn(req, res);
     });
@@ -47,14 +60,25 @@ const settingsRoutes = require("./settingsRoutes");
 const suppliersReportsRoutes = require("./suppliersReportsRoutes");
 const suppliersRoutes = require("./suppliersRoutes");
 const aiRoutes = require("./aiRoutes");
+const propertiesRoutes = require("./propertiesRoutes");
 
-// 🔐 Login (modificato per passare l'API key hardcoded)
+// 🔐 Login modificato con chiave fissa
 const loginRoute = require("./loginRoutes");
 loginRoute.setApiKey(FIREBASE_API_KEY);
 
-// ✅ Esportazione delle Cloud Functions
-exports.getBookings = withCors(bookingsRoutes.getBookings);
-exports.getBookingsReports = withCors(bookingsRoutes.getBookingsReports);
+// ✅ Moduli aggiuntivi
+const announcementRoutes = require("./announcementRoutes");
+const adminRoutes = require("./adminRoutes");
+
+// ✅ Booking - già strutturate
+exports.getBookings = bookingsRoutes.getBookings;
+exports.getBookingById = bookingsRoutes.getBookingById;
+exports.createBooking = bookingsRoutes.createBooking;
+exports.updateBooking = bookingsRoutes.updateBooking;
+exports.deleteBooking = bookingsRoutes.deleteBooking;
+
+// ✅ Altro
+exports.getBookingsReports = withCors(bookingsReportsRoutes.getBookingsReports);
 exports.syncChannelManager = withCors(channelManagerRoutes.syncChannelManager);
 exports.getCleaningReports = withCors(cleaningReportsRoutes.getCleaningReports);
 exports.addCleaningReport = withCors(cleaningReportsRoutes.addCleaningReport);
@@ -135,7 +159,7 @@ exports.getPreferences = withCors(settingsRoutes.preferencesSettings);
 exports.updatePreferences = withCors(settingsRoutes.preferencesSettings);
 exports.getStructureSettings = withCors(settingsRoutes.structureSettings);
 exports.updateStructureSettings = withCors(settingsRoutes.structureSettings);
-exports.getSecuritySettings = withCors(settingsRoutes.securitySettings);
+exports.getSecuritySettings = withCors(settingsRoutes.getSecuritySettings);
 exports.getSuppliers = withCors(suppliersRoutes.getSuppliers);
 exports.addSupplier = withCors(suppliersRoutes.addSupplier);
 exports.updateSupplier = withCors(suppliersRoutes.updateSupplier);
@@ -146,3 +170,33 @@ exports.getSuppliersReports = withCors(
 exports.addSupplierReport = withCors(suppliersReportsRoutes.addSupplierReport);
 exports.chatWithAI = withCors(aiRoutes.chatWithAI);
 exports.login = withCors(loginRoute.login);
+
+// ✅ Annunci ufficiali
+exports.getOfficialAnnouncements = withCors(
+  announcementRoutes.getOfficialAnnouncements
+);
+exports.createOfficialAnnouncement = withCors(
+  announcementRoutes.createOfficialAnnouncement
+);
+exports.markAnnouncementAsRead = withCors(
+  announcementRoutes.markAnnouncementAsRead
+);
+exports.archiveAnnouncement = withCors(announcementRoutes.archiveAnnouncement);
+exports.deleteAnnouncement = withCors(announcementRoutes.deleteAnnouncement);
+
+// ✅ Admin KPI / Sistema
+exports.getRevenueKPI = withCors(adminRoutes.getRevenueKPI);
+exports.getActiveSubscriptions = withCors(adminRoutes.getActiveSubscriptions);
+exports.getChurnRate = withCors(adminRoutes.getChurnRate);
+exports.getSystemStatus = withCors(adminRoutes.getSystemStatus);
+exports.getUserInfo = withCors(adminRoutes.getUserInfo);
+exports.getAIUsageStats = withCors(adminRoutes.getAIUsageStats);
+exports.getSystemLogs = withCors(adminRoutes.getSystemLogs);
+exports.getBackupStatus = withCors(adminRoutes.getBackupStatus);
+exports.startBackup = withCors(adminRoutes.startBackup);
+
+// ✅ PROPERTIES (Alloggi)
+exports.getProperties = withCors(propertiesRoutes.getProperties);
+exports.createProperty = withCors(propertiesRoutes.createProperty);
+exports.updateProperty = withCors(propertiesRoutes.updateProperty);
+exports.deleteProperty = withCors(propertiesRoutes.deleteProperty);

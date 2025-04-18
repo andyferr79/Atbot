@@ -5,11 +5,13 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Navigate,
   useLocation,
 } from "react-router-dom";
+
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
+import ProtectedRoute from "./components/ProtectedRoute"; // ✅ Usa la versione Firebase
+
 import StayProDashboard from "./pages/StayProDashboard";
 import Bookings from "./pages/Bookings";
 import Guests from "./pages/Guests";
@@ -31,12 +33,10 @@ import Notifications from "./pages/notifications/Notifications";
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
 import AgentHub from "./pages/AgentHub";
-import "./App.css";
+import AnnouncementsPage from "./pages/AnnouncementsPage";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
-const ProtectedRoute = ({ element }) => {
-  const isAuthenticated = localStorage.getItem("token") !== null;
-  return isAuthenticated ? element : <Navigate to="/login" replace />;
-};
+import "./App.css";
 
 const LayoutWrapper = ({ children }) => {
   const location = useLocation();
@@ -139,6 +139,14 @@ function App() {
           <Route
             path="/agent-hub"
             element={<ProtectedRoute element={<AgentHub />} />}
+          />
+          <Route
+            path="/announcements"
+            element={<ProtectedRoute element={<AnnouncementsPage />} />}
+          />
+          <Route
+            path="/admin-dashboard"
+            element={<ProtectedRoute element={<AdminDashboard />} />}
           />
         </Routes>
       </LayoutWrapper>
