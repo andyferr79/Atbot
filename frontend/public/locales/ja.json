@@ -8,14 +8,21 @@
   },
   "signup": {
     "title": "アカウント作成",
-    "firstName": "名",
-    "lastName": "姓",
+    "first_name": "名",
+    "last_name": "姓",
     "email": "メールアドレス",
     "password": "パスワード",
-    "confirmPassword": "パスワードの確認",
-    "plan": "プランを選択",
+    "confirm_password": "パスワードの確認",
+    "plan_base": "ベースプラン",
+    "plan_gold": "ゴールドプラン",
     "company": "会社名",
-    "button": "登録"
+    "button": "登録",
+    "signup_loading": "登録中…",
+    "signup_success": "✅ 登録が完了しました！メールを確認してアカウントを有効化してください。",
+    "signup_failed": "登録に失敗しました。後でもう一度お試しください。",
+    "password_too_short": "パスワードは6文字以上である必要があります。",
+    "passwords_do_not_match": "パスワードが一致しません。",
+    "email_already_in_use": "このメールアドレスは既に使用されています。"
   },
   "topbar": {
     "welcome": "ようこそ",
@@ -42,26 +49,26 @@
     "guests": "総ゲスト数",
     "revenue": "収益",
     "reviews": "レビュー",
-    "welcomeBack": "おかえりなさい、",
-    "todayStats": "今日の統計"
+    "welcome_back": "おかえりなさい、",
+    "today_stats": "本日の統計"
   },
   "bookings": {
     "title": "予約",
-    "addBooking": "予約を追加",
-    "editBooking": "予約を編集",
-    "deleteBooking": "予約を削除",
-    "checkIn": "チェックイン日",
-    "checkOut": "チェックアウト日",
-    "guestName": "ゲスト名",
+    "add_booking": "予約を追加",
+    "edit_booking": "予約を編集",
+    "delete_booking": "予約を削除",
+    "check_in": "チェックイン日",
+    "check_out": "チェックアウト日",
+    "guest_name": "ゲスト名",
     "room": "部屋",
     "status": "ステータス",
     "actions": "アクション"
   },
   "guests": {
     "title": "ゲスト",
-    "addGuest": "ゲストを追加",
-    "editGuest": "ゲストを編集",
-    "deleteGuest": "ゲストを削除",
+    "add_guest": "ゲストを追加",
+    "edit_guest": "ゲストを編集",
+    "delete_guest": "ゲストを削除",
     "name": "フルネーム",
     "email": "メール",
     "phone": "電話番号",
@@ -69,10 +76,10 @@
   },
   "rooms": {
     "title": "部屋",
-    "addRoom": "部屋を追加",
-    "editRoom": "部屋を編集",
-    "deleteRoom": "部屋を削除",
-    "roomNumber": "部屋番号",
+    "add_room": "部屋を追加",
+    "edit_room": "部屋を編集",
+    "delete_room": "部屋を削除",
+    "room_number": "部屋番号",
     "type": "タイプ",
     "price": "価格",
     "availability": "空き状況",
@@ -80,25 +87,25 @@
   },
   "suppliers": {
     "title": "サプライヤー",
-    "addSupplier": "サプライヤーを追加",
-    "editSupplier": "サプライヤーを編集",
-    "deleteSupplier": "サプライヤーを削除",
+    "add_supplier": "サプライヤーを追加",
+    "edit_supplier": "サプライヤーを編集",
+    "delete_supplier": "サプライヤーを削除",
     "name": "サプライヤー名",
     "contact": "連絡先",
     "email": "メール",
-    "phone": "電話",
+    "phone": "電話番号",
     "category": "カテゴリ",
     "actions": "アクション"
   },
   "marketing": {
     "title": "マーケティング",
     "campaigns": "キャンペーン",
-    "socialPosts": "ソーシャル投稿",
+    "social_posts": "ソーシャル投稿",
     "budget": "予算",
-    "target": "ターゲット",
+    "target": "目標",
     "platforms": "プラットフォーム",
-    "createCampaign": "キャンペーンを作成",
-    "optimizeWithAI": "AIで最適化"
+    "create_campaign": "キャンペーンを作成",
+    "optimize_with_ai": "AIで最適化"
   },
   "reports": {
     "title": "レポート",
@@ -109,19 +116,19 @@
     "cleaning": "清掃レポート",
     "marketing": "マーケティングレポート",
     "customers": "顧客レポート",
-    "aiInsights": "AIインサイト",
-    "export": "レポートをエクスポート"
+    "ai_insights": "AIインサイト",
+    "export": "エクスポート"
   },
   "notifications": {
     "title": "通知",
-    "markAllRead": "すべて既読にする",
-    "noNotifications": "通知はありません"
+    "mark_all_read": "すべて既読にする",
+    "no_notifications": "通知はありません"
   },
   "chatbox": {
     "title": "AIチャット",
-    "placeholder": "質問を入力してください...",
+    "placeholder": "質問を入力してください…",
     "send": "送信",
-    "thinking": "AIが思考中..."
+    "thinking": "AIが思考中…"
   },
   "agentHub": {
     "title": "AIエージェントハブ",
@@ -129,11 +136,11 @@
     "actions": "AIアクション",
     "documents": "生成されたドキュメント",
     "settings": "自動化設定",
-    "autonomyLevel": "自律レベル",
-    "chatHistory": "チャット履歴",
+    "autonomy_level": "自律レベル",
+    "chat_history": "チャット履歴",
     "archived": "アーカイブ済み",
     "delete": "削除",
-    "confirmDelete": "この項目を削除してもよろしいですか？"
+    "confirm_delete": "本当にこの項目を削除しますか？"
   },
   "settings": {
     "title": "設定",
@@ -147,6 +154,26 @@
     "title": "サポート",
     "contact": "サポートに連絡",
     "faq": "よくある質問",
-    "guides": "ガイド & チュートリアル"
+    "guides": "ガイド・チュートリアル"
+  },
+  "common": {
+    "submit": "送信",
+    "logout": "ログアウト",
+    "language": "言語",
+    "welcome": "ようこそ",
+    "no_data": "データがありません",
+    "loading": "読み込み中…",
+    "error": "エラーが発生しました",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "update": "更新",
+    "add": "追加",
+    "search": "検索",
+    "actions": "アクション",
+    "view": "表示",
+    "send": "送信",
+    "confirm": "確認"
   }
 }

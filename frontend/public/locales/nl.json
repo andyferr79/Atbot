@@ -8,14 +8,21 @@
   },
   "signup": {
     "title": "Account aanmaken",
-    "firstName": "Voornaam",
-    "lastName": "Achternaam",
+    "first_name": "Voornaam",
+    "last_name": "Achternaam",
     "email": "E-mail",
     "password": "Wachtwoord",
-    "confirmPassword": "Bevestig wachtwoord",
-    "plan": "Kies je abonnement",
+    "confirm_password": "Bevestig wachtwoord",
+    "plan_base": "Basisabonnement",
+    "plan_gold": "Goudabonnement",
     "company": "Bedrijfsnaam",
-    "button": "Registreren"
+    "button": "Registreren",
+    "signup_loading": "Registreren…",
+    "signup_success": "✅ Registratie geslaagd! Controleer je e-mail om je account te activeren.",
+    "signup_failed": "Registratie mislukt. Probeer het later opnieuw.",
+    "password_too_short": "Wachtwoord moet minstens 6 tekens lang zijn.",
+    "passwords_do_not_match": "Wachtwoorden komen niet overeen.",
+    "email_already_in_use": "Dit e‑mailadres is al in gebruik."
   },
   "topbar": {
     "welcome": "Welkom",
@@ -30,11 +37,11 @@
     "marketing": "Marketing",
     "suppliers": "Leveranciers",
     "notifications": "Meldingen",
-    "officialAnnouncements": "Officiële mededelingen",
+    "official_announcements": "Officiële mededelingen",
     "settings": "Instellingen",
     "support": "Ondersteuning",
-    "chatIA": "AI Chat",
-    "agentHub": "AI Agent Hub"
+    "chat_ia": "AI Chat",
+    "agent_hub": "AI Agent Hub"
   },
   "dashboard": {
     "title": "Dashboard Overzicht",
@@ -42,26 +49,26 @@
     "guests": "Totale gasten",
     "revenue": "Omzet",
     "reviews": "Beoordelingen",
-    "welcomeBack": "Welkom terug,",
-    "todayStats": "Statistieken van vandaag"
+    "welcome_back": "Welkom terug,",
+    "today_stats": "Statistieken van vandaag"
   },
   "bookings": {
     "title": "Boekingen",
-    "addBooking": "Boeking toevoegen",
-    "editBooking": "Boeking bewerken",
-    "deleteBooking": "Boeking verwijderen",
-    "checkIn": "Incheckdatum",
-    "checkOut": "Uitcheckdatum",
-    "guestName": "Naam gast",
+    "add_booking": "Boeking toevoegen",
+    "edit_booking": "Boeking bewerken",
+    "delete_booking": "Boeking verwijderen",
+    "check_in": "Incheckdatum",
+    "check_out": "Uitcheckdatum",
+    "guest_name": "Naam gast",
     "room": "Kamer",
     "status": "Status",
     "actions": "Acties"
   },
   "guests": {
     "title": "Gasten",
-    "addGuest": "Gast toevoegen",
-    "editGuest": "Gast bewerken",
-    "deleteGuest": "Gast verwijderen",
+    "add_guest": "Gast toevoegen",
+    "edit_guest": "Gast bewerken",
+    "delete_guest": "Gast verwijderen",
     "name": "Volledige naam",
     "email": "E-mail",
     "phone": "Telefoon",
@@ -69,10 +76,10 @@
   },
   "rooms": {
     "title": "Kamers",
-    "addRoom": "Kamer toevoegen",
-    "editRoom": "Kamer bewerken",
-    "deleteRoom": "Kamer verwijderen",
-    "roomNumber": "Kamernummer",
+    "add_room": "Kamer toevoegen",
+    "edit_room": "Kamer bewerken",
+    "delete_room": "Kamer verwijderen",
+    "room_number": "Kamernummer",
     "type": "Type",
     "price": "Prijs",
     "availability": "Beschikbaarheid",
@@ -80,9 +87,9 @@
   },
   "suppliers": {
     "title": "Leveranciers",
-    "addSupplier": "Leverancier toevoegen",
-    "editSupplier": "Leverancier bewerken",
-    "deleteSupplier": "Leverancier verwijderen",
+    "add_supplier": "Leverancier toevoegen",
+    "edit_supplier": "Leverancier bewerken",
+    "delete_supplier": "Leverancier verwijderen",
     "name": "Naam leverancier",
     "contact": "Contact",
     "email": "E-mail",
@@ -93,12 +100,12 @@
   "marketing": {
     "title": "Marketing",
     "campaigns": "Campagnes",
-    "socialPosts": "Sociale berichten",
+    "social_posts": "Sociale berichten",
     "budget": "Budget",
     "target": "Doelgroep",
     "platforms": "Platformen",
-    "createCampaign": "Campagne aanmaken",
-    "optimizeWithAI": "Optimaliseren met AI"
+    "create_campaign": "Campagne aanmaken",
+    "optimize_with_ai": "Optimaliseren met AI"
   },
   "reports": {
     "title": "Rapporten",
@@ -109,31 +116,31 @@
     "cleaning": "Schoonmaakrapport",
     "marketing": "Marketingrapport",
     "customers": "Klantrapport",
-    "aiInsights": "AI-inzichten",
+    "ai_insights": "AI-inzichten",
     "export": "Rapport exporteren"
   },
   "notifications": {
     "title": "Meldingen",
-    "markAllRead": "Alles als gelezen markeren",
-    "noNotifications": "Geen meldingen"
+    "mark_all_read": "Alles als gelezen markeren",
+    "no_notifications": "Geen meldingen"
   },
   "chatbox": {
     "title": "AI Chat",
-    "placeholder": "Typ je vraag...",
+    "placeholder": "Typ je vraag…",
     "send": "Verzenden",
-    "thinking": "AI denkt na..."
+    "thinking": "AI denkt na…"
   },
-  "agentHub": {
+  "agent_hub": {
     "title": "AI Agent Hub",
     "overview": "Overzicht",
     "actions": "AI Acties",
     "documents": "Gegenereerde documenten",
     "settings": "Automatiseringsinstellingen",
-    "autonomyLevel": "Autonomieniveau",
-    "chatHistory": "Chatgeschiedenis",
+    "autonomy_level": "Autonomieniveau",
+    "chat_history": "Chatgeschiedenis",
     "archived": "Gearchiveerd",
     "delete": "Verwijderen",
-    "confirmDelete": "Weet je zeker dat je dit item wilt verwijderen?"
+    "confirm_delete": "Weet je zeker dat je dit item wilt verwijderen?"
   },
   "settings": {
     "title": "Instellingen",
@@ -148,5 +155,25 @@
     "contact": "Neem contact op met ondersteuning",
     "faq": "Veelgestelde vragen",
     "guides": "Handleidingen & tutorials"
+  },
+  "common": {
+    "submit": "Verzenden",
+    "logout": "Uitloggen",
+    "language": "Taal",
+    "welcome": "Welkom",
+    "no_data": "Geen gegevens",
+    "loading": "Laden…",
+    "error": "Er is een fout opgetreden",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "update": "Bijwerken",
+    "add": "Toevoegen",
+    "search": "Zoeken",
+    "actions": "Acties",
+    "view": "Bekijken",
+    "send": "Verzenden",
+    "confirm": "Bevestigen"
   }
 }

@@ -14,15 +14,18 @@
   },
   "signup": {
     "title": "Crea il tuo account",
-    "firstName": "Nome",
-    "lastName": "Cognome",
+    "first_name": "Nome",
+    "last_name": "Cognome",
     "email": "Email",
     "password": "Password",
-    "confirmPassword": "Conferma Password",
-    "plan": "Scegli il tuo piano",
+    "confirm_password": "Conferma Password",
+    "plan_base": "Piano BASE",
+    "plan_gold": "Piano GOLD",
     "company": "Nome Azienda",
-    "button": "Registrati"
+    "button": "Registrati",
+    "signup_loading": "Registrazione in corso..."
   },
+
   "topbar": {
     "welcome": "Benvenuto",
     "logout": "Esci"

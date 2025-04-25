@@ -1,6 +1,6 @@
 {
   "login": {
-    "title": "Login",
+    "title": "Log In",
     "email": "Email",
     "password": "Password",
     "button": "Log In",
@@ -8,14 +8,16 @@
   },
   "signup": {
     "title": "Create your account",
-    "firstName": "First Name",
-    "lastName": "Last Name",
+    "first_name": "First Name",
+    "last_name": "Last Name",
     "email": "Email",
     "password": "Password",
-    "confirmPassword": "Confirm Password",
-    "plan": "Choose your plan",
+    "confirm_password": "Confirm Password",
+    "plan_base": "BASE Plan",
+    "plan_gold": "GOLD Plan",
     "company": "Company name",
-    "button": "Register"
+    "button": "Register",
+    "signup_loading": "Registering..."
   },
   "topbar": {
     "welcome": "Welcome",
@@ -30,11 +32,11 @@
     "marketing": "Marketing",
     "suppliers": "Suppliers",
     "notifications": "Notifications",
-    "officialAnnouncements": "Official Announcements",
+    "official_announcements": "Official Announcements",
     "settings": "Settings",
     "support": "Support",
-    "chatIA": "AI Chat",
-    "agentHub": "AI Agent Hub"
+    "ai_chat": "AI Chat",
+    "agent_hub": "AI Agent Hub"
   },
   "dashboard": {
     "title": "Dashboard Overview",
@@ -42,26 +44,26 @@
     "guests": "Total Guests",
     "revenue": "Revenue",
     "reviews": "Reviews",
-    "welcomeBack": "Welcome back,",
-    "todayStats": "Today's statistics"
+    "welcome_back": "Welcome back,",
+    "today_stats": "Today's statistics"
   },
   "bookings": {
     "title": "Bookings",
-    "addBooking": "Add Booking",
-    "editBooking": "Edit Booking",
-    "deleteBooking": "Delete Booking",
-    "checkIn": "Check-in Date",
-    "checkOut": "Check-out Date",
-    "guestName": "Guest Name",
+    "add_booking": "Add Booking",
+    "edit_booking": "Edit Booking",
+    "delete_booking": "Delete Booking",
+    "check_in": "Check‑in Date",
+    "check_out": "Check‑out Date",
+    "guest_name": "Guest Name",
     "room": "Room",
     "status": "Status",
     "actions": "Actions"
   },
   "guests": {
     "title": "Guests",
-    "addGuest": "Add Guest",
-    "editGuest": "Edit Guest",
-    "deleteGuest": "Delete Guest",
+    "add_guest": "Add Guest",
+    "edit_guest": "Edit Guest",
+    "delete_guest": "Delete Guest",
     "name": "Full Name",
     "email": "Email",
     "phone": "Phone",
@@ -69,10 +71,10 @@
   },
   "rooms": {
     "title": "Rooms",
-    "addRoom": "Add Room",
-    "editRoom": "Edit Room",
-    "deleteRoom": "Delete Room",
-    "roomNumber": "Room Number",
+    "add_room": "Add Room",
+    "edit_room": "Edit Room",
+    "delete_room": "Delete Room",
+    "room_number": "Room Number",
     "type": "Type",
     "price": "Price",
     "availability": "Availability",
@@ -80,9 +82,9 @@
   },
   "suppliers": {
     "title": "Suppliers",
-    "addSupplier": "Add Supplier",
-    "editSupplier": "Edit Supplier",
-    "deleteSupplier": "Delete Supplier",
+    "add_supplier": "Add Supplier",
+    "edit_supplier": "Edit Supplier",
+    "delete_supplier": "Delete Supplier",
     "name": "Supplier Name",
     "contact": "Contact",
     "email": "Email",
@@ -93,47 +95,47 @@
   "marketing": {
     "title": "Marketing",
     "campaigns": "Campaigns",
-    "socialPosts": "Social Posts",
+    "social_posts": "Social Posts",
     "budget": "Budget",
     "target": "Target",
     "platforms": "Platforms",
-    "createCampaign": "Create Campaign",
-    "optimizeWithAI": "Optimize with AI"
+    "create_campaign": "Create Campaign",
+    "optimize_with_ai": "Optimize with AI"
   },
   "reports": {
     "title": "Reports",
-    "bookings": "Bookings Report",
-    "financial": "Financial Report",
-    "general": "General Report",
-    "suppliers": "Suppliers Report",
-    "cleaning": "Cleaning Report",
-    "marketing": "Marketing Report",
-    "customers": "Customers Report",
-    "aiInsights": "AI Insights",
-    "export": "Export Report"
+    "bookings_report": "Bookings Report",
+    "financial_report": "Financial Report",
+    "general_report": "General Report",
+    "suppliers_report": "Suppliers Report",
+    "cleaning_report": "Cleaning Report",
+    "marketing_report": "Marketing Report",
+    "customers_report": "Customers Report",
+    "ai_insights": "AI Insights",
+    "export_report": "Export Report"
   },
   "notifications": {
     "title": "Notifications",
-    "markAllRead": "Mark all as read",
-    "noNotifications": "No notifications"
+    "mark_all_read": "Mark all as read",
+    "no_notifications": "No notifications"
   },
   "chatbox": {
     "title": "AI Chat",
-    "placeholder": "Type your question...",
+    "placeholder": "Type your question…",
     "send": "Send",
-    "thinking": "AI is thinking..."
+    "thinking": "AI is thinking…"
   },
-  "agentHub": {
+  "agent_hub": {
     "title": "AI Agent Hub",
     "overview": "Overview",
     "actions": "AI Actions",
     "documents": "Generated Documents",
     "settings": "Automation Settings",
-    "autonomyLevel": "Autonomy Level",
-    "chatHistory": "Chat History",
+    "autonomy_level": "Autonomy Level",
+    "chat_history": "Chat History",
     "archived": "Archived",
     "delete": "Delete",
-    "confirmDelete": "Are you sure you want to delete this item?"
+    "confirm_delete": "Are you sure you want to delete this item?"
   },
   "settings": {
     "title": "Settings",
@@ -145,7 +147,7 @@
   },
   "support": {
     "title": "Support",
-    "contact": "Contact Support",
+    "contact_support": "Contact Support",
     "faq": "Frequently Asked Questions",
     "guides": "Guides & Tutorials"
   }

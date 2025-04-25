@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { getMarketingReport } from "../../../services/reportsApi";
 import "../../../styles/MarketingReport.css";
 
 const MarketingReport = () => {
   const [campaigns, setCampaigns] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3001/api/reports/marketing")
-      .then((response) => response.json())
-      .then((data) => setCampaigns(data))
+    getMarketingReport()
+      .then((response) => setCampaigns(response.data))
       .catch((error) =>
         console.error("Errore nel recupero dei dati di marketing:", error)
       );

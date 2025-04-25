@@ -1,101 +1,109 @@
-const express = require("express");
-const router = express.Router();
-const admin = require("firebase-admin");
-const rateLimit = require("express-rate-limit");
-const winston = require("winston");
+/*  src/services/api.js  */
+import axios from "axios";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-// ✅ Configurazione del logging avanzato
-const logger = winston.createLogger({
-  level: "error",
-  format: winston.format.json(),
-  transports: [
-    new winston.transports.File({ filename: "logs/api_errors.log" }),
-  ],
-});
+/* ─────────────────────────────────────────────────────────────
+   1⃣  BASE-URL: se non c’è la variabile .env usa l’emulatore       */
+const API_BASE_URL =
+  import.meta.env.VITE_FUNCTIONS_URL ||
+  "http://127.0.0.1:5001/autotaskerbot/us-central1";
 
-// ✅ Middleware per limitare le richieste di test Firebase (Max 10 richieste per IP ogni 5 minuti)
-const testLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  max: 10,
-  message: "❌ Troppe richieste. Riprova più tardi.",
-});
+/* ─────────────────────────────────────────────────────────────
+   2⃣  Istanza Axios                                                */
+const api = axios.create({ baseURL: API_BASE_URL });
 
-// ✅ **Verifica connessione Firebase prima di avviare le route**
-try {
-  admin.firestore();
-  console.log("✅ Connessione a Firebase riuscita!");
-} catch (error) {
-  logger.error("❌ Errore nella connessione a Firebase:", error);
-  throw new Error("❌ Impossibile connettersi a Firebase.");
-}
+/* ─────────────────────────────────────────────────────────────
+   3⃣  Helper: attendi che Firebase Auth emetta l’utente            */
+let tokenPromise = null;
 
-// ✅ Importiamo il file aiRoutes.js
-const aiRoutes = require("../functions/aiRoutes");
+const waitForValidToken = () => {
+  if (tokenPromise) return tokenPromise;
 
-// ✅ Integriamo aiRoutes con l'API principale
-router.use("/ai", aiRoutes);
-
-// ✅ **Rotta di test Firebase**
-router.get("/test-firebase", testLimiter, async (req, res) => {
-  try {
-    const db = admin.firestore();
-    const docRef = db.collection("test").doc("example");
-    await docRef.set({ message: "Connessione a Firebase riuscita!" });
-    const doc = await docRef.get();
-    res.json(doc.data());
-  } catch (error) {
-    logger.error("❌ Errore nella connessione a Firebase:", error);
-    res.status(500).json({
-      message: "Errore nella connessione a Firebase",
-      details: error.message,
+  const auth = getAuth();
+  tokenPromise = new Promise((resolve) => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const idToken = await user.getIdToken(true); // forza refresh
+        localStorage.setItem("firebaseToken", idToken);
+        resolve(idToken);
+      } else {
+        resolve(null);
+      }
+      unsub();
     });
+  });
+
+  return tokenPromise;
+};
+
+/* ─────────────────────────────────────────────────────────────
+   4⃣  Interceptor REQUEST                                         */
+api.interceptors.request.use(
+  async (config) => {
+    let token = localStorage.getItem("firebaseToken");
+    if (!token) token = await waitForValidToken();
+
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+/* ─────────────────────────────────────────────────────────────
+   5⃣  Interceptor RESPONSE                                        */
+api.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    const { response, config } = error;
+
+    if (response?.status === 401 && !config.__isRetry) {
+      config.__isRetry = true;
+      localStorage.removeItem("firebaseToken");
+      tokenPromise = null;
+
+      const freshToken = await waitForValidToken();
+      if (freshToken) {
+        config.headers.Authorization = `Bearer ${freshToken}`;
+        return api(config); // ritenta la stessa richiesta
+      }
+    }
+    return Promise.reject(error);
   }
-});
+);
 
-// ✅ **Importiamo tutte le altre route**
-const bookingsRoutes = require("../functions/bookingsRoutes");
-const bookingsReportsRoutes = require("../functions/bookingsReportsRoutes");
-const channelManagerRoutes = require("../functions/channelManagerRoutes");
-const cleaningReportsRoutes = require("../functions/cleaningReportsRoutes");
-const customersReportsRoutes = require("../functions/customersReportsRoutes");
-const customersRoutes = require("../functions/customersRoutes");
-const dashboardOverviewRoutes = require("../functions/dashboardOverviewRoutes");
-const expensesRoutes = require("../functions/expensesRoutes");
-const financesRoutes = require("../functions/financesRoutes");
-const financialReportsRoutes = require("../functions/financialReportsRoutes");
-const housekeepingRoutes = require("../functions/housekeepingRoutes");
-const marketingReportsRoutes = require("../functions/marketingReportsRoutes");
-const marketingRoutes = require("../functions/marketingRoutes");
-const notificationsRoutes = require("../functions/notificationsRoutes");
-const pricingRoutes = require("../functions/pricingRoutes");
-const reportsRoutes = require("../functions/reportsRoutes");
-const reviewsRoutes = require("../functions/reviewsRoutes");
-const settingsRoutes = require("../functions/settingsRoutes");
-const suppliersReportsRoutes = require("../functions/suppliersReportsRoutes");
-const suppliersRoutes = require("../functions/suppliersRoutes");
+/* ─────────────────────────────────────────────────────────────
+   6⃣  FUNZIONI REST — (aggiorna qui quando aggiungi nuove API)    */
 
-// ✅ **Definiamo tutte le route**
-router.use("/bookings", bookingsRoutes);
-router.use("/bookings/reports", bookingsReportsRoutes);
-router.use("/channel-manager", channelManagerRoutes);
-router.use("/cleaning/reports", cleaningReportsRoutes);
-router.use("/customers/reports", customersReportsRoutes);
-router.use("/customers", customersRoutes);
-router.use("/dashboard", dashboardOverviewRoutes);
-router.use("/expenses", expensesRoutes);
-router.use("/finances", financesRoutes);
-router.use("/finances/reports", financialReportsRoutes);
-router.use("/housekeeping", housekeepingRoutes);
-router.use("/marketing/reports", marketingReportsRoutes);
-router.use("/marketing", marketingRoutes);
-router.use("/notifications", notificationsRoutes);
-router.use("/pricing", pricingRoutes);
-router.use("/reports", reportsRoutes);
-router.use("/reviews", reviewsRoutes);
-router.use("/settings", settingsRoutes);
-router.use("/suppliers/reports", suppliersReportsRoutes);
-router.use("/suppliers", suppliersRoutes);
+/* ------- Test / Utilities ----------------------------------- */
+export const getTestFirebase = () => api.get("/getTestFirebase");
 
-// ✅ **Rimosso il doppio utilizzo di `router.use("/ai", aiRoutes);`**
+/* ------- Chat AI ------------------------------------------- */
+export const sendMessageToAI = (message, sessionId) =>
+  api.post("/chatWithAI", { user_message: message, session_id: sessionId });
 
-module.exports = router;
+/* ------- Suppliers ----------------------------------------- */
+export const getSuppliers = () => api.get("/getSuppliers");
+export const addSupplier = (data) => api.post("/addSupplier", data);
+export const updateSupplier = (id, data) =>
+  api.put(`/updateSupplier/${id}`, data);
+export const deleteSupplier = (id) => api.delete(`/deleteSupplier/${id}`);
+
+/* ------- Guests -------------------------------------------- */
+export const getGuests = () => api.get("/getGuests");
+export const addGuest = (data) => api.post("/addGuest", data);
+
+/* ------- Rooms --------------------------------------------- */
+export const getRooms = () => api.get("/getRooms");
+export const addRoom = (data) => api.post("/addRoom", data);
+export const updateRoom = (id, data) => api.put(`/updateRoom/${id}`, data);
+export const deleteRoom = (id) => api.delete(`/deleteRoom/${id}`);
+
+/* ------- Bookings ------------------------------------------ */
+export const getBookings = () => api.get("/getBookings");
+export const addBooking = (data) => api.post("/addBooking", data);
+export const updateBooking = (id, data) =>
+  api.put(`/updateBooking/${id}`, data);
+export const deleteBooking = (id) => api.delete(`/deleteBooking/${id}`);
+
+/* ----------------------------------------------------------- */
+export default api;

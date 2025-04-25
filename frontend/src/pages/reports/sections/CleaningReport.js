@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { getCleaningReport } from "../../../services/reportsApi";
 import "../../../styles/CleaningReport.css";
 
 const CleaningReport = () => {
   const [cleaningTasks, setCleaningTasks] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3001/api/reports/cleaning")
-      .then((response) => response.json())
-      .then((data) => setCleaningTasks(data))
+    getCleaningReport()
+      .then((response) => setCleaningTasks(response.data))
       .catch((error) =>
         console.error("Errore nel recupero dei dati sulle pulizie:", error)
       );

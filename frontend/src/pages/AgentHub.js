@@ -16,13 +16,13 @@ import DocumentsTab from "../components/AgentHub/DocumentsTab";
 import "../styles/AgentHub.css";
 
 const AgentHub = () => {
+  const [userId, setUserId] = useState(null);
   const [actions, setActions] = useState([]);
   const [chatSessions, setChatSessions] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [autonomyLevel, setAutonomyLevel] = useState("base");
   const [settings, setSettings] = useState({});
   const [plan, setPlan] = useState("BASE");
-  const userId = "test-user-001";
 
   const automations = [
     {
@@ -70,6 +70,14 @@ const AgentHub = () => {
   ];
 
   useEffect(() => {
+    const uid = localStorage.getItem("user_id");
+    if (uid) setUserId(uid);
+    else console.error("⚠ Nessun user_id trovato. L'utente non è autenticato.");
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
     fetch(`/api/chat_sessions/${userId}`)
       .then((res) => res.json())
       .then((data) => setChatSessions(data))
@@ -93,7 +101,7 @@ const AgentHub = () => {
         setPlan(data.plan || "BASE");
       })
       .catch((err) => console.error("❌ Error loading config:", err));
-  }, []);
+  }, [userId]);
 
   const handleArchive = async (sessionId) => {
     try {
@@ -112,9 +120,7 @@ const AgentHub = () => {
 
   const handleDelete = async (sessionId) => {
     try {
-      await fetch(`/api/chat_sessions/${sessionId}`, {
-        method: "DELETE",
-      });
+      await fetch(`/api/chat_sessions/${sessionId}`, { method: "DELETE" });
       setChatSessions((prev) =>
         prev.filter((chat) => chat.sessionId !== sessionId)
       );
@@ -122,6 +128,8 @@ const AgentHub = () => {
       console.error("Delete error:", err);
     }
   };
+
+  if (!userId) return null;
 
   return (
     <div className="agent-hub-container">

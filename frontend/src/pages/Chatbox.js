@@ -1,11 +1,12 @@
 import React, { useState } from "react";
+import { sendMessageToAI } from "../services/api";
 import "../styles/Chatbox.css";
 
 const Chatbox = () => {
-  const [messages, setMessages] = useState([]); // Stato per i messaggi
-  const [input, setInput] = useState(""); // Stato per l'input dell'utente
-  const [isOpen, setIsOpen] = useState(true); // Controllo visibilità della chat
-  const [loading, setLoading] = useState(false); // Stato di caricamento
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [isOpen, setIsOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const sendMessage = async () => {
     if (input.trim() === "") return;
@@ -16,34 +17,24 @@ const Chatbox = () => {
       time: new Date().toLocaleTimeString(),
     };
 
-    setMessages([...messages, userMessage]); // Aggiunge il messaggio dell'utente
+    setMessages([...messages, userMessage]);
     setInput("");
-    setLoading(true); // Mostra il caricamento
+    setLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_message: input,
-          session_id: "test123", // Può essere un ID dinamico
-        }),
-      });
-
-      const data = await response.json();
+      const sessionId =
+        localStorage.getItem("chat_session_id") || "default-session";
+      const res = await sendMessageToAI(input, sessionId);
       const aiMessage = {
-        text: data.response, // Risposta IA dal backend
+        text: res.data.response,
         sender: "ai",
         time: new Date().toLocaleTimeString(),
       };
-
-      setMessages((prevMessages) => [...prevMessages, aiMessage]); // Aggiunge la risposta IA
+      setMessages((prevMessages) => [...prevMessages, aiMessage]);
     } catch (error) {
       console.error("Errore nel collegamento all'IA:", error);
     } finally {
-      setLoading(false); // Rimuove il caricamento
+      setLoading(false);
     }
   };
 

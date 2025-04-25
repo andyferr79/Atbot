@@ -4,18 +4,26 @@
     "email": "E-mail",
     "password": "Senha",
     "button": "Entrar",
-    "error": "Credenciais inválidas ou e-mail não verificado."
+    "error_invalid": "Credenciais inválidas.",
+    "error_unverified": "E-mail não verificado."
   },
   "signup": {
     "title": "Crie sua conta",
-    "firstName": "Nome",
-    "lastName": "Sobrenome",
+    "first_name": "Nome",
+    "last_name": "Sobrenome",
     "email": "E-mail",
     "password": "Senha",
-    "confirmPassword": "Confirmar Senha",
-    "plan": "Escolha seu plano",
+    "confirm_password": "Confirmar senha",
+    "plan_base": "Plano Básico",
+    "plan_premium": "Plano Premium",
     "company": "Nome da empresa",
-    "button": "Registrar"
+    "button": "Registrar",
+    "loading": "Registrando…",
+    "success": "✅ Cadastro realizado! Verifique seu e-mail para confirmar a conta.",
+    "error": "Falha no cadastro. Tente novamente mais tarde.",
+    "error_password_length": "A senha deve ter pelo menos 6 caracteres.",
+    "error_password_match": "As senhas não coincidem.",
+    "error_email_taken": "Este e-mail já está em uso."
   },
   "topbar": {
     "welcome": "Bem-vindo",
@@ -30,38 +38,38 @@
     "marketing": "Marketing",
     "suppliers": "Fornecedores",
     "notifications": "Notificações",
-    "officialAnnouncements": "Comunicados Oficiais",
+    "official_announcements": "Comunicados Oficiais",
     "settings": "Configurações",
     "support": "Suporte",
-    "chatIA": "Chat IA",
-    "agentHub": "Central do Agente IA"
+    "chat_ai": "Chat IA",
+    "agent_hub": "Central do Agente IA"
   },
   "dashboard": {
-    "title": "Visão geral do painel",
+    "title": "Visão Geral",
     "bookings": "Total de reservas",
     "guests": "Total de hóspedes",
     "revenue": "Receita",
     "reviews": "Avaliações",
-    "welcomeBack": "Bem-vindo de volta,",
-    "todayStats": "Estatísticas de hoje"
+    "welcome_back": "Bem-vindo de volta,",
+    "today_stats": "Estatísticas de hoje"
   },
   "bookings": {
     "title": "Reservas",
-    "addBooking": "Adicionar reserva",
-    "editBooking": "Editar reserva",
-    "deleteBooking": "Excluir reserva",
-    "checkIn": "Data de entrada",
-    "checkOut": "Data de saída",
-    "guestName": "Nome do hóspede",
+    "add": "Adicionar reserva",
+    "edit": "Editar reserva",
+    "delete": "Excluir reserva",
+    "check_in": "Data de entrada",
+    "check_out": "Data de saída",
+    "guest_name": "Nome do hóspede",
     "room": "Quarto",
     "status": "Status",
     "actions": "Ações"
   },
   "guests": {
     "title": "Hóspedes",
-    "addGuest": "Adicionar hóspede",
-    "editGuest": "Editar hóspede",
-    "deleteGuest": "Excluir hóspede",
+    "add": "Adicionar hóspede",
+    "edit": "Editar hóspede",
+    "delete": "Excluir hóspede",
     "name": "Nome completo",
     "email": "E-mail",
     "phone": "Telefone",
@@ -69,10 +77,10 @@
   },
   "rooms": {
     "title": "Quartos",
-    "addRoom": "Adicionar quarto",
-    "editRoom": "Editar quarto",
-    "deleteRoom": "Excluir quarto",
-    "roomNumber": "Número do quarto",
+    "add": "Adicionar quarto",
+    "edit": "Editar quarto",
+    "delete": "Excluir quarto",
+    "room_number": "Número do quarto",
     "type": "Tipo",
     "price": "Preço",
     "availability": "Disponibilidade",
@@ -80,9 +88,9 @@
   },
   "suppliers": {
     "title": "Fornecedores",
-    "addSupplier": "Adicionar fornecedor",
-    "editSupplier": "Editar fornecedor",
-    "deleteSupplier": "Excluir fornecedor",
+    "add": "Adicionar fornecedor",
+    "edit": "Editar fornecedor",
+    "delete": "Excluir fornecedor",
     "name": "Nome do fornecedor",
     "contact": "Contato",
     "email": "E-mail",
@@ -93,12 +101,12 @@
   "marketing": {
     "title": "Marketing",
     "campaigns": "Campanhas",
-    "socialPosts": "Postagens sociais",
+    "social_posts": "Postagens sociais",
     "budget": "Orçamento",
     "target": "Público-alvo",
     "platforms": "Plataformas",
-    "createCampaign": "Criar campanha",
-    "optimizeWithAI": "Otimizar com IA"
+    "create_campaign": "Criar campanha",
+    "optimize_with_ai": "Otimizar com IA"
   },
   "reports": {
     "title": "Relatórios",
@@ -109,44 +117,59 @@
     "cleaning": "Relatório de limpeza",
     "marketing": "Relatório de marketing",
     "customers": "Relatório de clientes",
-    "aiInsights": "Insights da IA",
+    "ai_insights": "Insights IA",
     "export": "Exportar relatório"
   },
   "notifications": {
     "title": "Notificações",
-    "markAllRead": "Marcar tudo como lido",
-    "noNotifications": "Sem notificações"
+    "mark_all_read": "Marcar tudo como lido",
+    "no_notifications": "Sem notificações"
   },
   "chatbox": {
     "title": "Chat IA",
-    "placeholder": "Digite sua pergunta...",
+    "placeholder": "Digite sua pergunta…",
     "send": "Enviar",
-    "thinking": "IA está pensando..."
+    "thinking": "IA pensando…"
   },
-  "agentHub": {
+  "agent_hub": {
     "title": "Central do Agente IA",
     "overview": "Visão geral",
     "actions": "Ações IA",
-    "documents": "Documentos gerados",
-    "settings": "Configurações de automação",
-    "autonomyLevel": "Nível de autonomia",
-    "chatHistory": "Histórico do chat",
+    "documents": "Documentos",
+    "settings": "Configurações",
+    "autonomy_level": "Nível de autonomia",
+    "chat_history": "Histórico de chat",
     "archived": "Arquivados",
     "delete": "Excluir",
-    "confirmDelete": "Tem certeza de que deseja excluir este item?"
+    "confirm_delete": "Tem certeza que deseja excluir?"
   },
   "settings": {
     "title": "Configurações",
     "profile": "Perfil",
     "preferences": "Preferências",
     "security": "Segurança",
-    "structure": "Configurações da estrutura",
-    "notifications": "Configurações de notificações"
+    "structure": "Estrutura",
+    "notifications": "Notificações"
   },
   "support": {
     "title": "Suporte",
-    "contact": "Contato com suporte",
+    "contact": "Falar com suporte",
     "faq": "Perguntas frequentes",
-    "guides": "Guias e tutoriais"
+    "guides": "Guias"
+  },
+  "common": {
+    "submit": "Confirmar",
+    "cancel": "Cancelar",
+    "add": "Adicionar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "save": "Salvar",
+    "loading": "Carregando…",
+    "error": "Ocorreu um erro",
+    "no_data": "Nenhum dado",
+    "search": "Buscar",
+    "actions": "Ações",
+    "view": "Visualizar",
+    "confirm": "Confirmar"
   }
 }

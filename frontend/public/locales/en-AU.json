@@ -20,6 +20,8 @@
   "last_name": "Last Name",
   "company": "Company",
   "plan": "Plan",
+  "plan_base": "Base Plan",
+  "plan_gold": "Gold Plan",
   "confirm_password": "Confirm Password",
   "submit": "Submit",
   "logout": "Logout",
@@ -41,7 +43,6 @@
   "confirm": "Confirm",
   "email_not_verified": "Email not verified. Please check your inbox.",
   "invalid_credentials": "Invalid credentials or unregistered user.",
-
   "signup_success": "✅ Sign-up successful! Please check your email to confirm your account.",
   "password_too_short": "Password must be at least 6 characters long.",
   "passwords_do_not_match": "Passwords do not match.",

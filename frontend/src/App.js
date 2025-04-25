@@ -1,5 +1,3 @@
-// 📂 E:/ATBot/frontend/src/App.js
-
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -8,9 +6,10 @@ import {
   useLocation,
 } from "react-router-dom";
 
+import { AuthProvider } from "./contexts/AuthContext"; // ✅ Aggiunto contesto Auth centralizzato
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
-import ProtectedRoute from "./components/ProtectedRoute"; // ✅ Usa la versione Firebase
+import ProtectedRoute from "./components/ProtectedRoute"; // ✅ Protezione con Firebase Auth
 
 import StayProDashboard from "./pages/StayProDashboard";
 import Bookings from "./pages/Bookings";
@@ -56,101 +55,109 @@ const LayoutWrapper = ({ children }) => {
 
 function App() {
   return (
-    <Router>
-      <LayoutWrapper>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
+    <AuthProvider>
+      {" "}
+      {/* ✅ AuthProvider globale */}
+      <Router>
+        <LayoutWrapper>
+          <Routes>
+            {/* Rotte pubbliche */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
 
-          <Route
-            path="/"
-            element={<ProtectedRoute element={<StayProDashboard />} />}
-          />
-          <Route
-            path="/bookings"
-            element={<ProtectedRoute element={<Bookings />} />}
-          />
-          <Route
-            path="/guests"
-            element={<ProtectedRoute element={<Guests />} />}
-          />
-          <Route
-            path="/rooms"
-            element={<ProtectedRoute element={<Rooms />} />}
-          />
-          <Route
-            path="/suppliers"
-            element={<ProtectedRoute element={<Suppliers />} />}
-          />
-          <Route
-            path="/marketing"
-            element={<ProtectedRoute element={<Marketing />} />}
-          />
-          <Route
-            path="/settings"
-            element={<ProtectedRoute element={<Settings />} />}
-          />
-          <Route
-            path="/reports"
-            element={<ProtectedRoute element={<Reports />} />}
-          />
+            {/* Rotte protette */}
+            <Route
+              path="/"
+              element={<ProtectedRoute element={<StayProDashboard />} />}
+            />
+            <Route
+              path="/bookings"
+              element={<ProtectedRoute element={<Bookings />} />}
+            />
+            <Route
+              path="/guests"
+              element={<ProtectedRoute element={<Guests />} />}
+            />
+            <Route
+              path="/rooms"
+              element={<ProtectedRoute element={<Rooms />} />}
+            />
+            <Route
+              path="/suppliers"
+              element={<ProtectedRoute element={<Suppliers />} />}
+            />
+            <Route
+              path="/marketing"
+              element={<ProtectedRoute element={<Marketing />} />}
+            />
+            <Route
+              path="/settings"
+              element={<ProtectedRoute element={<Settings />} />}
+            />
+            <Route
+              path="/reports"
+              element={<ProtectedRoute element={<Reports />} />}
+            />
 
-          <Route
-            path="/reports/bookings"
-            element={<ProtectedRoute element={<BookingsReport />} />}
-          />
-          <Route
-            path="/reports/financial"
-            element={<ProtectedRoute element={<FinancialReport />} />}
-          />
-          <Route
-            path="/reports/general"
-            element={<ProtectedRoute element={<GeneralReport />} />}
-          />
-          <Route
-            path="/reports/suppliers"
-            element={<ProtectedRoute element={<SuppliersReport />} />}
-          />
-          <Route
-            path="/reports/cleaning"
-            element={<ProtectedRoute element={<CleaningReport />} />}
-          />
-          <Route
-            path="/reports/marketing"
-            element={<ProtectedRoute element={<MarketingReport />} />}
-          />
-          <Route
-            path="/reports/customers"
-            element={<ProtectedRoute element={<CustomersReport />} />}
-          />
-          <Route
-            path="/reports/ai-insights"
-            element={<ProtectedRoute element={<AIInsights />} />}
-          />
+            {/* Sezioni Report */}
+            <Route
+              path="/reports/bookings"
+              element={<ProtectedRoute element={<BookingsReport />} />}
+            />
+            <Route
+              path="/reports/financial"
+              element={<ProtectedRoute element={<FinancialReport />} />}
+            />
+            <Route
+              path="/reports/general"
+              element={<ProtectedRoute element={<GeneralReport />} />}
+            />
+            <Route
+              path="/reports/suppliers"
+              element={<ProtectedRoute element={<SuppliersReport />} />}
+            />
+            <Route
+              path="/reports/cleaning"
+              element={<ProtectedRoute element={<CleaningReport />} />}
+            />
+            <Route
+              path="/reports/marketing"
+              element={<ProtectedRoute element={<MarketingReport />} />}
+            />
+            <Route
+              path="/reports/customers"
+              element={<ProtectedRoute element={<CustomersReport />} />}
+            />
+            <Route
+              path="/reports/ai-insights"
+              element={<ProtectedRoute element={<AIInsights />} />}
+            />
 
-          <Route
-            path="/chatbox"
-            element={<ProtectedRoute element={<Chatbox />} />}
-          />
-          <Route
-            path="/notifications"
-            element={<ProtectedRoute element={<Notifications />} />}
-          />
-          <Route
-            path="/agent-hub"
-            element={<ProtectedRoute element={<AgentHub />} />}
-          />
-          <Route
-            path="/announcements"
-            element={<ProtectedRoute element={<AnnouncementsPage />} />}
-          />
-          <Route
-            path="/admin-dashboard"
-            element={<ProtectedRoute element={<AdminDashboard />} />}
-          />
-        </Routes>
-      </LayoutWrapper>
-    </Router>
+            {/* Altre funzionalità */}
+            <Route
+              path="/chatbox"
+              element={<ProtectedRoute element={<Chatbox />} />}
+            />
+            <Route
+              path="/notifications"
+              element={<ProtectedRoute element={<Notifications />} />}
+            />
+            <Route
+              path="/agent-hub"
+              element={<ProtectedRoute element={<AgentHub />} />}
+            />
+            <Route
+              path="/announcements"
+              element={<ProtectedRoute element={<AnnouncementsPage />} />}
+            />
+            <Route
+              path="/admin-dashboard"
+              element={<ProtectedRoute element={<AdminDashboard />} />}
+            />
+          </Routes>
+        </LayoutWrapper>
+      </Router>
+    </AuthProvider>
   );
 }
 

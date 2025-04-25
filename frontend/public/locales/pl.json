@@ -4,18 +4,26 @@
     "email": "E-mail",
     "password": "Hasło",
     "button": "Zaloguj się",
-    "error": "Nieprawidłowe dane logowania lub niezweryfikowany e-mail."
+    "error_invalid": "Nieprawidłowe dane logowania.",
+    "error_unverified": "E-mail nie został zweryfikowany."
   },
   "signup": {
     "title": "Utwórz konto",
-    "firstName": "Imię",
-    "lastName": "Nazwisko",
+    "first_name": "Imię",
+    "last_name": "Nazwisko",
     "email": "E-mail",
     "password": "Hasło",
-    "confirmPassword": "Potwierdź hasło",
-    "plan": "Wybierz plan",
+    "confirm_password": "Potwierdź hasło",
+    "plan_base": "Plan Podstawowy",
+    "plan_gold": "Plan Premium",
     "company": "Nazwa firmy",
-    "button": "Zarejestruj się"
+    "button": "Zarejestruj się",
+    "loading": "Rejestracja…",
+    "success": "✅ Rejestracja udana! Sprawdź swoją skrzynkę e-mail, aby potwierdzić konto.",
+    "error": "Rejestracja nie powiodła się. Spróbuj ponownie później.",
+    "error_password_length": "Hasło musi mieć co najmniej 6 znaków.",
+    "error_password_match": "Hasła nie są takie same.",
+    "error_email_taken": "E-mail jest już zajęty."
   },
   "topbar": {
     "welcome": "Witamy",
@@ -30,11 +38,11 @@
     "marketing": "Marketing",
     "suppliers": "Dostawcy",
     "notifications": "Powiadomienia",
-    "officialAnnouncements": "Oficjalne ogłoszenia",
+    "official_announcements": "Oficjalne ogłoszenia",
     "settings": "Ustawienia",
     "support": "Wsparcie",
-    "chatIA": "Czat AI",
-    "agentHub": "Centrum Agenta AI"
+    "chat_ai": "Czat AI",
+    "agent_hub": "Centrum Agenta AI"
   },
   "dashboard": {
     "title": "Przegląd panelu",
@@ -42,26 +50,26 @@
     "guests": "Łączni goście",
     "revenue": "Przychód",
     "reviews": "Opinie",
-    "welcomeBack": "Witamy ponownie,",
-    "todayStats": "Dzisiejsze statystyki"
+    "welcome_back": "Witamy ponownie,",
+    "today_stats": "Statystyki dzisiaj"
   },
   "bookings": {
     "title": "Rezerwacje",
-    "addBooking": "Dodaj rezerwację",
-    "editBooking": "Edytuj rezerwację",
-    "deleteBooking": "Usuń rezerwację",
-    "checkIn": "Data zameldowania",
-    "checkOut": "Data wymeldowania",
-    "guestName": "Imię i nazwisko gościa",
+    "add": "Dodaj rezerwację",
+    "edit": "Edytuj rezerwację",
+    "delete": "Usuń rezerwację",
+    "check_in": "Data zameldowania",
+    "check_out": "Data wymeldowania",
+    "guest_name": "Imię i nazwisko gościa",
     "room": "Pokój",
     "status": "Status",
     "actions": "Działania"
   },
   "guests": {
     "title": "Goście",
-    "addGuest": "Dodaj gościa",
-    "editGuest": "Edytuj gościa",
-    "deleteGuest": "Usuń gościa",
+    "add": "Dodaj gościa",
+    "edit": "Edytuj gościa",
+    "delete": "Usuń gościa",
     "name": "Imię i nazwisko",
     "email": "E-mail",
     "phone": "Telefon",
@@ -69,10 +77,10 @@
   },
   "rooms": {
     "title": "Pokoje",
-    "addRoom": "Dodaj pokój",
-    "editRoom": "Edytuj pokój",
-    "deleteRoom": "Usuń pokój",
-    "roomNumber": "Numer pokoju",
+    "add": "Dodaj pokój",
+    "edit": "Edytuj pokój",
+    "delete": "Usuń pokój",
+    "room_number": "Numer pokoju",
     "type": "Typ",
     "price": "Cena",
     "availability": "Dostępność",
@@ -80,9 +88,9 @@
   },
   "suppliers": {
     "title": "Dostawcy",
-    "addSupplier": "Dodaj dostawcę",
-    "editSupplier": "Edytuj dostawcę",
-    "deleteSupplier": "Usuń dostawcę",
+    "add": "Dodaj dostawcę",
+    "edit": "Edytuj dostawcę",
+    "delete": "Usuń dostawcę",
     "name": "Nazwa dostawcy",
     "contact": "Kontakt",
     "email": "E-mail",
@@ -93,12 +101,12 @@
   "marketing": {
     "title": "Marketing",
     "campaigns": "Kampanie",
-    "socialPosts": "Posty w mediach społecznościowych",
+    "social_posts": "Posty społecznościowe",
     "budget": "Budżet",
     "target": "Grupa docelowa",
     "platforms": "Platformy",
-    "createCampaign": "Utwórz kampanię",
-    "optimizeWithAI": "Optymalizuj za pomocą AI"
+    "create_campaign": "Utwórz kampanię",
+    "optimize_with_ai": "Optymalizuj AI"
   },
   "reports": {
     "title": "Raporty",
@@ -109,31 +117,31 @@
     "cleaning": "Raport sprzątania",
     "marketing": "Raport marketingowy",
     "customers": "Raport klientów",
-    "aiInsights": "Wnioski AI",
+    "ai_insights": "Wnioski AI",
     "export": "Eksportuj raport"
   },
   "notifications": {
     "title": "Powiadomienia",
-    "markAllRead": "Oznacz wszystkie jako przeczytane",
-    "noNotifications": "Brak powiadomień"
+    "mark_all_read": "Oznacz wszystkie jako przeczytane",
+    "no_notifications": "Brak powiadomień"
   },
   "chatbox": {
     "title": "Czat AI",
-    "placeholder": "Zadaj pytanie...",
+    "placeholder": "Zadaj pytanie…",
     "send": "Wyślij",
-    "thinking": "AI przetwarza odpowiedź..."
+    "thinking": "AI przetwarza…"
   },
-  "agentHub": {
+  "agent_hub": {
     "title": "Centrum Agenta AI",
     "overview": "Przegląd",
     "actions": "Akcje AI",
-    "documents": "Wygenerowane dokumenty",
+    "documents": "Dokumenty",
     "settings": "Ustawienia automatyzacji",
-    "autonomyLevel": "Poziom autonomii",
-    "chatHistory": "Historia czatu",
+    "autonomy_level": "Poziom autonomii",
+    "chat_history": "Historia czatu",
     "archived": "Zarchiwizowane",
     "delete": "Usuń",
-    "confirmDelete": "Czy na pewno chcesz usunąć ten element?"
+    "confirm_delete": "Czy na pewno usunąć?"
   },
   "settings": {
     "title": "Ustawienia",
@@ -145,8 +153,23 @@
   },
   "support": {
     "title": "Wsparcie",
-    "contact": "Skontaktuj się ze wsparciem",
-    "faq": "Często zadawane pytania",
-    "guides": "Przewodniki i samouczki"
+    "contact": "Kontakt z supportem",
+    "faq": "FAQ",
+    "guides": "Poradniki"
+  },
+  "common": {
+    "submit": "Zatwierdź",
+    "cancel": "Anuluj",
+    "add": "Dodaj",
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "save": "Zapisz",
+    "loading": "Ładowanie…",
+    "error": "Wystąpił błąd",
+    "no_data": "Brak danych",
+    "search": "Szukaj",
+    "actions": "Działania",
+    "view": "Podgląd",
+    "confirm": "Potwierdź"
   }
 }

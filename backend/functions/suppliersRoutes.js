@@ -1,9 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+if (!admin.apps.length) admin.initializeApp();
 
 const db = admin.firestore();
 
@@ -12,7 +10,7 @@ async function authenticate(req) {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) throw { status: 403, message: "❌ Token mancante" };
   try {
-    await admin.auth().verifyIdToken(token);
+    req.user = await admin.auth().verifyIdToken(token);
   } catch (error) {
     functions.logger.error("❌ Token non valido:", error);
     throw { status: 401, message: "❌ Token non valido" };
@@ -20,7 +18,7 @@ async function authenticate(req) {
 }
 
 // ✅ Middleware Rate Limiting
-async function checkRateLimit(ip, maxRequests, windowMs) {
+async function checkRateLimit(ip, maxRequests = 100, windowMs = 60_000) {
   const rateDocRef = db.collection("RateLimits").doc(ip);
   const rateDoc = await rateDocRef.get();
   const now = Date.now();
@@ -46,39 +44,19 @@ exports.getSuppliers = functions.https.onRequest(async (req, res) => {
 
   try {
     await authenticate(req);
+    await checkRateLimit(req.ip);
+
     const snapshot = await db.collection("Suppliers").get();
     const suppliers = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate().toISOString() || "N/A",
+      createdAt: doc.data().createdAt?.toDate().toISOString() || null,
+      updatedAt: doc.data().updatedAt?.toDate().toISOString() || null,
     }));
 
     res.json({ suppliers });
   } catch (error) {
     functions.logger.error("❌ Errore recupero fornitori:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
-  }
-});
-
-// 📌 GET - Ottiene un fornitore per ID
-exports.getSupplierById = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-
-  try {
-    await authenticate(req);
-    const { id } = req.query;
-    if (!id) return res.status(400).json({ error: "❌ ID mancante." });
-
-    const doc = await db.collection("Suppliers").doc(id).get();
-    if (!doc.exists)
-      return res.status(404).json({ error: "❌ Fornitore non trovato." });
-
-    res.json({ id: doc.id, ...doc.data() });
-  } catch (error) {
-    functions.logger.error("❌ Errore recupero fornitore:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
@@ -92,21 +70,30 @@ exports.addSupplier = functions.https.onRequest(async (req, res) => {
 
   try {
     await authenticate(req);
-    const { name, contact, email, phone } = req.body;
+    await checkRateLimit(req.ip);
 
-    if (!name || !contact)
-      return res.status(400).json({ error: "❌ Campi obbligatori mancanti." });
-
-    const supplier = {
+    const {
       name,
+      category = "Generale",
+      contact = {},
+      status = "Attivo",
+    } = req.body;
+    if (!name || !contact.email) {
+      return res.status(400).json({
+        error: "❌ Nome e contatto email sono obbligatori.",
+      });
+    }
+
+    const newSupplier = {
+      name,
+      category,
       contact,
-      email: email || "",
-      phone: phone || "",
+      status,
       createdAt: new Date(),
     };
 
-    const docRef = await db.collection("Suppliers").add(supplier);
-    res.json({ id: docRef.id, ...supplier });
+    const docRef = await db.collection("Suppliers").add(newSupplier);
+    res.status(201).json({ id: docRef.id, ...newSupplier });
   } catch (error) {
     functions.logger.error("❌ Errore aggiunta fornitore:", error);
     res
@@ -122,18 +109,24 @@ exports.updateSupplier = functions.https.onRequest(async (req, res) => {
 
   try {
     await authenticate(req);
+    await checkRateLimit(req.ip);
+
     const { id, updates } = req.body;
-    if (!id || !updates) {
+    if (!id || typeof updates !== "object") {
       return res
         .status(400)
-        .json({ error: "❌ ID e aggiornamenti richiesti." });
+        .json({ error: "❌ ID e dati aggiornati richiesti." });
     }
 
     await db
       .collection("Suppliers")
       .doc(id)
-      .update({ ...updates, updatedAt: new Date() });
-    res.json({ message: "✅ Fornitore aggiornato." });
+      .update({
+        ...updates,
+        updatedAt: new Date(),
+      });
+
+    res.json({ message: "✅ Fornitore aggiornato con successo." });
   } catch (error) {
     functions.logger.error("❌ Errore aggiornamento fornitore:", error);
     res
@@ -149,6 +142,8 @@ exports.deleteSupplier = functions.https.onRequest(async (req, res) => {
 
   try {
     await authenticate(req);
+    await checkRateLimit(req.ip);
+
     const { id } = req.query;
     if (!id) return res.status(400).json({ error: "❌ ID mancante." });
 

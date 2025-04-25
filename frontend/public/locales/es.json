@@ -8,14 +8,21 @@
   },
   "signup": {
     "title": "Crear tu cuenta",
-    "firstName": "Nombre",
-    "lastName": "Apellido",
+    "first_name": "Nombre",
+    "last_name": "Apellido",
     "email": "Correo electrónico",
     "password": "Contraseña",
-    "confirmPassword": "Confirmar contraseña",
-    "plan": "Elige tu plan",
+    "confirm_password": "Confirmar contraseña",
+    "plan_base": "Plan Base",
+    "plan_gold": "Plan Gold",
     "company": "Nombre de la empresa",
-    "button": "Registrarse"
+    "button": "Registrarse",
+    "signup_loading": "Registrando...",
+    "signup_success": "✅ Registro exitoso! Revisa tu correo para confirmar tu cuenta.",
+    "signup_failed": "Registro fallido. Por favor, inténtalo más tarde.",
+    "password_too_short": "La contraseña debe tener al menos 6 caracteres.",
+    "passwords_do_not_match": "Las contraseñas no coinciden.",
+    "email_already_in_use": "Este correo ya está registrado."
   },
   "topbar": {
     "welcome": "Bienvenido",
@@ -47,21 +54,21 @@
   },
   "bookings": {
     "title": "Reservas",
-    "addBooking": "Agregar Reserva",
-    "editBooking": "Editar Reserva",
-    "deleteBooking": "Eliminar Reserva",
-    "checkIn": "Fecha de entrada",
-    "checkOut": "Fecha de salida",
-    "guestName": "Nombre del huésped",
+    "add_booking": "Agregar Reserva",
+    "edit_booking": "Editar Reserva",
+    "delete_booking": "Eliminar Reserva",
+    "check_in": "Fecha de entrada",
+    "check_out": "Fecha de salida",
+    "guest_name": "Nombre del huésped",
     "room": "Habitación",
     "status": "Estado",
     "actions": "Acciones"
   },
   "guests": {
     "title": "Huéspedes",
-    "addGuest": "Agregar Huésped",
-    "editGuest": "Editar Huésped",
-    "deleteGuest": "Eliminar Huésped",
+    "add_guest": "Agregar Huésped",
+    "edit_guest": "Editar Huésped",
+    "delete_guest": "Eliminar Huésped",
     "name": "Nombre Completo",
     "email": "Correo electrónico",
     "phone": "Teléfono",
@@ -69,10 +76,10 @@
   },
   "rooms": {
     "title": "Habitaciones",
-    "addRoom": "Agregar Habitación",
-    "editRoom": "Editar Habitación",
-    "deleteRoom": "Eliminar Habitación",
-    "roomNumber": "Número de Habitación",
+    "add_room": "Agregar Habitación",
+    "edit_room": "Editar Habitación",
+    "delete_room": "Eliminar Habitación",
+    "room_number": "Número de Habitación",
     "type": "Tipo",
     "price": "Precio",
     "availability": "Disponibilidad",
@@ -80,9 +87,9 @@
   },
   "suppliers": {
     "title": "Proveedores",
-    "addSupplier": "Agregar Proveedor",
-    "editSupplier": "Editar Proveedor",
-    "deleteSupplier": "Eliminar Proveedor",
+    "add_supplier": "Agregar Proveedor",
+    "edit_supplier": "Editar Proveedor",
+    "delete_supplier": "Eliminar Proveedor",
     "name": "Nombre del Proveedor",
     "contact": "Contacto",
     "email": "Correo electrónico",
@@ -93,12 +100,12 @@
   "marketing": {
     "title": "Marketing",
     "campaigns": "Campañas",
-    "socialPosts": "Publicaciones Sociales",
+    "social_posts": "Publicaciones Sociales",
     "budget": "Presupuesto",
     "target": "Objetivo",
     "platforms": "Plataformas",
-    "createCampaign": "Crear Campaña",
-    "optimizeWithAI": "Optimizar con IA"
+    "create_campaign": "Crear Campaña",
+    "optimize_with_ai": "Optimizar con IA"
   },
   "reports": {
     "title": "Informes",
@@ -109,13 +116,13 @@
     "cleaning": "Informe de Limpieza",
     "marketing": "Informe de Marketing",
     "customers": "Informe de Clientes",
-    "aiInsights": "Análisis con IA",
+    "ai_insights": "Análisis con IA",
     "export": "Exportar Informe"
   },
   "notifications": {
     "title": "Notificaciones",
-    "markAllRead": "Marcar todo como leído",
-    "noNotifications": "No hay notificaciones"
+    "mark_all_read": "Marcar todo como leído",
+    "no_notifications": "No hay notificaciones"
   },
   "chatbox": {
     "title": "Chat IA",
@@ -129,11 +136,11 @@
     "actions": "Acciones de la IA",
     "documents": "Documentos Generados",
     "settings": "Configuraciones de Automatización",
-    "autonomyLevel": "Nivel de Autonomía",
-    "chatHistory": "Historial de Chat",
+    "autonomy_level": "Nivel de Autonomía",
+    "chat_history": "Historial de Chat",
     "archived": "Archivado",
     "delete": "Eliminar",
-    "confirmDelete": "¿Estás seguro de que deseas eliminar este elemento?"
+    "confirm_delete": "¿Estás seguro de que deseas eliminar este elemento?"
   },
   "settings": {
     "title": "Configuración",
@@ -148,5 +155,25 @@
     "contact": "Contactar Soporte",
     "faq": "Preguntas Frecuentes",
     "guides": "Guías y Tutoriales"
+  },
+  "common": {
+    "submit": "Enviar",
+    "logout": "Cerrar sesión",
+    "language": "Idioma",
+    "welcome": "Bienvenido",
+    "no_data": "No hay datos disponibles",
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "update": "Actualizar",
+    "add": "Agregar",
+    "search": "Buscar",
+    "actions": "Acciones",
+    "view": "Ver",
+    "send": "Enviar",
+    "confirm": "Confirmar"
   }
 }

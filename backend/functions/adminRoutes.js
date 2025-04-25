@@ -1,20 +1,14 @@
 // 📂 E:/ATBot/backend/functions/adminRoutes.js
+// Handler puri per KPI e amministrazione, usati da index.js con withCors()
 
-const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
-
 const db = admin.firestore();
 
 /**
- * ✅ 1. Entrate mensili (KPI)
+ * 1. Entrate mensili (KPI)
  */
 exports.getRevenueKPI = async (req, res) => {
   console.log("📊 [getRevenueKPI] Avvio calcolo entrate mensili");
-
   try {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -34,7 +28,7 @@ exports.getRevenueKPI = async (req, res) => {
     console.log("✅ [getRevenueKPI] Totale entrate:", total);
     return res.json({ monthlyRevenue: total });
   } catch (error) {
-    functions.logger.error("❌ Errore getRevenueKPI:", error);
+    console.error("❌ Errore getRevenueKPI:", error);
     return res
       .status(500)
       .json({ message: "Errore nel calcolo delle entrate." });
@@ -42,11 +36,10 @@ exports.getRevenueKPI = async (req, res) => {
 };
 
 /**
- * ✅ 2. Abbonamenti attivi (KPI)
+ * 2. Abbonamenti attivi (KPI)
  */
 exports.getActiveSubscriptions = async (req, res) => {
   console.log("📦 [getActiveSubscriptions] Conteggio abbonamenti attivi");
-
   try {
     const usersSnap = await db
       .collection("users")
@@ -56,7 +49,7 @@ exports.getActiveSubscriptions = async (req, res) => {
     console.log("✅ [getActiveSubscriptions] Attivi:", usersSnap.size);
     return res.json({ activeSubscriptions: usersSnap.size });
   } catch (error) {
-    functions.logger.error("❌ Errore getActiveSubscriptions:", error);
+    console.error("❌ Errore getActiveSubscriptions:", error);
     return res
       .status(500)
       .json({ message: "Errore nel recupero abbonamenti." });
@@ -64,11 +57,10 @@ exports.getActiveSubscriptions = async (req, res) => {
 };
 
 /**
- * ✅ 3. Tasso di abbandono (KPI)
+ * 3. Tasso di abbandono (KPI)
  */
 exports.getChurnRate = async (req, res) => {
   console.log("📉 [getChurnRate] Calcolo utenti disdetti");
-
   try {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -84,17 +76,16 @@ exports.getChurnRate = async (req, res) => {
     console.log("✅ [getChurnRate] Utenti disdetti:", snapshot.size);
     return res.json({ churnedUsers: snapshot.size });
   } catch (error) {
-    functions.logger.error("❌ Errore getChurnRate:", error);
+    console.error("❌ Errore getChurnRate:", error);
     return res.status(500).json({ message: "Errore nel calcolo churn rate." });
   }
 };
 
 /**
- * ✅ 4. Stato sistema (KPI dummy)
+ * 4. Stato sistema (KPI dummy)
  */
 exports.getSystemStatus = async (req, res) => {
   console.log("🔧 [getSystemStatus] Recupero stato sistema");
-
   try {
     return res.json({
       apiUptime: "99.98%",
@@ -103,26 +94,18 @@ exports.getSystemStatus = async (req, res) => {
       status: "✅ Tutto operativo",
     });
   } catch (error) {
-    functions.logger.error("❌ Errore getSystemStatus:", error);
+    console.error("❌ Errore getSystemStatus:", error);
     return res.status(500).json({ message: "Errore stato sistema." });
   }
 };
 
 /**
- * ✅ 5. Informazioni utente (ruolo/piano/email)
+ * 5. Informazioni utente (ruolo/piano/email)
  */
 exports.getUserInfo = async (req, res) => {
-  console.log("🔐 [getUserInfo] Verifica token e recupero dati utente");
-
+  console.log("🔐 [getUserInfo] Recupero dati utente da req.user");
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-      console.warn("⚠️ [getUserInfo] Token mancante");
-      return res.status(403).json({ message: "Token mancante" });
-    }
-
-    const decoded = await admin.auth().verifyIdToken(token);
-    const uid = decoded.uid;
+    const { uid } = req.user; // iniettato da verifyToken
     console.log("✅ [getUserInfo] UID verificato:", uid);
 
     const doc = await db.collection("users").doc(uid).get();
@@ -139,36 +122,34 @@ exports.getUserInfo = async (req, res) => {
       role: data.role,
       plan: data.plan,
     });
-  } catch (err) {
-    functions.logger.error("❌ Errore getUserInfo:", err);
+  } catch (error) {
+    console.error("❌ Errore getUserInfo:", error);
     return res.status(500).json({ message: "Errore durante getUserInfo." });
   }
 };
 
 /**
- * ✅ 6. Statistiche uso IA (dummy)
+ * 6. Statistiche uso IA (dummy)
  */
 exports.getAIUsageStats = async (req, res) => {
   console.log("🤖 [getAIUsageStats] Recupero dati IA");
-
   try {
     return res.json({
       totalRequests: 835,
       avgResponseTime: "1.2s",
       topFeature: "Auto Risposte Clienti",
     });
-  } catch (err) {
-    functions.logger.error("❌ Errore getAIUsageStats:", err);
+  } catch (error) {
+    console.error("❌ Errore getAIUsageStats:", error);
     return res.status(500).json({ message: "Errore statistiche AI." });
   }
 };
 
 /**
- * ✅ 7. Logs di sistema (dummy)
+ * 7. Logs di sistema (dummy)
  */
 exports.getSystemLogs = async (req, res) => {
   console.log("📋 [getSystemLogs] Invio log fittizi");
-
   try {
     return res.json([
       {
@@ -187,36 +168,34 @@ exports.getSystemLogs = async (req, res) => {
         timestamp: new Date(),
       },
     ]);
-  } catch (err) {
-    functions.logger.error("❌ Errore getSystemLogs:", err);
+  } catch (error) {
+    console.error("❌ Errore getSystemLogs:", error);
     return res.status(500).json({ message: "Errore logs sistema." });
   }
 };
 
 /**
- * ✅ 8. Stato backup (dummy)
+ * 8. Stato backup (dummy)
  */
 exports.getBackupStatus = async (req, res) => {
   console.log("💾 [getBackupStatus] Stato backup");
-
   try {
     return res.json({ status: "Ultimo backup: oggi alle 02:30" });
-  } catch (err) {
-    functions.logger.error("❌ Errore getBackupStatus:", err);
+  } catch (error) {
+    console.error("❌ Errore getBackupStatus:", error);
     return res.status(500).json({ message: "Errore stato backup." });
   }
 };
 
 /**
- * ✅ 9. Avvia backup manuale (dummy)
+ * 9. Avvia backup manuale (dummy)
  */
 exports.startBackup = async (req, res) => {
   console.log("🚀 [startBackup] Avvio backup manuale");
-
   try {
     return res.status(200).json({ message: "Backup manuale avviato." });
-  } catch (err) {
-    functions.logger.error("❌ Errore startBackup:", err);
+  } catch (error) {
+    console.error("❌ Errore startBackup:", error);
     return res.status(500).json({ message: "Errore avvio backup." });
   }
 };

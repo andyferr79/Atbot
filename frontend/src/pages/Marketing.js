@@ -1,6 +1,6 @@
 // 📌 Marketing.js - Gestione Marketing
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../services/api";
 import "../styles/Marketing.css";
 
 const Marketing = () => {
@@ -12,15 +12,12 @@ const Marketing = () => {
   });
 
   const [loading, setLoading] = useState(true);
-  const userId = "user123"; // Da sostituire con l'ID utente dinamico
+  const userId = localStorage.getItem("user_id");
 
-  // ✅ Recupera gli account collegati da Firestore all'avvio della pagina
   useEffect(() => {
     const fetchConnectedAccounts = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3001/api/marketing/accounts"
-        );
+        const response = await api.get("/marketing/accounts");
         const userAccount = response.data.find((acc) => acc.userId === userId);
 
         if (userAccount) {
@@ -39,9 +36,8 @@ const Marketing = () => {
     };
 
     fetchConnectedAccounts();
-  }, []);
+  }, [userId]);
 
-  // ✅ Funzione per collegare un account e salvarlo in Firestore
   const handleConnect = async (platform) => {
     try {
       const updatedAccounts = {
@@ -49,7 +45,7 @@ const Marketing = () => {
         [`${platform}Id`]: `mock_${platform}_id`,
       };
 
-      await axios.post("http://localhost:3001/api/marketing/accounts", {
+      await api.post("/marketing/accounts", {
         userId,
         facebookPageId: updatedAccounts.facebookPageId,
         googleAdsId: updatedAccounts.googleAdsId,
@@ -65,13 +61,11 @@ const Marketing = () => {
 
   return (
     <div className="marketing-page">
-      {/* Header */}
       <div className="marketing-header">
         <h1>Gestione Marketing</h1>
         <button className="new-campaign-button">+ Nuova Campagna</button>
       </div>
 
-      {/* Sezione Collega i tuoi account */}
       <section className="marketing-accounts">
         <h2>🔗 Collega i tuoi Account di Marketing</h2>
         <p>
@@ -130,7 +124,6 @@ const Marketing = () => {
         )}
       </section>
 
-      {/* Dashboard delle Metriche */}
       <section className="marketing-dashboard">
         <h2>Dashboard delle Metriche</h2>
         <div className="metrics-container">
@@ -149,7 +142,6 @@ const Marketing = () => {
         </div>
       </section>
 
-      {/* Social Media */}
       <section className="social-media-management">
         <h2>Gestione Social Media</h2>
         <div className="social-media-tools">
@@ -164,25 +156,21 @@ const Marketing = () => {
         </div>
       </section>
 
-      {/* Campagne Ads */}
       <section className="ads-management">
         <h2>Gestione Campagne Ads</h2>
         <p>Wizard guidato per configurare campagne pubblicitarie.</p>
       </section>
 
-      {/* Promozioni */}
       <section className="promotions">
         <h2>Promozioni Personalizzate</h2>
         <button>Genera Offerta</button>
       </section>
 
-      {/* Recensioni */}
       <section className="reviews">
         <h2>Analisi e Gestione delle Recensioni</h2>
         <p>Strumento per analisi delle recensioni degli ospiti.</p>
       </section>
 
-      {/* Collaborazioni con Influencer */}
       <section className="influencer-collaborations">
         <h2>Collaborazioni con Influencer</h2>
         <p>Trova e gestisci collaborazioni con influencer.</p>

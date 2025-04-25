@@ -16,18 +16,9 @@ import { useTranslation } from "react-i18next";
 import { auth, db } from "../../firebaseConfig";
 import "../../styles/SignUp.css";
 
-/**
- * ---------------------------------------------
- *  SignUp.js – registrazione utente
- *  ▸ Crea l’utenza in Firebase Auth
- *  ▸ Invia e‑mail di verifica
- *  ▸ Salva profilo di base su Firestore (collezione "users")
- *  ▸ Logga l’evento in "logs_signup" per audit
- * ---------------------------------------------
- */
-
 const SignUp = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -36,14 +27,11 @@ const SignUp = () => {
     firstName: "",
     lastName: "",
     company: "",
-    plan: "BASE", // BASE o GOLD
+    plan: "BASE",
   });
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
-  /** Password policy: ≥8 caratteri, almeno una lettera & un numero */
   const isPasswordStrong = (pwd) =>
     /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(pwd);
 
@@ -64,46 +52,40 @@ const SignUp = () => {
       plan,
     } = formData;
 
-    /* 🔒 Validazioni lato client */
     if (password !== confirmPassword) {
       setError("passwords_do_not_match");
       return;
     }
-
     if (!isPasswordStrong(password)) {
       setError("password_too_weak");
       return;
     }
 
     setLoading(true);
-
     try {
-      // 1️⃣ Crea lʼutente in Firebase Auth
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-      // 2️⃣ Aggiorna profilo con nome & cognome – utile per displayName
-      await updateProfile(user, { displayName: `${firstName} ${lastName}` });
+      await updateProfile(user, {
+        displayName: `${firstName} ${lastName}`,
+      });
 
-      // 3️⃣ Invia e‑mail di verifica (obbligatoria prima del login)
       await sendEmailVerification(user);
 
-      // 4️⃣ Persisti info utente di base in Firestore
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email,
         firstName,
         lastName,
         company,
-        plan: plan.toUpperCase(), // assicurarsi coerenza
+        plan: plan.toUpperCase(),
         role: "user",
         createdAt: serverTimestamp(),
       });
 
-      // 5️⃣ Log di audit (facoltativo ma utile)
       await addDoc(collection(db, "logs_signup"), {
         uid: user.uid,
         email,
@@ -111,11 +93,12 @@ const SignUp = () => {
         ts: serverTimestamp(),
       });
 
+      localStorage.setItem("user_id", user.uid); // ✅ Aggiunto salvataggio UID
+
       alert(t("signup_success_check_email"));
       navigate("/login");
     } catch (err) {
       console.error("❌ Sign‑up error:", err);
-
       switch (err.code) {
         case "auth/email-already-in-use":
           setError("email_already_registered");

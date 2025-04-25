@@ -8,7 +8,12 @@ export const updateReportSettings = (settings) =>
   api.put("/updateReportSettings", settings);
 
 // 🚀 Genera un report immediatamente
-export const generateReportNow = () => api.post("/generateReportNow");
+export const generateReportNow = () => {
+  const userId = localStorage.getItem("user_id");
+  return api.post("/generateReportNow", {
+    generatedBy: userId,
+  });
+};
 
 // 📊 Recupera dati per la dashboard dei report
 export const getDashboardMetrics = () => api.get("/getDashboardMetrics");

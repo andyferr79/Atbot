@@ -1,103 +1,84 @@
-// 🔥 Hardcoded API key (bypass .env)
-const FIREBASE_API_KEY = "AIzaSyDtcXEcXxQJqHzQB5Hjat82grMrOMQiwAM";
+/********************************************************************
+ *  StayPro – Cloud Functions (Node 20, v1 API)                     *
+ *  ✔ carica variabili da .env                                      *
+ *  ✔ middleware withCors & verifyToken                             *
+ *  ✔ inizializzazione base + tutte le rotte funzionanti            *
+ *******************************************************************/
 
-// ❌ Disattiviamo dotenv per evitare conflitti
-// require("dotenv").config();
+require("dotenv").config();
 
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+if (!admin.apps.length) admin.initializeApp();
 
-// 🔐 Inizializza Firebase Admin
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+// 🔹 Middleware
+const verifyToken = async (req, res, next) => {
+  const authHeader = req.headers.authorization || "";
+  if (!authHeader.startsWith("Bearer ")) {
+    return res.status(403).json({ error: "Token mancante" });
+  }
+  try {
+    await admin.auth().verifyIdToken(authHeader.split(" ")[1]);
+    return next();
+  } catch (err) {
+    console.error("verifyIdToken error:", err.message);
+    return res.status(401).json({ error: "Token non valido" });
+  }
+};
 
-const cors = require("cors")({ origin: true });
-
-// ✅ Middleware CORS completo con gestione OPTIONS
-function withCors(fn) {
-  return functions.https.onRequest((req, res) => {
+const withCors = (handler) =>
+  functions.https.onRequest(async (req, res) => {
     res.set("Access-Control-Allow-Origin", "*");
     res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.set(
       "Access-Control-Allow-Methods",
       "GET, POST, PUT, PATCH, DELETE, OPTIONS"
     );
-
-    if (req.method === "OPTIONS") {
-      return res.status(204).send("");
-    }
-
-    cors(req, res, () => {
-      fn(req, res);
-    });
+    if (req.method === "OPTIONS") return res.status(204).send("");
+    await verifyToken(req, res, () => handler(req, res));
   });
-}
 
-// ✅ Importa tutte le route
+// 🔹 Imports
 const bookingsRoutes = require("./bookingsRoutes");
 const bookingsReportsRoutes = require("./bookingsReportsRoutes");
 const channelManagerRoutes = require("./channelManagerRoutes");
 const cleaningReportsRoutes = require("./cleaningReportsRoutes");
-const customersRoutes = require("./customersRoutes");
-const customersReportsRoutes = require("./customersReportsRoutes");
-const dashboardOverviewRoutes = require("./dashboardOverviewRoutes");
-const expensesRoutes = require("./expensesRoutes");
-const financialReportsRoutes = require("./financialReportsRoutes");
 const housekeepingRoutes = require("./housekeepingRoutes");
 const housekeepingScheduleRoutes = require("./housekeepingScheduleRoutes");
-const marketingReportsRoutes = require("./marketingReportsRoutes");
+const customersRoutes = require("./customersRoutes");
+const customersReportsRoutes = require("./customersReportsRoutes");
+const suppliersRoutes = require("./suppliersRoutes");
+const suppliersReportsRoutes = require("./suppliersReportsRoutes");
+const dashboardOverviewRoutes = require("./dashboardOverviewRoutes");
+const expensesRoutes = require("./expensesRoutes");
 const marketingRoutes = require("./marketingRoutes");
+const marketingReportsRoutes = require("./marketingReportsRoutes");
 const notificationsRoutes = require("./notificationsRoutes");
-const pricingRecommendationsRoutes = require("./pricingRecommendationsRoutes");
+const announcementRoutes = require("./announcementRoutes");
 const pricingRoutes = require("./pricingRoutes");
-const reportsExportRoutes = require("./reportsExportRoutes");
 const reportsRoutes = require("./reportsRoutes");
+const reportsExportRoutes = require("./reportsExportRoutes");
 const reportsStatsRoutes = require("./reportsStatsRoutes");
 const reviewsRoutes = require("./reviewsRoutes");
 const roomsRoutes = require("./roomsRoutes");
 const settingsRoutes = require("./settingsRoutes");
-const suppliersReportsRoutes = require("./suppliersReportsRoutes");
-const suppliersRoutes = require("./suppliersRoutes");
-const aiRoutes = require("./aiRoutes");
 const propertiesRoutes = require("./propertiesRoutes");
-
-// 🔐 Login modificato con chiave fissa
+const aiRoutes = require("./aiRoutes");
 const loginRoute = require("./loginRoutes");
-loginRoute.setApiKey(FIREBASE_API_KEY);
-
-// ✅ Moduli aggiuntivi
-const announcementRoutes = require("./announcementRoutes");
 const adminRoutes = require("./adminRoutes");
+const { addDefaultRole } = require("./triggers/onUserCreated");
 
-// ✅ Booking - già strutturate
-exports.getBookings = bookingsRoutes.getBookings;
-exports.getBookingById = bookingsRoutes.getBookingById;
-exports.createBooking = bookingsRoutes.createBooking;
-exports.updateBooking = bookingsRoutes.updateBooking;
-exports.deleteBooking = bookingsRoutes.deleteBooking;
-
-// ✅ Altro
+// 🔹 Export delle rotte
+exports.getBookings = withCors(bookingsRoutes.getBookings);
+exports.getBookingById = withCors(bookingsRoutes.getBookingById);
+exports.createBooking = withCors(bookingsRoutes.createBooking);
+exports.updateBooking = withCors(bookingsRoutes.updateBooking);
+exports.deleteBooking = withCors(bookingsRoutes.deleteBooking);
 exports.getBookingsReports = withCors(bookingsReportsRoutes.getBookingsReports);
 exports.syncChannelManager = withCors(channelManagerRoutes.syncChannelManager);
+
 exports.getCleaningReports = withCors(cleaningReportsRoutes.getCleaningReports);
 exports.addCleaningReport = withCors(cleaningReportsRoutes.addCleaningReport);
-exports.getCustomers = withCors(customersRoutes.getCustomersData);
-exports.addCustomer = withCors(customersRoutes.addCustomer);
-exports.updateCustomer = withCors(customersRoutes.updateCustomer);
-exports.deleteCustomer = withCors(customersRoutes.deleteCustomer);
-exports.getCustomersReports = withCors(
-  customersReportsRoutes.getCustomersReports
-);
-exports.addCustomerReport = withCors(customersReportsRoutes.addCustomerReport);
-exports.getDashboardOverview = withCors(
-  dashboardOverviewRoutes.getDashboardOverview
-);
-exports.getExpenses = withCors(expensesRoutes.getExpenses);
-exports.addExpense = withCors(expensesRoutes.addExpense);
-exports.importFinancialReports = withCors(
-  financialReportsRoutes.importFinancialReports
-);
 exports.getHousekeepingStatus = withCors(
   housekeepingRoutes.getHousekeepingStatus
 );
@@ -107,6 +88,31 @@ exports.getHousekeepingSchedule = withCors(
 exports.updateHousekeepingSchedule = withCors(
   housekeepingScheduleRoutes.updateHousekeepingSchedule
 );
+
+exports.getCustomers = withCors(customersRoutes.getCustomersData);
+exports.addCustomer = withCors(customersRoutes.addCustomer);
+exports.updateCustomer = withCors(customersRoutes.updateCustomer);
+exports.deleteCustomer = withCors(customersRoutes.deleteCustomer);
+exports.getCustomersReports = withCors(
+  customersReportsRoutes.getCustomersReports
+);
+exports.addCustomerReport = withCors(customersReportsRoutes.addCustomerReport);
+
+exports.getSuppliers = withCors(suppliersRoutes.getSuppliers);
+exports.addSupplier = withCors(suppliersRoutes.addSupplier);
+exports.updateSupplier = withCors(suppliersRoutes.updateSupplier);
+exports.deleteSupplier = withCors(suppliersRoutes.deleteSupplier);
+exports.getSuppliersReports = withCors(
+  suppliersReportsRoutes.getSuppliersReports
+);
+exports.addSupplierReport = withCors(suppliersReportsRoutes.addSupplierReport);
+
+exports.getDashboardOverview = withCors(
+  dashboardOverviewRoutes.getDashboardOverview
+);
+exports.getExpenses = withCors(expensesRoutes.getExpenses);
+exports.addExpense = withCors(expensesRoutes.addExpense);
+
 exports.getMarketingReports = withCors(
   marketingReportsRoutes.getMarketingReports
 );
@@ -124,54 +130,26 @@ exports.addMarketingCampaign = withCors(marketingRoutes.addMarketingCampaign);
 exports.getSocialMediaPosts = withCors(marketingRoutes.getSocialMediaPosts);
 exports.createSocialPost = withCors(marketingRoutes.createSocialPost);
 exports.deleteSocialPost = withCors(marketingRoutes.deleteSocialPost);
-exports.getNotifications = withCors(notificationsRoutes.getNotifications);
-exports.getUnreadNotificationsCount = withCors(
-  notificationsRoutes.getUnreadNotificationsCount
+
+exports.getNotifications = withCors(
+  notificationsRoutes.getNotificationsHandler
+);
+exports.createNotification = withCors(
+  notificationsRoutes.createNotificationHandler
 );
 exports.markNotificationAsRead = withCors(
-  notificationsRoutes.markNotificationAsRead
+  notificationsRoutes.markNotificationAsReadHandler
 );
 exports.markAllNotificationsAsRead = withCors(
-  notificationsRoutes.markAllNotificationsAsRead
+  notificationsRoutes.markAllNotificationsAsReadHandler
 );
-exports.getPricingRecommendations = withCors(
-  aiRoutes.getPricingRecommendations
+exports.deleteNotification = withCors(
+  notificationsRoutes.deleteNotificationHandler
 );
-exports.getRoomPricing = withCors(pricingRoutes.getRoomPricing);
-exports.updateRoomPricing = withCors(pricingRoutes.updateRoomPricing);
-exports.addRoomPricing = withCors(pricingRoutes.addRoomPricing);
-exports.deleteRoomPricing = withCors(pricingRoutes.deleteRoomPricing);
-exports.getReports = withCors(reportsRoutes.getReports);
-exports.createReport = withCors(reportsRoutes.createReport);
-exports.updateReport = withCors(reportsRoutes.updateReport);
-exports.deleteReport = withCors(reportsRoutes.deleteReport);
-exports.exportReports = withCors(reportsExportRoutes.exportReports);
-exports.getReportsStats = withCors(reportsStatsRoutes.getReportsStats);
-exports.getReviews = withCors(reviewsRoutes.getReviews);
-exports.addReview = withCors(reviewsRoutes.addReview);
-exports.updateReview = withCors(reviewsRoutes.updateReview);
-exports.deleteReview = withCors(reviewsRoutes.deleteReview);
-exports.getRooms = withCors(roomsRoutes.getRooms);
-exports.createRoom = withCors(roomsRoutes.createRoom);
-exports.updateRoom = withCors(roomsRoutes.updateRoom);
-exports.deleteRoom = withCors(roomsRoutes.deleteRoom);
-exports.getPreferences = withCors(settingsRoutes.preferencesSettings);
-exports.updatePreferences = withCors(settingsRoutes.preferencesSettings);
-exports.getStructureSettings = withCors(settingsRoutes.structureSettings);
-exports.updateStructureSettings = withCors(settingsRoutes.structureSettings);
-exports.getSecuritySettings = withCors(settingsRoutes.getSecuritySettings);
-exports.getSuppliers = withCors(suppliersRoutes.getSuppliers);
-exports.addSupplier = withCors(suppliersRoutes.addSupplier);
-exports.updateSupplier = withCors(suppliersRoutes.updateSupplier);
-exports.deleteSupplier = withCors(suppliersRoutes.deleteSupplier);
-exports.getSuppliersReports = withCors(
-  suppliersReportsRoutes.getSuppliersReports
+exports.getUnreadNotificationsCount = withCors(
+  notificationsRoutes.getUnreadNotificationsCountHandler
 );
-exports.addSupplierReport = withCors(suppliersReportsRoutes.addSupplierReport);
-exports.chatWithAI = withCors(aiRoutes.chatWithAI);
-exports.login = withCors(loginRoute.login);
 
-// ✅ Annunci ufficiali
 exports.getOfficialAnnouncements = withCors(
   announcementRoutes.getOfficialAnnouncements
 );
@@ -184,7 +162,47 @@ exports.markAnnouncementAsRead = withCors(
 exports.archiveAnnouncement = withCors(announcementRoutes.archiveAnnouncement);
 exports.deleteAnnouncement = withCors(announcementRoutes.deleteAnnouncement);
 
-// ✅ Admin KPI / Sistema
+exports.getPricingRecommendations = withCors(
+  aiRoutes.getPricingRecommendations
+);
+exports.getRoomPricing = withCors(pricingRoutes.getRoomPricing);
+exports.updateRoomPricing = withCors(pricingRoutes.updateRoomPricing);
+exports.addRoomPricing = withCors(pricingRoutes.addRoomPricing);
+exports.deleteRoomPricing = withCors(pricingRoutes.deleteRoomPricing);
+
+exports.getReports = withCors(reportsRoutes.getReports);
+exports.createReport = withCors(reportsRoutes.createReport);
+exports.updateReport = withCors(reportsRoutes.updateReport);
+exports.deleteReport = withCors(reportsRoutes.deleteReport);
+exports.exportReports = withCors(reportsExportRoutes.exportReports);
+exports.getReportsStats = withCors(reportsStatsRoutes.getReportsStats);
+
+exports.getReviews = withCors(reviewsRoutes.getReviews);
+exports.addReview = withCors(reviewsRoutes.addReview);
+exports.updateReview = withCors(reviewsRoutes.updateReview);
+exports.deleteReview = withCors(reviewsRoutes.deleteReview);
+
+exports.getRooms = withCors(roomsRoutes.getRooms);
+exports.createRoom = withCors(roomsRoutes.createRoom);
+exports.updateRoom = withCors(roomsRoutes.updateRoom);
+exports.deleteRoom = withCors(roomsRoutes.deleteRoom);
+
+exports.getPreferences = withCors(settingsRoutes.getPreferences);
+exports.updatePreferences = withCors(settingsRoutes.updatePreferences);
+exports.getStructureSettings = withCors(settingsRoutes.getStructureSettings);
+exports.updateStructureSettings = withCors(
+  settingsRoutes.updateStructureSettings
+);
+exports.getSecuritySettings = withCors(settingsRoutes.getSecuritySettings);
+
+exports.getProperties = withCors(propertiesRoutes.getProperties);
+exports.createProperty = withCors(propertiesRoutes.createProperty);
+exports.updateProperty = withCors(propertiesRoutes.updateProperty);
+exports.deleteProperty = withCors(propertiesRoutes.deleteProperty);
+
+exports.chatWithAI = withCors(aiRoutes.chatWithAI);
+exports.login = withCors(loginRoute.login);
+
 exports.getRevenueKPI = withCors(adminRoutes.getRevenueKPI);
 exports.getActiveSubscriptions = withCors(adminRoutes.getActiveSubscriptions);
 exports.getChurnRate = withCors(adminRoutes.getChurnRate);
@@ -195,8 +213,5 @@ exports.getSystemLogs = withCors(adminRoutes.getSystemLogs);
 exports.getBackupStatus = withCors(adminRoutes.getBackupStatus);
 exports.startBackup = withCors(adminRoutes.startBackup);
 
-// ✅ PROPERTIES (Alloggi)
-exports.getProperties = withCors(propertiesRoutes.getProperties);
-exports.createProperty = withCors(propertiesRoutes.createProperty);
-exports.updateProperty = withCors(propertiesRoutes.updateProperty);
-exports.deleteProperty = withCors(propertiesRoutes.deleteProperty);
+// --- Trigger identity v2 --------------------------------------------------
+exports.addDefaultRole = addDefaultRole;

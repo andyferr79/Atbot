@@ -159,7 +159,7 @@ const Charts = ({ charts }) => (
 
 const StayProDashboard = () => {
   const [overview, setOverview] = useState(null);
-  const userId = localStorage.getItem("userId");
+  const userId = localStorage.getItem("user_id");
 
   useEffect(() => {
     const fetchOverview = async () => {

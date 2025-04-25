@@ -45,7 +45,7 @@ const checkRateLimit = async (req, res, windowMs = 60 * 1000) => {
   return true;
 };
 
-// ✅ API per ottenere tutti i report delle prenotazioni
+// ✅ API per ottenere tutti i report delle prenotazioni (solo per l'utente loggato)
 exports.getBookingsReports = functions.https.onRequest(async (req, res) => {
   if (req.method !== "GET")
     return res.status(405).json({ error: "❌ Usa GET." });
@@ -53,7 +53,11 @@ exports.getBookingsReports = functions.https.onRequest(async (req, res) => {
   if (!(await checkRateLimit(req, res))) return;
 
   try {
-    const snapshot = await db.collection("BookingsReports").get();
+    const snapshot = await db
+      .collection("BookingsReports")
+      .where("generatedBy", "==", req.user.uid)
+      .get();
+
     if (snapshot.empty) {
       return res.json([]);
     }

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { getCustomersReport } from "../../../services/reportsApi";
 import "../../../styles/CustomersReport.css";
 
 const CustomersReport = () => {
   const [customers, setCustomers] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3001/api/reports/customers")
-      .then((response) => response.json())
-      .then((data) => setCustomers(data))
+    getCustomersReport()
+      .then((response) => setCustomers(response.data))
       .catch((error) =>
         console.error("Errore nel recupero dei dati clienti:", error)
       );
