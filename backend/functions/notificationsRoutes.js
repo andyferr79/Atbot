@@ -29,9 +29,12 @@ async function authenticate(req) {
   }
 }
 
-// ✅ Middleware Rate Limiting (opzionale)
+// ✅ Middleware Rate Limiting
 async function checkRateLimit(ip, maxRequests = 100, windowMs = 60_000) {
-  const rateDocRef = db.collection("RateLimits").doc(ip);
+  // se ip non valido, usiamo fallback 'global'
+  const key = typeof ip === "string" && ip.trim() !== "" ? ip : "global";
+
+  const rateDocRef = db.collection("RateLimits").doc(key);
   const rateDoc = await rateDocRef.get();
   const now = Date.now();
 

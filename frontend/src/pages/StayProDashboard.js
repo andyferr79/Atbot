@@ -29,7 +29,7 @@ const RatingStars = ({ rating }) => (
   </span>
 );
 
-const RecensioniClienti = ({ recensioni }) => (
+const RecensioniClienti = ({ recensioni = [] }) => (
   <section className="reviews-box">
     <h3>Ultime Recensioni dei Clienti</h3>
     <div className="reviews-list">
@@ -40,7 +40,7 @@ const RecensioniClienti = ({ recensioni }) => (
           <div className="review" key={index}>
             <h4>{recensione.nome}</h4>
             <RatingStars rating={recensione.rating} />
-            <p>"{recensione.commento}"</p>
+            <p>&quot;{recensione.commento}&quot;</p>
           </div>
         ))
       )}
@@ -69,93 +69,103 @@ const KeyStats = ({ stats }) => (
   </section>
 );
 
-const Charts = ({ charts }) => (
-  <section className="charts">
-    <h2>Tendenze e Previsioni</h2>
+const Charts = ({ charts = {} }) => {
+  const {
+    dailyBookings = [],
+    monthlyRevenue = [],
+    bookingSources = [],
+    roomOccupancy = [],
+    cancellationsVsConfirmed = [],
+  } = charts;
 
-    <div className="chart-box">
-      <h3>Prenotazioni Giornaliere</h3>
-      <ResponsiveContainer width="100%" height={250}>
-        <BarChart data={charts.dailyBookings}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="giorno" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="prenotazioni" fill="#8884d8" />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+  return (
+    <section className="charts">
+      <h2>Tendenze e Previsioni</h2>
 
-    <div className="chart-box">
-      <h3>Entrate Mensili</h3>
-      <ResponsiveContainer width="100%" height={250}>
-        <LineChart data={charts.monthlyRevenue}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="mese" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey="entrate" stroke="#82ca9d" />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+      <div className="chart-box">
+        <h3>Prenotazioni Giornaliere</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <BarChart data={dailyBookings}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="giorno" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="prenotazioni" fill="#8884d8" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
-    <div className="chart-box">
-      <h3>Fonti di Prenotazione</h3>
-      <ResponsiveContainer width="100%" height={250}>
-        <BarChart data={charts.bookingSources}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="fonte" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="ricavi" fill="#ff7300" />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+      <div className="chart-box">
+        <h3>Entrate Mensili</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={monthlyRevenue}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="mese" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="entrate" stroke="#82ca9d" />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
 
-    <div className="chart-box">
-      <h3>Tasso di Occupazione per Tipo di Camera</h3>
-      <ResponsiveContainer width="100%" height={250}>
-        <PieChart>
-          <Pie
-            data={charts.roomOccupancy}
-            dataKey="valore"
-            nameKey="tipo"
-            cx="50%"
-            cy="50%"
-            outerRadius={100}
-            label
-          >
-            {charts.roomOccupancy.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-              />
-            ))}
-          </Pie>
-          <Tooltip />
-        </PieChart>
-      </ResponsiveContainer>
-    </div>
+      <div className="chart-box">
+        <h3>Fonti di Prenotazione</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <BarChart data={bookingSources}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="fonte" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="ricavi" fill="#ff7300" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
-    <div className="chart-box">
-      <h3>Cancellazioni vs Prenotazioni Confermate</h3>
-      <ResponsiveContainer width="100%" height={250}>
-        <ComposedChart data={charts.cancellationsVsConfirmed}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="mese" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="confermate" fill="#0088FE" />
-          <Bar dataKey="cancellazioni" fill="#FF0000" />
-        </ComposedChart>
-      </ResponsiveContainer>
-    </div>
-  </section>
-);
+      <div className="chart-box">
+        <h3>Tasso di Occupazione per Tipo di Camera</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <PieChart>
+            <Pie
+              data={roomOccupancy}
+              dataKey="valore"
+              nameKey="tipo"
+              cx="50%"
+              cy="50%"
+              outerRadius={100}
+              label
+            >
+              {roomOccupancy.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[index % COLORS.length]}
+                />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="chart-box">
+        <h3>Cancellazioni vs Prenotazioni Confermate</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <ComposedChart data={cancellationsVsConfirmed}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="mese" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="confermate" fill="#0088FE" />
+            <Bar dataKey="cancellazioni" fill="#FF0000" />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  );
+};
 
 const StayProDashboard = () => {
   const [overview, setOverview] = useState(null);
@@ -183,7 +193,7 @@ const StayProDashboard = () => {
       </header>
       <KeyStats stats={overview} />
       <Charts charts={overview} />
-      <RecensioniClienti recensioni={overview.reviews || []} />
+      <RecensioniClienti recensioni={overview.reviews} />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 // 📂 E:/ATBot/frontend/src/pages/auth/Login.js
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   signInWithEmailAndPassword,
   sendEmailVerification,
@@ -10,7 +10,7 @@ import { auth } from "../../firebaseConfig";
 import "../../styles/Login.css";
 
 /**
- * Login page ‒ autenticazione con Firebase Auth,
+ * Login page ‒ autenticazione con Firebase Auth,
  * salvataggio ID‑Token con custom claims in localStorage
  * e redirect in base al ruolo.
  */
@@ -54,7 +54,6 @@ export default function Login() {
 
       // 📑 leggiamo role e plan dai claims
       const { role = "user", plan = "BASE" } = idTokenResult.claims || {};
-
       localStorage.setItem("role", role);
       localStorage.setItem("plan", plan);
 
@@ -123,6 +122,10 @@ export default function Login() {
           {loading ? t("loading") : t("login")}
         </button>
       </form>
+
+      <p className="signup-link">
+        {t("no_account")} <Link to="/signup">{t("sign_up")}</Link>
+      </p>
     </div>
   );
 }

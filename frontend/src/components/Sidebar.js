@@ -28,24 +28,17 @@ const Sidebar = () => {
   const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
   const [role, setRole] = useState(null);
 
-  /* -------------------------------------------------------------
-   * Quando cambia l'autenticazione:
-   *  1. aggiorna il ruolo (localStorage)
-   *  2. ricarica contatori notifiche / annunci
-   * ----------------------------------------------------------- */
   useEffect(() => {
     const auth = getAuth();
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        // Logout → azzera contatori
         setUnreadNotifications(0);
         setUnreadAnnouncements(0);
         setRole(null);
         return;
       }
 
-      // ruolo salvato al login
+      // Ruolo salvato al login
       setRole(localStorage.getItem("role") || "user");
 
       try {
@@ -141,8 +134,6 @@ const Sidebar = () => {
             )}
           </Link>
         </li>
-
-        {/* Solo per admin */}
         {role === "admin" && (
           <li>
             <Link to="/admin-dashboard">

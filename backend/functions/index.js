@@ -67,6 +67,7 @@ const aiRoutes = require("./aiRoutes");
 const loginRoute = require("./loginRoutes");
 const adminRoutes = require("./adminRoutes");
 const { addDefaultRole } = require("./triggers/onUserCreated");
+const guestsRoutes = require("./guestsRoutes");
 
 // 🔹 Export delle rotte
 exports.getBookings = withCors(bookingsRoutes.getBookings);
@@ -215,3 +216,9 @@ exports.startBackup = withCors(adminRoutes.startBackup);
 
 // --- Trigger identity v2 --------------------------------------------------
 exports.addDefaultRole = addDefaultRole;
+
+// Guests ----------------------------------------------------------
+exports.getGuests = withCors(guestsRoutes.getGuests);
+exports.addGuest = withCors(guestsRoutes.addGuest);
+exports.updateGuest = withCors(guestsRoutes.updateGuest);
+exports.deleteGuest = withCors(guestsRoutes.deleteGuest);
