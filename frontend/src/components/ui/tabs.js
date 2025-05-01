@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 import clsx from "clsx";
+
+const TabsContext = createContext();
 
 export const Tabs = ({ defaultValue, children }) => {
   const [activeTab, setActiveTab] = useState(defaultValue);
 
-  // Inietta `activeTab` e `setActiveTab` nei children via cloneElement
-  const childrenWithProps = React.Children.map(children, (child) => {
-    if (!React.isValidElement(child)) return child;
-    return React.cloneElement(child, { activeTab, setActiveTab });
-  });
-
-  return <div>{childrenWithProps}</div>;
+  return (
+    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+      <div>{children}</div>
+    </TabsContext.Provider>
+  );
 };
 
 export const TabsList = ({ children, className = "" }) => {
@@ -21,13 +21,8 @@ export const TabsList = ({ children, className = "" }) => {
   );
 };
 
-export const TabsTrigger = ({
-  value,
-  activeTab,
-  setActiveTab,
-  children,
-  className = "",
-}) => {
+export const TabsTrigger = ({ value, children, className = "" }) => {
+  const { activeTab, setActiveTab } = useContext(TabsContext);
   const isActive = value === activeTab;
 
   return (
@@ -47,7 +42,8 @@ export const TabsTrigger = ({
   );
 };
 
-export const TabsContent = ({ value, activeTab, children, className = "" }) => {
+export const TabsContent = ({ value, children, className = "" }) => {
+  const { activeTab } = useContext(TabsContext);
   if (value !== activeTab) return null;
 
   return <div className={clsx("mt-4", className)}>{children}</div>;

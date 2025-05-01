@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Path
 from pydantic import BaseModel
 from datetime import datetime
 from uuid import uuid4
@@ -47,7 +47,6 @@ async def chat_endpoint(request: ChatRequest):
         ai_reply = response.choices[0].message.content
         now = datetime.utcnow()
 
-        # 🔥 Salvataggio messaggi in sottocollezione /chat_sessions/{sessionId}/messages
         session_ref = db.collection("chat_sessions").document(request.session_id)
         messages_ref = session_ref.collection("messages")
 
@@ -62,7 +61,6 @@ async def chat_endpoint(request: ChatRequest):
             "timestamp": now
         })
 
-        # 🔁 Aggiorna la sessione
         session_ref.set({
             "userId": request.user_id,
             "lastUpdated": now
@@ -73,7 +71,7 @@ async def chat_endpoint(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Errore IA: {str(e)}")
 
-# ✅ Endpoint per creare nuova sessione chat
+# ✅ Crea nuova sessione chat
 @router.post("/chat/start-session")
 async def start_chat_session(request: StartSessionRequest):
     try:
@@ -99,40 +97,41 @@ async def start_chat_session(request: StartSessionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Errore creazione sessione: {str(e)}")
 
-from fastapi import Path
-
+# ✅ Archivia una chat session
 @router.post("/chat_sessions/{session_id}/archive")
 async def archive_chat_session(session_id: str = Path(...)):
     try:
         session_ref = db.collection("chat_sessions").document(session_id)
-        session_doc = session_ref.get()
-
-        if not session_doc.exists:
+        if not session_ref.get().exists:
             raise HTTPException(status_code=404, detail="Sessione non trovata")
-
         session_ref.update({"status": "archived"})
         return {"message": "✅ Sessione archiviata con successo"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Errore archiviazione: {str(e)}")
 
+# ✅ Elimina una chat session + messaggi
 @router.delete("/chat_sessions/{session_id}")
 async def delete_chat_session(session_id: str = Path(...)):
     try:
         session_ref = db.collection("chat_sessions").document(session_id)
-        session_doc = session_ref.get()
-
-        if not session_doc.exists:
+        if not session_ref.get().exists:
             raise HTTPException(status_code=404, detail="Sessione non trovata")
 
-        # Elimina tutti i messaggi della sottocollezione
-        messages_ref = session_ref.collection("messages")
-        messages = messages_ref.stream()
+        messages = session_ref.collection("messages").stream()
         for msg in messages:
             msg.reference.delete()
 
-        # Elimina il documento della sessione
         session_ref.delete()
-
         return {"message": "🗑️ Sessione eliminata con successo"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Errore eliminazione: {str(e)}")
+
+# ✅ Recupera tutte le azioni associate a una chat session
+@router.get("/chat_sessions/{session_id}/actions")
+async def get_chat_session_actions(session_id: str = Path(...)):
+    try:
+        query = db.collection_group("actions").where("context.session_id", "==", session_id)
+        actions = [doc.to_dict() for doc in query.stream()]
+        return actions
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Errore recupero azioni per sessione: {str(e)}")

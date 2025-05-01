@@ -4,7 +4,7 @@
   margin-left: 260px;
   width: calc(100% - 260px);
   min-height: 100vh;
-  background: linear-gradient(to bottom, #ffffff, #f4f7fa);
+  background: linear-gradient(to bottom, #9fdbcc, #f4f7fa);
   display: flex;
   flex-direction: column;
 }
@@ -35,6 +35,24 @@
 
 .icon {
   margin-right: 6px;
+}
+
+/* ✨ Modern Tabs */
+.tab-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  background-color: white;
+  color: #1f2937;
+  cursor: pointer;
+}
+.tab-btn[data-state="active"] {
+  background-color: #10f188; /* Verde StayPro */
+  color: white;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
 }
 
 /* 🧩 Card */

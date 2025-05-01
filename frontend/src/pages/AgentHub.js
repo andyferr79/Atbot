@@ -5,18 +5,17 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/tabs";
-import { Badge } from "../components/ui/badge";
-import { Switch } from "../components/ui/switch";
-import { Button } from "../components/ui/button";
 import { Settings, Bot } from "lucide-react";
 import OverviewTab from "../components/AgentHub/OverviewTab";
 import ActionsTab from "../components/AgentHub/ActionsTab";
 import ChatTab from "../components/AgentHub/ChatTab";
 import DocumentsTab from "../components/AgentHub/DocumentsTab";
+import SettingsTab from "../components/AgentHub/SettingsTab";
 import "../styles/AgentHub.css";
 
 const AgentHub = () => {
   const [userId, setUserId] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview");
   const [actions, setActions] = useState([]);
   const [chatSessions, setChatSessions] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -24,76 +23,30 @@ const AgentHub = () => {
   const [settings, setSettings] = useState({});
   const [plan, setPlan] = useState("BASE");
 
-  const automations = [
-    {
-      key: "welcomeMessage",
-      label: "Automatic check-in message",
-      plan: "BASE",
-    },
-    {
-      key: "autoReport",
-      label: "Automatic performance report generation",
-      plan: "BASE",
-    },
-    { key: "smartSuggestions", label: "Smart suggestions", plan: "GOLD" },
-    { key: "autoCheckin", label: "Complete AI Auto Check-in", plan: "GOLD" },
-    {
-      key: "cleaningReminder",
-      label: "Free room cleaning reminder",
-      plan: "BASE",
-    },
-    {
-      key: "bookingConfirm",
-      label: "Automatic booking confirmation",
-      plan: "BASE",
-    },
-    { key: "autoArchiveChats", label: "Auto archive chats", plan: "BASE" },
-    {
-      key: "offerSuggestions",
-      label: "Offer suggestions (manual)",
-      plan: "BASE",
-    },
-    { key: "weeklySummary", label: "Weekly summary email", plan: "BASE" },
-    {
-      key: "autoCleaningSchedule",
-      label: "Staff cleaning schedule (AI)",
-      plan: "GOLD",
-    },
-    { key: "lastminuteOffersAi", label: "Last minute AI offers", plan: "GOLD" },
-    {
-      key: "competitorAnalysis",
-      label: "OTA competitor analysis",
-      plan: "GOLD",
-    },
-    { key: "socialPostAi", label: "AI social post generation", plan: "GOLD" },
-    { key: "reviewAnalysis", label: "Customer review analysis", plan: "GOLD" },
-  ];
-
   useEffect(() => {
     const uid = localStorage.getItem("user_id");
     if (uid) setUserId(uid);
-    else console.error("⚠ Nessun user_id trovato. L'utente non è autenticato.");
   }, []);
 
   useEffect(() => {
     if (!userId) return;
 
-    fetch(`/api/chat_sessions/${userId}`)
+    fetch(`http://localhost:8000/chat_sessions/${userId}`)
       .then((res) => res.json())
-      .then((data) => setChatSessions(data))
+      .then(setChatSessions)
       .catch((err) => console.error("❌ Error loading chat:", err));
 
-    fetch(`/api/agent/actions/${userId}`)
+    fetch(`http://localhost:8000/agent/actions/${userId}`)
       .then((res) => res.json())
-      .then((data) => setActions(data))
+      .then(setActions)
       .catch((err) => console.error("❌ Error loading actions:", err));
 
-    fetch(`/api/agent/documents/${userId}`)
+    fetch(`http://localhost:8000/agent/documents/${userId}`)
       .then((res) => res.json())
-      .then((data) => setDocuments(data))
+      .then(setDocuments)
       .catch((err) => console.error("❌ Error loading documents:", err));
 
-    fetch(`/api/agent/config/${userId}`)
+    fetch(`http://localhost:8000/agent/config/${userId}`)
       .then((res) => res.json())
       .then((data) => {
         setAutonomyLevel(data.autonomyLevel || "base");
@@ -105,7 +58,7 @@ const AgentHub = () => {
 
   const handleArchive = async (sessionId) => {
     try {
-      await fetch(`/api/chat_sessions/${sessionId}/archive`, {
+      await fetch(`http://localhost:8000/chat_sessions/${sessionId}/archive`, {
         method: "POST",
       });
       setChatSessions((prev) =>
@@ -120,7 +73,9 @@ const AgentHub = () => {
 
   const handleDelete = async (sessionId) => {
     try {
-      await fetch(`/api/chat_sessions/${sessionId}`, { method: "DELETE" });
+      await fetch(`http://localhost:8000/chat_sessions/${sessionId}`, {
+        method: "DELETE",
+      });
       setChatSessions((prev) =>
         prev.filter((chat) => chat.sessionId !== sessionId)
       );
@@ -140,7 +95,7 @@ const AgentHub = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="overview">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="hub-tabs-list">
           <TabsTrigger value="overview">
             <Bot className="icon" /> Overview
@@ -158,11 +113,12 @@ const AgentHub = () => {
             actions={actions}
             chatSessions={chatSessions}
             autonomyLevel={autonomyLevel}
+            setActiveTab={setActiveTab}
           />
         </TabsContent>
 
         <TabsContent value="actions">
-          <ActionsTab actions={actions} />
+          <ActionsTab actions={actions} setActiveTab={setActiveTab} />
         </TabsContent>
 
         <TabsContent value="chat">
@@ -170,79 +126,23 @@ const AgentHub = () => {
             chatSessions={chatSessions}
             onArchive={handleArchive}
             onDelete={handleDelete}
+            setActiveTab={setActiveTab}
           />
         </TabsContent>
 
         <TabsContent value="documents">
-          <DocumentsTab documents={documents} />
+          <DocumentsTab documents={documents} setActiveTab={setActiveTab} />
         </TabsContent>
 
         <TabsContent value="settings">
-          <div className="mb-4">
-            <h2 className="hub-settings-title">Autonomy Level</h2>
-            <div className="flex gap-4">
-              <Badge
-                variant={autonomyLevel === "base" ? "default" : "outline"}
-                onClick={() => setAutonomyLevel("base")}
-                className="cursor-pointer"
-              >
-                Base
-              </Badge>
-              <Badge
-                variant={autonomyLevel === "gold" ? "default" : "outline"}
-                onClick={() => setAutonomyLevel("gold")}
-                className="cursor-pointer"
-              >
-                Gold
-              </Badge>
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            <div className="hub-card">
-              <div className="card-content space-y-3">
-                {automations.map(({ key, label, plan: requiredPlan }) => {
-                  const isDisabled = requiredPlan === "GOLD" && plan === "BASE";
-                  return (
-                    <div key={key} className="hub-toggle-row">
-                      <span>
-                        {label}{" "}
-                        {isDisabled && (
-                          <Badge variant="outline" className="ml-2">
-                            Gold
-                          </Badge>
-                        )}
-                      </span>
-                      <Switch
-                        checked={!!settings[key]}
-                        onCheckedChange={(val) =>
-                          setSettings((prev) => ({ ...prev, [key]: val }))
-                        }
-                        disabled={isDisabled}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <Button
-            className="mt-4"
-            onClick={() => {
-              fetch(`/api/agent/config/${userId}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  autonomyLevel,
-                  enabledAutomations: settings,
-                  plan,
-                }),
-              });
-            }}
-          >
-            Save Settings
-          </Button>
+          <SettingsTab
+            autonomyLevel={autonomyLevel}
+            setAutonomyLevel={setAutonomyLevel}
+            settings={settings}
+            setSettings={setSettings}
+            plan={plan}
+            userId={userId}
+          />
         </TabsContent>
       </Tabs>
     </div>

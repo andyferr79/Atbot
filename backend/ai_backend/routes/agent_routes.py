@@ -155,7 +155,6 @@ Ecco i dettagli della tua prenotazione:
 
         message += "\n📩 Riceverai un'email o un messaggio WhatsApp con tutte le istruzioni utili.\nGrazie per aver scelto la nostra struttura!"
 
-        # Salvataggio in HUB come azione
         action_id = str(uuid4())
         action_ref = db.collection("ai_agent_hub").document(request.user_id).collection("actions").document(action_id)
         action_ref.set({
@@ -172,7 +171,7 @@ Ecco i dettagli della tua prenotazione:
             },
             "output": {
                 "message": message,
-                "deliveredVia": "simulated"  # Può diventare: email, WhatsApp, ecc
+                "deliveredVia": "simulated"
             }
         })
 
