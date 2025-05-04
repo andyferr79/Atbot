@@ -135,3 +135,13 @@ async def get_chat_session_actions(session_id: str = Path(...)):
         return actions
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Errore recupero azioni per sessione: {str(e)}")
+
+# ✅ Recupera tutte le chat di un utente
+@router.get("/chat_sessions/{user_id}")
+async def get_chat_sessions_by_user(user_id: str):
+    try:
+        sessions_ref = db.collection("chat_sessions").where("userId", "==", user_id).order_by("lastUpdated", direction=firestore.Query.DESCENDING)
+        sessions = [doc.to_dict() | {"sessionId": doc.id} for doc in sessions_ref.stream()]
+        return sessions
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Errore recupero chat: {str(e)}")

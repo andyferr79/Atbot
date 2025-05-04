@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
-import { CheckCircle, Clock, XCircle, Bot } from "lucide-react";
+import { CheckCircle, Clock, XCircle, Bot, Trash2 } from "lucide-react";
+import "../../styles/ActionsTab.css"; // ✅ CSS dedicato
 
 const statusIcon = {
   completed: <CheckCircle size={16} className="text-green-600" />,
@@ -16,9 +17,9 @@ const formatDate = (isoDate) => {
   return date.toLocaleString("it-IT");
 };
 
-const ActionsTab = (props) => {
-  const { actions, setActiveTab } = props;
+const ActionsTab = ({ actions, setActiveTab, setActions }) => {
   const userId = localStorage.getItem("user_id");
+  const [expanded, setExpanded] = useState({});
 
   const handleDispatchPricing = async () => {
     try {
@@ -47,8 +48,6 @@ const ActionsTab = (props) => {
 
       const data = await res.json();
       alert("✅ Dispatch completato: " + data.message);
-
-      // ⏩ Passa alla tab "documents"
       if (typeof setActiveTab === "function") {
         setTimeout(() => setActiveTab("documents"), 300);
       }
@@ -56,6 +55,27 @@ const ActionsTab = (props) => {
       console.error("❌ Errore dispatch pricing:", err);
       alert("Errore invio dispatch");
     }
+  };
+
+  const handleDeleteAction = async (actionId) => {
+    if (!window.confirm("Sei sicuro di voler eliminare questa azione IA?"))
+      return;
+    try {
+      await fetch(`http://localhost:8000/agent/actions/${userId}/${actionId}`, {
+        method: "DELETE",
+      });
+      setActions((prev) => prev.filter((a) => a.actionId !== actionId));
+    } catch (err) {
+      console.error("❌ Errore eliminazione azione:", err);
+      alert("Errore durante l'eliminazione dell'azione");
+    }
+  };
+
+  const toggleExpanded = (id) => {
+    setExpanded((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
   };
 
   return (
@@ -75,14 +95,14 @@ const ActionsTab = (props) => {
             .map((action) => (
               <li
                 key={action.actionId}
-                className="action-item p-3 border rounded-md"
+                className={`action-item ${action.status || "pending"}`}
               >
-                <div className="flex justify-between items-center mb-1">
-                  <div className="flex items-center gap-2 font-medium">
+                <div className="action-header">
+                  <div className="flex items-center gap-2">
                     <Bot size={16} />
                     <span className="capitalize">{action.type}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-sm">
+                  <div className="action-status">
                     {statusIcon[action.status] || <Clock size={16} />}
                     <Badge
                       variant={
@@ -91,25 +111,54 @@ const ActionsTab = (props) => {
                     >
                       {action.status}
                     </Badge>
+                    <Trash2
+                      size={16}
+                      className="text-red-500 cursor-pointer"
+                      onClick={() => handleDeleteAction(action.actionId)}
+                    />
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground mb-1">
+                <div className="action-meta">
                   Avviata il {formatDate(action.startedAt)}
                 </div>
+
                 {action.output?.optimized_price && (
-                  <div className="text-sm">
+                  <div className="action-output">
                     💰 Prezzo ottimizzato:{" "}
-                    <strong>{action.output.optimized_price} €</strong>
+                    <span className="highlight">
+                      {action.output.optimized_price} €
+                    </span>
                   </div>
                 )}
+
                 {action.output?.preview && (
-                  <div className="text-sm italic text-muted-foreground">
-                    📨 {action.output.preview.slice(0, 100)}...
+                  <div>
+                    <div
+                      className={`action-output preview ${
+                        expanded[action.actionId]
+                          ? "collapsible expanded"
+                          : "collapsible"
+                      }`}
+                    >
+                      📨 {action.output.preview}
+                    </div>
+                    {action.output.preview.length > 250 && (
+                      <span
+                        className="show-more"
+                        onClick={() => toggleExpanded(action.actionId)}
+                      >
+                        {expanded[action.actionId]
+                          ? "Mostra meno ▲"
+                          : "Mostra tutto ▼"}
+                      </span>
+                    )}
                   </div>
                 )}
+
                 {action.output?.title && (
-                  <div className="text-sm font-medium">
-                    📄 Report: <span>{action.output.title}</span>
+                  <div className="action-output">
+                    📄 Report:{" "}
+                    <span className="highlight">{action.output.title}</span>
                   </div>
                 )}
               </li>

@@ -23,12 +23,6 @@ class AgentActionUpdate(BaseModel):
     status: Optional[str] = None
     output: Optional[dict] = None
 
-class UploadReportRequest(BaseModel):
-    user_id: str
-    title: str
-    content: str
-    tags: Optional[list] = []
-
 class CheckInMessageRequest(BaseModel):
     user_id: str
     booking_id: str
@@ -100,22 +94,14 @@ async def update_agent_action(user_id: str, action_id: str, update: AgentActionU
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Errore aggiornamento azione: {str(e)}")
 
-# 🔄 POST - Salva un documento generato dall’agente
-@router.post("/agent/upload-report")
-async def upload_agent_report(request: UploadReportRequest):
+# 🔄 DELETE - Elimina una azione IA
+@router.delete("/agent/actions/{user_id}/{action_id}")
+async def delete_agent_action(user_id: str, action_id: str):
     try:
-        now = datetime.utcnow()
-        report_id = str(uuid4())
-        db.collection("ai_agent_hub").document(request.user_id).collection("documents").document(report_id).set({
-            "reportId": report_id,
-            "title": request.title,
-            "content": request.content,
-            "tags": request.tags,
-            "createdAt": now
-        })
-        return {"message": "✅ Documento salvato", "reportId": report_id}
+        db.collection("ai_agent_hub").document(user_id).collection("actions").document(action_id).delete()
+        return {"message": "✅ Azione eliminata"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Errore salvataggio documento: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Errore eliminazione azione: {str(e)}")
 
 # 🔄 GET - Recupera stato HUB IA
 @router.get("/agent/hub-status/{user_id}")
@@ -128,14 +114,36 @@ async def get_agent_hub_status(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Errore recupero stato HUB: {str(e)}")
 
-# 🔄 DELETE - Elimina una azione IA
-@router.delete("/agent/actions/{user_id}/{action_id}")
-async def delete_agent_action(user_id: str, action_id: str):
+# 🔄 GET - Recupera documenti generati IA
+@router.get("/agent/documents/{user_id}")
+async def get_generated_documents(user_id: str):
     try:
-        db.collection("ai_agent_hub").document(user_id).collection("actions").document(action_id).delete()
-        return {"message": "✅ Azione eliminata"}
+        docs_ref = db.collection("ai_agent_hub").document(user_id).collection("documents")
+        docs = docs_ref.stream()
+        return [doc.to_dict() for doc in docs]
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Errore eliminazione azione: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Errore recupero documenti: {str(e)}")
+
+# 🔄 GET - Recupera configurazione agente (autonomia, automazioni, piano)
+@router.get("/agent/config/{user_id}")
+async def get_agent_config(user_id: str):
+    try:
+        doc_ref = db.collection("ai_agent_hub").document(user_id)
+        doc = doc_ref.get()
+        if not doc.exists:
+            return {
+                "autonomyLevel": "base",
+                "enabledAutomations": {},
+                "plan": "BASE"
+            }
+        data = doc.to_dict()
+        return {
+            "autonomyLevel": data.get("autonomyLevel", "base"),
+            "enabledAutomations": data.get("enabledAutomations", {}),
+            "plan": data.get("plan", "BASE")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Errore recupero config: {str(e)}")
 
 # ✅ POST - Invio messaggio di benvenuto check-in
 @router.post("/agent/checkin/send-welcome")
@@ -179,3 +187,34 @@ Ecco i dettagli della tua prenotazione:
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Errore invio messaggio di benvenuto: {str(e)}")
+
+# ✅ POST - Upload report da contesto IA (usato da agent/chat)
+@router.post("/agent/upload-report")
+async def generate_report_from_chat(context: dict):
+    try:
+        user_id = context.get("user_id", "unknown")
+        session_id = context.get("session_id", "unknown")
+
+        report_content = f"📊 Report generato per l’utente {user_id} – Sessione: {session_id}"
+        timestamp = datetime.utcnow()
+        doc_id = str(uuid4())
+
+        doc_ref = db.collection("ai_agent_hub").document(user_id).collection("documents").document(doc_id)
+        doc_ref.set({
+            "documentId": doc_id,
+            "type": "report",
+            "content": report_content,
+            "generatedAt": timestamp,
+            "linkedSession": session_id,
+        })
+
+        return {
+            "status": "completed",
+            "message": "📎 Report generato con successo!",
+            "documentId": doc_id,
+            "content": report_content,
+            "generatedAt": timestamp.isoformat()
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

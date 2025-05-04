@@ -6,10 +6,10 @@ import {
   useLocation,
 } from "react-router-dom";
 
-import { AuthProvider } from "./contexts/AuthContext"; // ✅ Aggiunto contesto Auth centralizzato
+import { AuthProvider } from "./contexts/AuthContext";
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
-import ProtectedRoute from "./components/ProtectedRoute"; // ✅ Protezione con Firebase Auth
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import StayProDashboard from "./pages/StayProDashboard";
 import Bookings from "./pages/Bookings";
@@ -27,7 +27,6 @@ import CleaningReport from "./pages/reports/sections/CleaningReport";
 import MarketingReport from "./pages/reports/sections/MarketingReport";
 import CustomersReport from "./pages/reports/sections/CustomersReport";
 import AIInsights from "./pages/reports/sections/AIInsightsReport";
-import Chatbox from "./pages/Chatbox";
 import Notifications from "./pages/notifications/Notifications";
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
@@ -35,7 +34,31 @@ import AgentHub from "./pages/AgentHub";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
+import AgentChatbox from "./pages/AgentChatbox"; // ✅ Nuovo componente
+
 import "./App.css";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "./firebaseConfig";
+
+// ✅ Auto-login sviluppo
+if (process.env.NODE_ENV !== "production") {
+  const storedUid = localStorage.getItem("user_id");
+  if (!storedUid) {
+    signInWithEmailAndPassword(auth, "dev@test.com", "pistacchio79")
+      .then(({ user }) => {
+        localStorage.setItem("user_id", user.uid);
+        console.log("✅ Login automatico (dev) con:", user.uid);
+      })
+      .catch((err) => {
+        console.error("❌ Login auto dev:", err.code);
+        if (err.code === "auth/user-not-found") {
+          alert(
+            "⚠️ Utente dev@test.com non esiste. Registralo una volta tramite il form o emulator."
+          );
+        }
+      });
+  }
+}
 
 const LayoutWrapper = ({ children }) => {
   const location = useLocation();
@@ -48,6 +71,7 @@ const LayoutWrapper = ({ children }) => {
       <div className="main-content" style={{ flex: 1, paddingLeft: "220px" }}>
         <TopBar />
         {children}
+        <AgentChatbox /> {/* ✅ Sempre visibile ma chiuso di default */}
       </div>
     </div>
   );
@@ -56,16 +80,14 @@ const LayoutWrapper = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      {" "}
-      {/* ✅ AuthProvider globale */}
       <Router>
         <LayoutWrapper>
           <Routes>
-            {/* Rotte pubbliche */}
+            {/* Pubbliche */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
 
-            {/* Rotte protette */}
+            {/* Protette */}
             <Route
               path="/"
               element={<ProtectedRoute element={<StayProDashboard />} />}
@@ -99,7 +121,7 @@ function App() {
               element={<ProtectedRoute element={<Reports />} />}
             />
 
-            {/* Sezioni Report */}
+            {/* Report sezioni */}
             <Route
               path="/reports/bookings"
               element={<ProtectedRoute element={<BookingsReport />} />}
@@ -133,11 +155,9 @@ function App() {
               element={<ProtectedRoute element={<AIInsights />} />}
             />
 
-            {/* Altre funzionalità */}
-            <Route
-              path="/chatbox"
-              element={<ProtectedRoute element={<Chatbox />} />}
-            />
+            {/* Extra */}
+            {/* 🔕 Disattivata chatbox vecchia */}
+            {/* <Route path="/chatbox" element={<ProtectedRoute element={<Chatbox />} />} /> */}
             <Route
               path="/notifications"
               element={<ProtectedRoute element={<Notifications />} />}

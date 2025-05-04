@@ -14,12 +14,19 @@ load_dotenv()
 app = FastAPI()
 
 # ✅ Importa tutte le route dell'agente IA
-from routes import chat_routes, agent_routes, pricingRoutes, dispatchRoutes
+from routes import (
+    chat_routes,
+    agent_routes,
+    pricingRoutes,
+    dispatchRoutes,
+    messageRoutes  # 👈 NUOVO import
+)
 
 app.include_router(chat_routes.router)
 app.include_router(agent_routes.router)
 app.include_router(pricingRoutes.router)
 app.include_router(dispatchRoutes.router)
+app.include_router(messageRoutes.router)  # 👈 NUOVA route registrata
 
 # ✅ CORS Debug per frontend
 app.add_middleware(
@@ -60,3 +67,4 @@ else:
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
