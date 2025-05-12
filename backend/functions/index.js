@@ -8,14 +8,13 @@
 require("dotenv").config();
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-// 🚨 Integrazione Sentry
 const Sentry = require("@sentry/google-cloud-serverless");
+const { v4: uuidv4 } = require("uuid");
 
 Sentry.init({
   dsn: "https://ed67712db0b24f8430a94545ea545cdd@o4509237214314496.ingest.de.sentry.io/4509237230239824",
   sendDefaultPii: true,
 });
-const { v4: uuidv4 } = require("uuid");
 
 if (!admin.apps.length) {
   admin.initializeApp();
@@ -54,7 +53,6 @@ const withCors = (handler) =>
       return res.status(204).send("");
     }
 
-    // 🎯 Genera un request_id univoco per tracciamento
     const requestId = uuidv4();
     req.requestId = requestId;
     res.setHeader("X-Request-ID", requestId);
@@ -95,6 +93,7 @@ const announcementRoutes = require("./announcementRoutes");
 const adminRoutes = require("./adminRoutes");
 const loginRoutes = require("./loginRoutes");
 const agentRoutes = require("./agentRoutes");
+const backupRoutes = require("./backupRoutes");
 
 // Trigger identity v2
 const { addDefaultRole } = require("./triggers/onUserCreated");
@@ -258,6 +257,10 @@ exports.getSystemLogs = withCors(adminRoutes.getSystemLogs);
 exports.getBackupStatus = withCors(adminRoutes.getBackupStatus);
 exports.startBackup = withCors(adminRoutes.startBackup);
 
+// 🔐 Backup & Sicurezza
+exports.restoreBackup = withCors(backupRoutes.restoreBackup);
+exports.updatePassword = withCors(backupRoutes.updatePassword);
+
 // 🔐 Login
 exports.login = withCors(loginRoutes.login);
 
@@ -276,6 +279,7 @@ exports.getAgentHubStatus = withCors(agentRoutes.getAgentHubStatus);
 exports.getAgentConfig = withCors(agentRoutes.getAgentConfig);
 exports.saveAgentConfig = withCors(agentRoutes.saveAgentConfig);
 
+// 🧪 Test Sentry
 exports.testError = Sentry.wrapHttpFunction((req, res) => {
   throw new Error("🔥 TEST SENTRY: crash volontario StayPro!");
 });

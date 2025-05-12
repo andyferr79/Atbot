@@ -1,0 +1,60 @@
+.plasma-agent-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at center, #00f0ff 0%, #0d1b2a 80%);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.5), 0 0 40px rgba(0, 240, 255, 0.3),
+    0 0 60px rgba(0, 240, 255, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  z-index: 9999;
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.5), 0 0 40px rgba(0, 240, 255, 0.3),
+      0 0 60px rgba(0, 240, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(0, 255, 180, 0.7), 0 0 60px rgba(0, 255, 180, 0.5),
+      0 0 90px rgba(0, 255, 180, 0.3);
+  }
+}
+.plasma-agent-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  z-index: 9999;
+}
+
+.plasma-agent-button::after {
+  content: "Agente HOXY";
+  position: absolute;
+  bottom: 110%;
+  right: 50%;
+  transform: translateX(50%);
+  background-color: #1e1e1e;
+  color: #00f0ff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.plasma-agent-button:hover::after {
+  opacity: 1;
+}

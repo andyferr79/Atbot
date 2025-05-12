@@ -11,6 +11,8 @@ import ActionsTab from "../components/AgentHub/ActionsTab";
 import ChatTab from "../components/AgentHub/ChatTab";
 import DocumentsTab from "../components/AgentHub/DocumentsTab";
 import SettingsTab from "../components/AgentHub/SettingsTab";
+import ScheduledTasksTab from "../components/AgentHub/ScheduledTasksTab";
+import StructureProfileForm from "../components/AgentHub/StructureProfileForm";
 import "../styles/AgentHub.css";
 
 const AgentHub = () => {
@@ -103,6 +105,8 @@ const AgentHub = () => {
           <TabsTrigger value="actions">Actions</TabsTrigger>
           <TabsTrigger value="chat">Chat</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="scheduler">Scheduler</TabsTrigger>
+          <TabsTrigger value="structure">Profilo</TabsTrigger>
           <TabsTrigger value="settings">
             <Settings className="icon" /> Settings
           </TabsTrigger>
@@ -132,6 +136,14 @@ const AgentHub = () => {
 
         <TabsContent value="documents">
           <DocumentsTab documents={documents} setActiveTab={setActiveTab} />
+        </TabsContent>
+
+        <TabsContent value="scheduler">
+          <ScheduledTasksTab />
+        </TabsContent>
+
+        <TabsContent value="structure">
+          <StructureProfileForm />
         </TabsContent>
 
         <TabsContent value="settings">

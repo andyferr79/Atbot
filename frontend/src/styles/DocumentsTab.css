@@ -1,0 +1,88 @@
+.structure-form {
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 40px;
+  background-color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.structure-form h2 {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 26px;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.structure-form label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+  color: #333;
+}
+
+.structure-form input[type="text"],
+.structure-form input[type="number"],
+.structure-form input[type="file"],
+.structure-form input[type="email"],
+.structure-form input[type="checkbox"],
+.structure-form textarea,
+.structure-form select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.structure-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.structure-form hr {
+  grid-column: 1 / -1;
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 20px 0;
+}
+
+.structure-form button {
+  grid-column: 1 / -1;
+  padding: 14px;
+  background-color: #00aa88;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.structure-form button:hover {
+  background-color: #008f75;
+}
+
+.structure-form img {
+  margin-top: 10px;
+  border: 1px solid #ddd;
+  max-width: 100px;
+  border-radius: 6px;
+}
+
+.structure-form .full-width {
+  grid-column: 1 / -1;
+}
+
+.structure-form .inline-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}

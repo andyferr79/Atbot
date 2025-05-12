@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Bot, Send } from "lucide-react";
 import "../styles/AgentChatbox.css";
 
-const AgentChatbox = () => {
+const AgentChatbox = ({ onStartThinking, onStopThinking }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
@@ -14,7 +14,6 @@ const AgentChatbox = () => {
     localStorage.getItem("chat_session_id") || null
   );
 
-  // ✅ Crea nuova sessione
   const createSession = async () => {
     try {
       const res = await fetch("http://localhost:8000/chat/start-session", {
@@ -34,7 +33,6 @@ const AgentChatbox = () => {
     }
   };
 
-  // ✅ Traccia azione IA
   const trackAction = async (type, context = {}) => {
     try {
       const res = await fetch("http://localhost:8000/agent/track-action", {
@@ -54,7 +52,24 @@ const AgentChatbox = () => {
     }
   };
 
-  // ✅ Aggiorna stato azione a completed
+  const uploadReport = async (sessionId, userId, content) => {
+    try {
+      const res = await fetch("http://localhost:8000/agent/upload-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: sessionId,
+          user_id: userId,
+          content,
+        }),
+      });
+      const data = await res.json();
+      console.log("📎 Report salvato:", data);
+    } catch (err) {
+      console.error("❌ Errore upload report:", err);
+    }
+  };
+
   const updateAction = async (output = {}) => {
     if (!actionId) return;
     try {
@@ -71,7 +86,6 @@ const AgentChatbox = () => {
     }
   };
 
-  // ✅ Invia messaggio alla IA
   const sendMessage = async () => {
     if (!input.trim()) return;
     if (!sessionId) await createSession();
@@ -85,6 +99,7 @@ const AgentChatbox = () => {
     setMessages((prev) => [...prev, newUserMessage]);
     setInput("");
     setLoading(true);
+    onStartThinking && onStartThinking();
 
     try {
       const res = await fetch("http://localhost:8000/chat", {
@@ -107,22 +122,19 @@ const AgentChatbox = () => {
 
       setMessages((prev) => [...prev, newBotMessage]);
 
-      // ✅ Tracciamento IA
       const prompt = input.toLowerCase();
-      const context = {
-        session_id: sessionId,
-        prompt: input,
-      };
+      const context = { session_id: sessionId, prompt: input };
 
       let type = "chat";
-      if (prompt.includes("report")) type = "report";
-      else if (prompt.includes("check-in")) type = "checkin";
+      if (prompt.includes("report")) {
+        type = "report";
+        await uploadReport(sessionId, userId, responseText);
+      } else if (prompt.includes("check-in")) type = "checkin";
       else if (prompt.includes("prezzo") || prompt.includes("tariffa"))
         type = "pricing";
 
       await trackAction(type, context);
 
-      // ✅ Update a completed
       await updateAction({
         response: responseText,
         preview: responseText.slice(0, 100) + "...",
@@ -131,6 +143,7 @@ const AgentChatbox = () => {
       console.error("Errore risposta IA:", err);
     } finally {
       setLoading(false);
+      onStopThinking && onStopThinking();
     }
   };
 

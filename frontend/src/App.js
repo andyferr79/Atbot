@@ -34,7 +34,7 @@ import AgentHub from "./pages/AgentHub";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
-import AgentChatbox from "./pages/AgentChatbox"; // ✅ Nuovo componente
+import AgentAccess from "./pages/AgentAccess"; // ✅ Nuovo componente
 
 import "./App.css";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -71,7 +71,7 @@ const LayoutWrapper = ({ children }) => {
       <div className="main-content" style={{ flex: 1, paddingLeft: "220px" }}>
         <TopBar />
         {children}
-        <AgentChatbox /> {/* ✅ Sempre visibile ma chiuso di default */}
+        <AgentAccess /> {/* ✅ Nuova sfera IA + Chatbox */}
       </div>
     </div>
   );
@@ -120,7 +120,6 @@ function App() {
               path="/reports"
               element={<ProtectedRoute element={<Reports />} />}
             />
-
             {/* Report sezioni */}
             <Route
               path="/reports/bookings"
@@ -154,10 +153,7 @@ function App() {
               path="/reports/ai-insights"
               element={<ProtectedRoute element={<AIInsights />} />}
             />
-
             {/* Extra */}
-            {/* 🔕 Disattivata chatbox vecchia */}
-            {/* <Route path="/chatbox" element={<ProtectedRoute element={<Chatbox />} />} /> */}
             <Route
               path="/notifications"
               element={<ProtectedRoute element={<Notifications />} />}

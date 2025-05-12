@@ -46,11 +46,18 @@ async def dispatch_master_agent(request: DispatchRequest):
             "pendingActions": firestore.ArrayUnion([action_id])
         }, merge=True)
 
-        # 🔁 Dispatch dinamico
+                # 🔁 Dispatch dinamico
         async with httpx.AsyncClient() as client:
+            print(f"📤 Dispatching intent: {request.intent}")
+            print(f"📦 Payload inviato: {request.context}")  # 👈 DEBUG STAMPA
+
             if request.intent == "pricing":
+                payload = {
+                    "user_id": request.user_id,
+                    **request.context
+                }
                 response = await client.post(
-                    "http://127.0.0.1:8000/agent/pricing", json=request.context
+                    "http://127.0.0.1:8000/agent/pricing", json=payload
                 )
             elif request.intent == "checkin":
                 response = await client.post(
@@ -62,6 +69,7 @@ async def dispatch_master_agent(request: DispatchRequest):
                 )
             else:
                 raise HTTPException(status_code=400, detail="Intent non supportato")
+
 
         output = response.json()
 

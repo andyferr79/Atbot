@@ -19,14 +19,19 @@ from routes import (
     agent_routes,
     pricingRoutes,
     dispatchRoutes,
-    messageRoutes  # 👈 NUOVO import
+    messageRoutes,
+    checkinRoutes,
+    automationRoutes  # 👈 AGGIUNTO ORA
 )
 
+# ✅ Includi i router
 app.include_router(chat_routes.router)
 app.include_router(agent_routes.router)
 app.include_router(pricingRoutes.router)
 app.include_router(dispatchRoutes.router)
-app.include_router(messageRoutes.router)  # 👈 NUOVA route registrata
+app.include_router(messageRoutes.router)
+app.include_router(checkinRoutes.router)
+app.include_router(automationRoutes.router)  # 👈 ROUTE REGISTRATA
 
 # ✅ CORS Debug per frontend
 app.add_middleware(
@@ -67,4 +72,3 @@ else:
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

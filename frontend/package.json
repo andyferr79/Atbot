@@ -9,6 +9,8 @@
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
+    "@react-three/drei": "^9.88.6",
+    "@react-three/fiber": "^8.13.8",
     "ajv": "^8.12.0",
     "axios": "^1.8.4",
     "chart.js": "^4.4.8",
@@ -28,6 +30,7 @@
     "react-icons": "^4.10.1",
     "react-router-dom": "^7.1.1",
     "recharts": "^2.15.1",
+    "three": "^0.152.2",
     "web-vitals": "^4.2.4"
   },
   "scripts": {
