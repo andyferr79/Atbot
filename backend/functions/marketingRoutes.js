@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const { sendNotification } = require("./lib/sendNotification");
 
 if (!admin.apps.length) {
   admin.initializeApp();
@@ -43,7 +44,6 @@ async function checkRateLimit(ip, maxRequests, windowMs) {
 // 📌 POST SOCIAL MEDIA
 // ==============================
 
-// 📌 GET - Post social media
 exports.getSocialMediaPosts = functions.https.onRequest(async (req, res) => {
   if (req.method !== "GET")
     return res.status(405).json({ error: "❌ Usa GET." });
@@ -72,7 +72,6 @@ exports.getSocialMediaPosts = functions.https.onRequest(async (req, res) => {
   }
 });
 
-// 📌 POST - Creare post social media
 exports.createSocialPost = functions.https.onRequest(async (req, res) => {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "❌ Usa POST." });
@@ -108,7 +107,6 @@ exports.createSocialPost = functions.https.onRequest(async (req, res) => {
   }
 });
 
-// 📌 DELETE - Eliminare post social media
 exports.deleteSocialPost = functions.https.onRequest(async (req, res) => {
   if (req.method !== "DELETE") {
     return res.status(405).json({ error: "❌ Usa DELETE." });
@@ -135,7 +133,6 @@ exports.deleteSocialPost = functions.https.onRequest(async (req, res) => {
 // 📌 CAMPAGNE MARKETING
 // ==============================
 
-// 📌 GET - Recuperare campagne
 exports.getMarketingCampaigns = functions.https.onRequest(async (req, res) => {
   if (req.method !== "GET")
     return res.status(405).json({ error: "❌ Usa GET." });
@@ -161,5 +158,81 @@ exports.getMarketingCampaigns = functions.https.onRequest(async (req, res) => {
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
+  }
+});
+
+// 📌 POST - Email marketing IA
+exports.generateEmailCampaign = functions.https.onRequest(async (req, res) => {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "❌ Usa POST." });
+  }
+
+  try {
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 50, 10 * 60 * 1000);
+
+    const { userId, structureName = "La tua struttura" } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: "userId richiesto" });
+    }
+
+    const now = new Date();
+
+    const subject = `Offerta esclusiva da ${structureName}`;
+    const content = `
+Ciao 👋
+
+Abbiamo pensato a qualcosa di speciale per te! 🎁
+
+Prenota ora da ${structureName} e ottieni:
+✅ 10% di sconto
+✅ Colazione inclusa
+✅ Check-out esteso gratuito
+
+📅 Offerta valida solo per pochi giorni!
+
+👉 Prenota adesso e approfitta di questa occasione.
+
+Grazie per aver scelto ${structureName}! 💙
+`;
+
+    const actionRef = db
+      .collection("ai_agent_hub")
+      .doc(userId)
+      .collection("actions")
+      .doc();
+
+    await actionRef.set({
+      actionId: actionRef.id,
+      type: "email_marketing",
+      status: "completed",
+      startedAt: now,
+      context: { structureName },
+      output: { subject, content },
+      priority: "normal",
+    });
+
+    await sendNotification({
+      userId,
+      title: "Email Marketing Generata",
+      description: `È stata generata un’email marketing per ${structureName}.`,
+      type: "ai",
+    });
+
+    return res.status(200).json({
+      message: "✅ Email marketing generata",
+      actionId: actionRef.id,
+      subject,
+      content,
+    });
+  } catch (err) {
+    functions.logger.error("❌ Errore generateEmailCampaign:", err);
+    return res
+      .status(err.status || 500)
+      .json({ error: err.message || "Errore generazione email IA" });
   }
 });

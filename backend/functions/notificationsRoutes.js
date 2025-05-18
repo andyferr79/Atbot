@@ -222,6 +222,33 @@ async function getUnreadNotificationsCountHandler(req, res) {
       .json({ error: error.message || "Errore interno" });
   }
 }
+// 🔔 GET: Numero notifiche non lette per tipo (es. ai o system)
+async function getUnreadNotificationsByTypeHandler(req, res) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "❌ Usa GET." });
+  }
+  try {
+    await authenticate(req);
+    await checkRateLimit(req.ip);
+
+    const userId = req.user.uid;
+    const type = req.query.type || "ai";
+
+    const snapshot = await db
+      .collection("Notifications")
+      .where("userId", "==", userId)
+      .where("status", "==", "unread")
+      .where("type", "==", type)
+      .get();
+
+    res.json({ unreadCount: snapshot.size, type });
+  } catch (error) {
+    console.error("❌ Errore conteggio notifiche per tipo:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
+  }
+}
 
 module.exports = {
   getNotificationsHandler,
@@ -230,4 +257,5 @@ module.exports = {
   markAllNotificationsAsReadHandler,
   deleteNotificationHandler,
   getUnreadNotificationsCountHandler,
+  getUnreadNotificationsByTypeHandler, // 👈 AGGIUNTO
 };

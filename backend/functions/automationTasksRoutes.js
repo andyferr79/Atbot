@@ -6,6 +6,7 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
+const { Timestamp, FieldValue } = admin.firestore; // ✅ Importazione corretta
 
 // ✅ Middleware verifica token utente
 const verifyToken = async (req, res) => {
@@ -41,9 +42,9 @@ exports.createAutomationTask = functions.https.onRequest(async (req, res) => {
     const taskRef = await db.collection("AutomationTasks").add({
       taskType,
       assignedTo,
-      dueDate: admin.firestore.Timestamp.fromDate(new Date(dueDate)),
+      dueDate: Timestamp.fromDate(new Date(dueDate)),
       createdBy: req.user.uid,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
     });
 
     res.json({ message: "✅ Task creato con successo!", id: taskRef.id });
@@ -124,10 +125,7 @@ exports.updateAutomationTask = functions.https.onRequest(async (req, res) => {
     const updateData = {};
     if (taskType) updateData.taskType = taskType;
     if (assignedTo) updateData.assignedTo = assignedTo;
-    if (dueDate)
-      updateData.dueDate = admin.firestore.Timestamp.fromDate(
-        new Date(dueDate)
-      );
+    if (dueDate) updateData.dueDate = Timestamp.fromDate(new Date(dueDate));
 
     await taskRef.update(updateData);
 

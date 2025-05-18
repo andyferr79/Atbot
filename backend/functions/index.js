@@ -94,6 +94,10 @@ const adminRoutes = require("./adminRoutes");
 const loginRoutes = require("./loginRoutes");
 const agentRoutes = require("./agentRoutes");
 const backupRoutes = require("./backupRoutes");
+const automationTasksRoutes = require("./automationTasksRoutes");
+const { sendAutoReminders } = require("./aiReminders");
+const { runSchedulerNowHandler } = require("./scheduledDailyTask");
+const { getAgentSummaryHandler } = require("./agentSummary");
 
 // Trigger identity v2
 const { addDefaultRole } = require("./triggers/onUserCreated");
@@ -161,7 +165,15 @@ exports.deleteNotification = withCors(
 exports.getUnreadNotificationsCount = withCors(
   notificationsRoutes.getUnreadNotificationsCountHandler
 );
-
+exports.sendAutoReminders = functions.https.onRequest(async (req, res) => {
+  try {
+    await sendAutoReminders();
+    res.status(200).send("✅ Reminder IA completati");
+  } catch (error) {
+    console.error("❌ Errore reminder IA:", error);
+    res.status(500).send("Errore reminder IA");
+  }
+});
 // ⚙️ Impostazioni
 exports.getPreferences = withCors(settingsRoutes.getPreferences);
 exports.updatePreferences = withCors(settingsRoutes.updatePreferences);
@@ -180,6 +192,11 @@ exports.addMarketingCampaign = withCors(marketingRoutes.addMarketingCampaign);
 exports.getSocialMediaPosts = withCors(marketingRoutes.getSocialMediaPosts);
 exports.createSocialPost = withCors(marketingRoutes.createSocialPost);
 exports.deleteSocialPost = withCors(marketingRoutes.deleteSocialPost);
+exports.seoStrategy = withCors(marketingRoutes.seoStrategyHandler);
+exports.analyzeMarketingPresence = withCors(
+  agentRoutes.analyzeMarketingPresence
+);
+exports.generateEmailCampaign = withCors(marketingRoutes.generateEmailCampaign);
 
 // 💵 Spese
 exports.getExpenses = withCors(expensesRoutes.getExpenses);
@@ -223,6 +240,8 @@ exports.getPricingRecommendations = withCors(
 
 // 🤖 AI Chat
 exports.chatWithAI = withCors(aiRoutes.chatWithAI);
+exports.sendAgentFeedback = withCors(agentRoutes.sendAgentFeedback);
+exports.sendWelcomeCheckin = withCors(agentRoutes.sendWelcomeCheckin);
 
 // 🏡 Properties
 exports.getProperties = withCors(propertiesRoutes.getProperties);
@@ -245,6 +264,11 @@ exports.markAnnouncementAsRead = withCors(
 );
 exports.archiveAnnouncement = withCors(announcementRoutes.archiveAnnouncement);
 exports.deleteAnnouncement = withCors(announcementRoutes.deleteAnnouncement);
+exports.suggestUpsell = withCors(agentRoutes.suggestUpsell);
+exports.generateUpsellPdfMock = withCors(agentRoutes.generateUpsellPdfMock);
+exports.getUnreadNotificationsByType = withCors(
+  notificationsRoutes.getUnreadNotificationsByTypeHandler
+);
 
 // 🛠️ Admin KPI / Sistema
 exports.getRevenueKPI = withCors(adminRoutes.getRevenueKPI);
@@ -269,10 +293,12 @@ exports.dispatchAgentAction = withCors(agentRoutes.dispatchAgentAction);
 exports.getAgentActions = withCors(agentRoutes.getAgentActions);
 exports.updateAgentAction = withCors(agentRoutes.updateAgentAction);
 exports.deleteAgentAction = withCors(agentRoutes.deleteAgentAction);
+exports.getAgentSummary = withCors(getAgentSummaryHandler);
 
 // 📄 Documenti IA
 exports.uploadAgentReport = withCors(agentRoutes.uploadAgentReport);
 exports.getAgentDocuments = withCors(agentRoutes.getAgentDocuments);
+exports.generateCheckinPdfMock = withCors(agentRoutes.generateCheckinPdfMock);
 
 // 🧭 Configurazione HUB
 exports.getAgentHubStatus = withCors(agentRoutes.getAgentHubStatus);
@@ -286,3 +312,23 @@ exports.testError = Sentry.wrapHttpFunction((req, res) => {
 
 // ✅ Trigger
 exports.addDefaultRole = addDefaultRole;
+
+// 🔁 Automazioni IA
+exports.createAutomationTask = withCors(
+  automationTasksRoutes.createAutomationTask
+);
+exports.getAutomationTasks = withCors(automationTasksRoutes.getAutomationTasks);
+exports.getAutomationTaskById = withCors(
+  automationTasksRoutes.getAutomationTaskById
+);
+exports.updateAutomationTask = withCors(
+  automationTasksRoutes.updateAutomationTask
+);
+exports.deleteAutomationTask = withCors(
+  automationTasksRoutes.deleteAutomationTask
+);
+
+exports.eventMatcher = withCors(agentRoutes.eventMatcher);
+
+// 🕐 Scheduler IA giornaliero
+exports.runSchedulerNow = withCors(runSchedulerNowHandler);
