@@ -13,30 +13,51 @@ load_dotenv()
 # ✅ Inizializza FastAPI
 app = FastAPI()
 
-# ✅ Importa tutte le route dell'agente IA
+# ✅ Importa tutte le route modulari
 from routes import (
-    chat_routes,
-    agent_routes,
+    # Agenti IA modulari
+    chatAgentRoutes,
+    sessionAgentRoutes,
+    contextAgentRoutes,
+    eventAgentRoutes,
+    insightAgentRoutes,
+    reportAgentRoutes,
+    documentAgentRoutes,
+    configAgentRoutes,
+    structureAgentRoutes,
+    feedback_routes,
+    statusAgentRoutes,
+
+    # Altri agenti già modularizzati
     pricingRoutes,
     dispatchRoutes,
-    messageRoutes,
     checkinRoutes,
-    automationRoutes  # 👈 AGGIUNTO ORA
+    automationRoutes
 )
 
-# ✅ Includi i router
-app.include_router(chat_routes.router)
-app.include_router(agent_routes.router)
+# ✅ Includi i router IA modulari
+app.include_router(chatAgentRoutes.router)
+app.include_router(sessionAgentRoutes.router)
+app.include_router(contextAgentRoutes.router)
+app.include_router(eventAgentRoutes.router)
+app.include_router(insightAgentRoutes.router)
+app.include_router(reportAgentRoutes.router)
+app.include_router(documentAgentRoutes.router)
+app.include_router(configAgentRoutes.router)
+app.include_router(structureAgentRoutes.router)
+app.include_router(feedback_routes.router)
+app.include_router(statusAgentRoutes.router)
+
+# ✅ Includi router legacy modulari già separati
 app.include_router(pricingRoutes.router)
 app.include_router(dispatchRoutes.router)
-app.include_router(messageRoutes.router)
 app.include_router(checkinRoutes.router)
-app.include_router(automationRoutes.router)  # 👈 ROUTE REGISTRATA
+app.include_router(automationRoutes.router)
 
 # ✅ CORS Debug per frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ⚠️ In produzione restringere
+    allow_origins=["*"],  # ⚠️ In produzione: usa dominio sicuro
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

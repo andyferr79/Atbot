@@ -1,42 +1,69 @@
+# ✅ FILE: E:/ATBot/backend/ai_backend/routes/dispatchRoutes.py
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional, Dict
+from typing import Dict
 from uuid import uuid4
 from datetime import datetime
 import firebase_admin
 from firebase_admin import firestore
+import importlib
 import httpx
 
 router = APIRouter()
 
-# ✅ Inizializza Firebase Admin se non già attivo
+# ✅ Inizializza Firebase
 if not firebase_admin._apps:
     firebase_admin.initialize_app()
 db = firestore.client()
 
+# ✅ Dispatcher Map corretta (usa cartella 'dispatchers')
+DISPATCHER_MAP = {
+    "pricing": "dispatchers.pricingDispatcher",
+    "checkin": "dispatchers.checkinDispatcher",
+    "report": "dispatchers.reportDispatcher",
+    "cleaning": "dispatchers.cleaningDispatcher",
+    "context": "dispatchers.contextDispatcher",
+    "faq": "dispatchers.faqDispatcher",
+    "upsell": "dispatchers.upsellDispatcher",
+    "security": "dispatchers.securityDispatcher",
+    "alert": "dispatchers.alertDispatcher",
+    "event": "dispatchers.eventDispatcher",
+    "feedback": "dispatchers.feedbackDispatcher",
+    "insight": "dispatchers.insightDispatcher",
+    "conversion": "dispatchers.conversionDispatcher",
+    "revenue": "dispatchers.revenueDispatcher",
+    "bookingfix": "dispatchers.bookingFixDispatcher",
+    "autopilot": "dispatchers.autopilotDispatcher",
+    "crm": "dispatchers.crmDispatcher",
+    "marketing": "dispatchers.marketingDispatcher",
+    "support": "dispatchers.supportDispatcher",
+    "followup": "dispatchers.followupDispatcher"
+}
+
 # ✅ Modello della richiesta
 class DispatchRequest(BaseModel):
     user_id: str
-    intent: str  # es: "pricing", "checkin", "report"
+    intent: str
     context: Dict
 
+# ✅ Endpoint master dispatcher
 @router.post("/agent/dispatch")
 async def dispatch_master_agent(request: DispatchRequest):
+    now = datetime.utcnow()
+    action_id = str(uuid4())
+    doc_ref = db.collection("ai_agent_hub").document(request.user_id)
+    actions_ref = doc_ref.collection("actions").document(action_id)
+
     try:
-        now = datetime.utcnow()
-        action_id = str(uuid4())
-
-        # 🔹 Traccia l’azione nel Firestore
-        doc_ref = db.collection("ai_agent_hub").document(request.user_id)
-        actions_ref = doc_ref.collection("actions").document(action_id)
-
+        # 🔹 Traccia l’azione inizialmente
         actions_ref.set({
             "actionId": action_id,
             "type": request.intent,
             "status": "pending",
             "startedAt": now,
             "context": request.context,
-            "output": {},
+            "output": {}
         })
 
         doc_ref.set({
@@ -46,34 +73,17 @@ async def dispatch_master_agent(request: DispatchRequest):
             "pendingActions": firestore.ArrayUnion([action_id])
         }, merge=True)
 
-                # 🔁 Dispatch dinamico
-        async with httpx.AsyncClient() as client:
-            print(f"📤 Dispatching intent: {request.intent}")
-            print(f"📦 Payload inviato: {request.context}")  # 👈 DEBUG STAMPA
+        # 🔁 Import dinamico del dispatcher corrispondente
+        if request.intent not in DISPATCHER_MAP:
+            raise HTTPException(status_code=400, detail=f"Intent non supportato: {request.intent}")
 
-            if request.intent == "pricing":
-                payload = {
-                    "user_id": request.user_id,
-                    **request.context
-                }
-                response = await client.post(
-                    "http://127.0.0.1:8000/agent/pricing", json=payload
-                )
-            elif request.intent == "checkin":
-                response = await client.post(
-                    "http://127.0.0.1:8000/agent/checkin/send-welcome", json=request.context
-                )
-            elif request.intent == "report":
-                response = await client.post(
-                    "http://127.0.0.1:8000/agent/upload-report", json=request.context
-                )
-            else:
-                raise HTTPException(status_code=400, detail="Intent non supportato")
+        module_path = DISPATCHER_MAP[request.intent]
+        dispatcher = importlib.import_module(module_path)
 
+        # 🚀 Esegui la logica dell’agente specifico
+        output = await dispatcher.handle(request.user_id, request.context)
 
-        output = response.json()
-
-        # ✅ Aggiorna l’azione come completata
+        # ✅ Aggiorna come completata
         actions_ref.update({
             "status": "completed",
             "completedAt": datetime.utcnow(),
@@ -92,9 +102,10 @@ async def dispatch_master_agent(request: DispatchRequest):
         }
 
     except Exception as e:
+        # ❌ In caso di errore, aggiorna stato a 'error'
         actions_ref.update({
             "status": "error",
             "error": str(e),
-            "completedAt": datetime.utcnow(),
+            "completedAt": datetime.utcnow()
         })
         raise HTTPException(status_code=500, detail=f"Errore dispatch: {str(e)}")
