@@ -10,6 +10,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ChannelManager from "./pages/ChannelManager";
+import ContentWizard from "./pages/ContentWizard/ContentWizard";
 
 import StayProDashboard from "./pages/StayProDashboard";
 import Bookings from "./pages/Bookings";
@@ -107,6 +109,14 @@ function App() {
             <Route
               path="/suppliers"
               element={<ProtectedRoute element={<Suppliers />} />}
+            />
+            <Route
+              path="/channel-manager"
+              element={<ProtectedRoute element={<ChannelManager />} />}
+            />
+            <Route
+              path="/ota-content"
+              element={<ProtectedRoute element={<ContentWizard />} />}
             />
             <Route
               path="/marketing"

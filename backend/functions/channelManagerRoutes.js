@@ -44,7 +44,20 @@ const checkRateLimit = async (req, res, windowMs = 10 * 60 * 1000) => {
   return true;
 };
 
-// 📌 1️⃣ **GET /api/channel-manager** - Recupera tutti i canali OTA
+// 📌 Logging centralizzato
+const createLog = async (userId, log) => {
+  const logRef = db
+    .collection("ChannelManager")
+    .doc(userId)
+    .collection("logs")
+    .doc();
+  await logRef.set({
+    ...log,
+    timestamp: admin.firestore.Timestamp.now(),
+  });
+};
+
+// 📌 1️⃣ GET /api/channel-manager
 exports.getChannelManager = functions.https.onRequest(async (req, res) => {
   if (req.method !== "GET")
     return res.status(405).json({ error: "❌ Usa GET." });
@@ -70,7 +83,7 @@ exports.getChannelManager = functions.https.onRequest(async (req, res) => {
   }
 });
 
-// 📌 2️⃣ **GET /api/channel-manager/:id** - Recupera un singolo canale OTA
+// 📌 2️⃣ GET /api/channel-manager/:id
 exports.getSingleChannel = functions.https.onRequest(async (req, res) => {
   if (req.method !== "GET")
     return res.status(405).json({ error: "❌ Usa GET." });
@@ -91,7 +104,7 @@ exports.getSingleChannel = functions.https.onRequest(async (req, res) => {
   }
 });
 
-// 📌 3️⃣ **POST /api/channel-manager/sync** - Sincronizza un nuovo canale OTA
+// 📌 3️⃣ POST /api/channel-manager/sync
 exports.syncChannelManager = functions.https.onRequest(async (req, res) => {
   if (req.method !== "POST")
     return res.status(405).json({ error: "❌ Usa POST." });
@@ -112,6 +125,13 @@ exports.syncChannelManager = functions.https.onRequest(async (req, res) => {
     };
 
     const docRef = await db.collection("ChannelManager").add(newSync);
+
+    await createLog(req.user.uid, {
+      action: "syncChannelManager",
+      details: `Avviata sync per ${channelName}`,
+      action_by: "user",
+    });
+
     res.json({
       message: "✅ Sincronizzazione avviata con successo",
       id: docRef.id,
@@ -125,7 +145,7 @@ exports.syncChannelManager = functions.https.onRequest(async (req, res) => {
   }
 });
 
-// 📌 4️⃣ **PUT /api/channel-manager/:id** - Aggiorna un canale OTA
+// 📌 4️⃣ PUT /api/channel-manager/:id
 exports.updateChannel = functions.https.onRequest(async (req, res) => {
   if (req.method !== "PUT")
     return res.status(405).json({ error: "❌ Usa PUT." });
@@ -145,6 +165,12 @@ exports.updateChannel = functions.https.onRequest(async (req, res) => {
       lastSync: admin.firestore.Timestamp.fromDate(new Date()),
     });
 
+    await createLog(req.user.uid, {
+      action: "updateChannel",
+      details: `Aggiornato canale ${name}`,
+      action_by: "user",
+    });
+
     res.json({ message: "✅ Canale aggiornato con successo." });
   } catch (error) {
     functions.logger.error(
@@ -155,7 +181,7 @@ exports.updateChannel = functions.https.onRequest(async (req, res) => {
   }
 });
 
-// 📌 5️⃣ **DELETE /api/channel-manager/:id** - Elimina un canale OTA
+// 📌 5️⃣ DELETE /api/channel-manager/:id
 exports.deleteChannel = functions.https.onRequest(async (req, res) => {
   if (req.method !== "DELETE")
     return res.status(405).json({ error: "❌ Usa DELETE." });
@@ -168,12 +194,132 @@ exports.deleteChannel = functions.https.onRequest(async (req, res) => {
     const channelRef = db.collection("ChannelManager").doc(id);
     await channelRef.delete();
 
+    await createLog(req.user.uid, {
+      action: "deleteChannel",
+      details: `Canale ${id} eliminato`,
+      action_by: "user",
+    });
+
     res.json({ message: "✅ Canale eliminato con successo." });
   } catch (error) {
     functions.logger.error(
       "❌ Errore nell'eliminazione del canale OTA:",
       error
     );
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 📌 6️⃣ POST /api/channel-manager/map-rooms
+exports.mapRooms = functions.https.onRequest(async (req, res) => {
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "❌ Usa POST." });
+  if (!(await verifyToken(req, res))) return;
+
+  const userId = req.user.uid;
+  const { mappings } = req.body;
+
+  if (!mappings || typeof mappings !== "object")
+    return res.status(400).json({ error: "❌ Mappatura non valida." });
+
+  try {
+    await db
+      .collection("ChannelManager")
+      .doc(userId)
+      .collection("room_mappings")
+      .doc("map")
+      .set({ mappings }, { merge: true });
+
+    await createLog(userId, {
+      action: "mapRooms",
+      details: "Mappatura camere aggiornata",
+      action_by: "user",
+    });
+
+    res.json({ message: "✅ Mappatura aggiornata con successo." });
+  } catch (error) {
+    functions.logger.error("❌ Errore nella mappatura delle camere:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 📌 7️⃣ POST /api/channel-manager/push-rates
+exports.pushRates = functions.https.onRequest(async (req, res) => {
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "❌ Usa POST." });
+  if (!(await verifyToken(req, res))) return;
+
+  const userId = req.user.uid;
+  const { roomId, rate, ota, origin = "user" } = req.body;
+
+  if (!roomId || !rate || !ota)
+    return res.status(400).json({ error: "❌ Dati mancanti." });
+
+  try {
+    await db
+      .collection("ChannelManager")
+      .doc(userId)
+      .collection("pricing_updates")
+      .add({
+        roomId,
+        rate,
+        ota,
+        origin,
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
+
+    await createLog(userId, {
+      action: "pushRates",
+      details: `Tariffa aggiornata per ${ota}: ${rate}€`,
+      action_by: origin,
+    });
+
+    res.json({ message: "✅ Tariffa sincronizzata con successo." });
+  } catch (error) {
+    functions.logger.error(
+      "❌ Errore nella sincronizzazione delle tariffe:",
+      error
+    );
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 📌 8️⃣ POST /api/channel-manager/pull-bookings
+exports.pullBookings = functions.https.onRequest(async (req, res) => {
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "❌ Usa POST." });
+  if (!(await verifyToken(req, res))) return;
+
+  const userId = req.user.uid;
+  const { mock = false } = req.body;
+
+  try {
+    const bookings = mock
+      ? [
+          {
+            guest: "Mario Rossi",
+            room: "102",
+            ota: "Booking.com",
+            date: "2025-05-24",
+          },
+          {
+            guest: "Alice Tanaka",
+            room: "201",
+            ota: "Agoda",
+            date: "2025-05-25",
+          },
+        ]
+      : [];
+
+    await createLog(userId, {
+      action: "pullBookings",
+      details: `Prenotazioni recuperate: ${bookings.length}`,
+      action_by: "system",
+    });
+
+    res.json({ bookings });
+  } catch (error) {
+    functions.logger.error("❌ Errore nel recupero delle prenotazioni:", error);
     res.status(500).json({ error: error.message });
   }
 });

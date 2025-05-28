@@ -272,3 +272,33 @@ async def get_structure_profile(user_id: str):
         return doc.to_dict()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Errore recupero profilo: {str(e)}")
+    
+class FeedbackPayload(BaseModel):
+    user_id: str
+    action_id: str
+    rating: str  # 'up' o 'down'
+    comment: str = ""
+
+@router.post("/agent/feedback")
+async def submit_feedback(payload: FeedbackPayload):
+    try:
+        now = datetime.utcnow()
+        feedback_id = str(uuid4())
+
+        ref = db.collection("ai_agent_hub").document(payload.user_id).collection("feedback").document(feedback_id)
+        ref.set({
+            "feedbackId": feedback_id,
+            "actionId": payload.action_id,
+            "rating": payload.rating,
+            "comment": payload.comment,
+            "createdAt": now
+        })
+
+        return {
+            "message": "✅ Feedback registrato",
+            "feedbackId": feedback_id,
+            "timestamp": now
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"❌ Errore salvataggio feedback: {str(e)}")

@@ -1,0 +1,84 @@
+.ota-checklist-box {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  padding: 24px 32px;
+  margin-bottom: 32px;
+  max-width: 820px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ota-checklist-box h3 {
+  font-size: 1.4rem;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.ota-checklist-box p {
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.progress-bar {
+  height: 18px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  font-size: 0.85rem;
+  color: #334155;
+  margin-bottom: 12px;
+}
+
+.progress {
+  height: 100%;
+  background: linear-gradient(to right, #3b82f6, #2563eb);
+  transition: width 0.4s ease;
+}
+
+.progress-bar span {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  line-height: 18px;
+}
+
+.checklist {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+}
+
+.checklist li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #334155;
+  padding: 6px 0;
+}
+
+.checklist li.ok {
+  color: #16a34a;
+}
+
+.checklist li.missing {
+  color: #dc2626;
+}
+
+.btn.primary {
+  background: linear-gradient(to right, #3b82f6, #2563eb);
+  color: #fff;
+  padding: 10px 24px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn.primary:hover {
+  background: linear-gradient(to right, #2563eb, #1d4ed8);
+}

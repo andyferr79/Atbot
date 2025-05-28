@@ -1,0 +1,59 @@
+.review-summary {
+  background: #f9fafb;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.review-summary h4 {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+  color: #1e293b;
+  border-bottom: 1px solid #cbd5e1;
+  padding-bottom: 6px;
+}
+
+.review-summary ul {
+  margin-top: 12px;
+  padding-left: 1.2rem;
+  list-style-type: disc;
+  color: #475569;
+}
+
+.review-summary .incomplete {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.review-summary .complete {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.review-summary .alert {
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 12px;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.review-summary .final-button {
+  background: linear-gradient(to right, #3b82f6, #2563eb);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 24px;
+}
+
+.review-summary .final-button:disabled {
+  background: #cbd5e1;
+  color: #64748b;
+  cursor: not-allowed;
+}

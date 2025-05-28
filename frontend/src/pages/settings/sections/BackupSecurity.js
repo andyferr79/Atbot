@@ -1,125 +1,103 @@
-// BackupSecurity.js - Gestione Backup e Sicurezza
-import React, { useState } from "react";
+// ✅ BackupSecurity.js - Collegato al backend reale e multi-utente
+import React, { useEffect, useState, useCallback } from "react";
+import api from "../../../services/api";
 import "../../../styles/BackupSecurity.css";
 
 const BackupSecurity = () => {
-  const [backups, setBackups] = useState([
-    { id: 1, date: "2025-01-24", size: "10MB" },
-    { id: 2, date: "2025-01-23", size: "9MB" },
-  ]);
-  const [autoBackup, setAutoBackup] = useState(true);
-  const [password, setPassword] = useState("");
+  const [lastBackup, setLastBackup] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const toggleAutoBackup = () => {
-    setAutoBackup(!autoBackup);
-    alert(`Backup automatico ${!autoBackup ? "abilitato" : "disabilitato"}`);
-  };
+  const userId = localStorage.getItem("user_id");
 
-  const handlePasswordChange = () => {
-    if (password) {
-      alert("Password aggiornata con successo!");
-      setPassword("");
-    } else {
-      alert("Inserisci una nuova password.");
+  const fetchBackupStatus = useCallback(async () => {
+    try {
+      const res = await api.get(`/getBackupStatus?uid=${userId}`);
+      setLastBackup(res.data.timestamp);
+    } catch (err) {
+      setLastBackup(null);
+    }
+  }, [userId]);
+
+  const handleCreateBackup = async () => {
+    setLoading(true);
+    try {
+      await api.post("/startBackup", { uid: userId });
+      alert("✅ Backup creato con successo!");
+      fetchBackupStatus();
+    } catch (err) {
+      alert("❌ Errore creazione backup.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const downloadBackup = (id) => {
-    alert(`Download del backup con ID: ${id}`);
+  const handleRestoreBackup = async () => {
+    if (!window.confirm("Sei sicuro di voler ripristinare l'ultimo backup?"))
+      return;
+    setLoading(true);
+    try {
+      await api.post("/restoreBackup", { uid: userId });
+      alert("✅ Backup ripristinato.");
+    } catch (err) {
+      alert("❌ Errore ripristino backup.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const restoreBackup = (id) => {
-    alert(`Ripristino del backup con ID: ${id}`);
+  const handlePasswordChange = async () => {
+    if (!newPassword.trim()) {
+      return alert("❌ Inserisci una nuova password valida.");
+    }
+    try {
+      await api.put("/updatePassword", {
+        uid: userId,
+        newPassword,
+      });
+      alert("✅ Password aggiornata con successo.");
+      setNewPassword("");
+    } catch (err) {
+      alert("❌ Errore aggiornamento password.");
+    }
   };
 
-  const addBackup = () => {
-    const newBackup = {
-      id: Date.now(),
-      date: new Date().toISOString().split("T")[0],
-      size: "12MB",
-    };
-    setBackups((prevBackups) => [...prevBackups, newBackup]);
-    alert("Backup aggiunto con successo!");
-  };
+  useEffect(() => {
+    fetchBackupStatus();
+  }, [fetchBackupStatus]);
 
   return (
     <div className="backup-security">
-      <h2 className="section-title">Gestione Backup e Sicurezza</h2>
+      <h2 className="section-title">Backup & Sicurezza</h2>
       <p className="section-description">
-        Configura i backup automatici e proteggi i tuoi dati con le impostazioni
-        di sicurezza.
+        Gestisci i tuoi dati con backup automatici e cambia la tua password in
+        sicurezza.
       </p>
 
-      {/* Backup Automatico */}
       <div className="backup-section">
-        <h3>Backup Automatico</h3>
-        <label className="toggle-label">
-          <input
-            type="checkbox"
-            checked={autoBackup}
-            onChange={toggleAutoBackup}
-          />
-          {autoBackup ? "Abilitato" : "Disabilitato"}
-        </label>
-        <button className="add-backup-button" onClick={addBackup}>
-          Crea Backup Manuale
+        <h3>Backup Manuale</h3>
+        <p>
+          Ultimo Backup:{" "}
+          <strong>{lastBackup || "Nessun backup trovato."}</strong>
+        </p>
+        <button onClick={handleCreateBackup} disabled={loading}>
+          📦 Crea Backup Ora
+        </button>
+        <button onClick={handleRestoreBackup} disabled={loading}>
+          ♻️ Ripristina Backup
         </button>
       </div>
 
-      {/* Elenco Backup */}
-      <div className="backup-list">
-        <h3>Elenco Backup Disponibili</h3>
-        {backups.length > 0 ? (
-          <table>
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Dimensione</th>
-                <th>Azioni</th>
-              </tr>
-            </thead>
-            <tbody>
-              {backups.map((backup) => (
-                <tr key={backup.id}>
-                  <td>{backup.date}</td>
-                  <td>{backup.size}</td>
-                  <td>
-                    <button
-                      className="download-button"
-                      onClick={() => downloadBackup(backup.id)}
-                    >
-                      Scarica
-                    </button>
-                    <button
-                      className="restore-button"
-                      onClick={() => restoreBackup(backup.id)}
-                    >
-                      Ripristina
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>Nessun backup disponibile.</p>
-        )}
-      </div>
-
-      {/* Sicurezza */}
       <div className="security-section">
-        <h3>Impostazioni di Sicurezza</h3>
-        <label>
-          Nuova Password:
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Inserisci la nuova password"
-          />
-        </label>
-        <button className="save-password-button" onClick={handlePasswordChange}>
-          Aggiorna Password
+        <h3>Cambia Password</h3>
+        <input
+          type="password"
+          placeholder="Nuova password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+        />
+        <button onClick={handlePasswordChange} disabled={loading}>
+          🔐 Aggiorna Password
         </button>
       </div>
     </div>

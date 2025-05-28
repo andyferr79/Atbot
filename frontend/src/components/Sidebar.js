@@ -16,6 +16,7 @@ import {
   faBell,
   faEnvelopeOpenText,
   faCrown,
+  faExchangeAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import api from "../services/api";
@@ -105,6 +106,12 @@ const Sidebar = () => {
             <Link to="/suppliers">
               <FontAwesomeIcon icon={faTruck} className="icon" />
               <span>Fornitori</span>
+            </Link>
+          </li>
+          <li>
+            <Link to="/channel-manager">
+              <FontAwesomeIcon icon={faExchangeAlt} className="icon" />
+              <span>Channel Manager</span>
             </Link>
           </li>
         </ul>

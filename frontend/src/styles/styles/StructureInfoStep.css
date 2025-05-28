@@ -1,0 +1,98 @@
+.structure-form {
+  max-width: 720px;
+  margin: 2rem auto 1rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+.structure-form h2 {
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+  color: #111827;
+  font-weight: 700;
+  text-align: center;
+}
+
+.structure-form p {
+  font-size: 0.95rem;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* ✅ Etichette */
+.structure-form label {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: #374151;
+}
+
+/* ✅ Input / Select / Textarea */
+.structure-form input,
+.structure-form select,
+.structure-form textarea {
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  margin-bottom: 1.2rem;
+  font-size: 0.95rem;
+  color: #111827;
+  background: #f9fafb;
+  transition: border 0.2s ease;
+}
+
+.structure-form input:focus,
+.structure-form select:focus,
+.structure-form textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  background-color: #ffffff;
+}
+
+/* ✅ Pulsanti footer */
+.structure-footer {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.55rem 1.3rem;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn.primary {
+  background-color: #2563eb;
+  color: white;
+}
+
+.btn.primary:hover {
+  background-color: #1d4ed8;
+}
+
+.btn.ghost {
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.btn.ghost:hover {
+  background-color: #e5e7eb;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

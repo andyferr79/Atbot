@@ -101,7 +101,7 @@ const { getAgentSummaryHandler } = require("./agentSummary");
 
 // Trigger identity v2
 const { addDefaultRole } = require("./triggers/onUserCreated");
-
+const { dailyAgentTrigger } = require("./triggers/triggerWatcher");
 // 📢 Exports delle Cloud Functions
 
 // 📚 Prenotazioni
@@ -251,6 +251,9 @@ exports.deleteProperty = withCors(propertiesRoutes.deleteProperty);
 
 // 🔄 Channel Manager
 exports.syncChannelManager = withCors(channelManagerRoutes.syncChannelManager);
+exports.mapRooms = withCors(channelManagerRoutes.mapRooms);
+exports.pushRates = withCors(channelManagerRoutes.pushRates);
+exports.pullBookings = withCors(channelManagerRoutes.pullBookings);
 
 // 📢 Annunci ufficiali
 exports.getOfficialAnnouncements = withCors(
@@ -312,6 +315,7 @@ exports.testError = Sentry.wrapHttpFunction((req, res) => {
 
 // ✅ Trigger
 exports.addDefaultRole = addDefaultRole;
+exports.dailyAgentTrigger = dailyAgentTrigger;
 
 // 🔁 Automazioni IA
 exports.createAutomationTask = withCors(

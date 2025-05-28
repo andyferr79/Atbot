@@ -1,11 +1,11 @@
-/* 📄 AgentHub.css */
+/* 📄 AgentHub.css - COMPLETO e RESTYLATO */
 .agent-hub-container {
-  padding: 40px;
+  padding: 48px;
   margin-left: 260px;
   width: calc(100% - 260px);
   min-height: 100vh;
-  background: linear-gradient(to bottom, #9fdbcc, #f4f7fa);
-  display: block; /* permette al form di espandersi correttamente */
+  background: linear-gradient(to bottom, #f0f4f8, #ffffff);
+  display: block;
 }
 
 .hub-header-container {
@@ -36,7 +36,6 @@
   margin-right: 6px;
 }
 
-/* ✨ Modern Tabs */
 .tab-btn {
   padding: 8px 16px;
   font-size: 14px;
@@ -54,34 +53,71 @@
   box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
 }
 
-/* 🧩 Card layout generale */
 .hub-card {
-  background: white;
+  background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .hub-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* 🧾 Overview grid */
 .overview-grid {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
-/* 📜 Scroll Area */
+.overview-grid table {
+  width: 100%;
+  font-size: 14px;
+  border-collapse: collapse;
+}
+.overview-grid th {
+  text-align: left;
+  color: #374151;
+  font-weight: 600;
+  padding: 6px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.overview-grid td {
+  padding: 6px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+.overview-grid tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: white;
+}
+.badge.base {
+  background-color: #22c55e;
+}
+.badge.gold {
+  background-color: #f59e0b;
+}
+.badge.outline {
+  background-color: #f9fafb;
+  border: 1px solid #d1d5db;
+  color: #1f2937;
+}
+
 .hub-scroll {
   height: 400px;
   overflow-y: auto;
   padding-right: 10px;
 }
 
-/* ✅ Liste standard */
 .action-list,
 .chat-list,
 .document-list {
@@ -90,7 +126,6 @@
   margin: 0;
 }
 
-/* 📄 Item base (actions/chat/docs) */
 .action-item,
 .chat-item,
 .document-item {
@@ -110,7 +145,6 @@
   gap: 8px;
 }
 
-/* ⚙️ Impostazioni */
 .hub-settings-title {
   font-size: 18px;
   font-weight: 600;
@@ -124,23 +158,19 @@
   padding: 8px 0;
 }
 
-/* 📁 Documenti */
 .document-item {
   padding: 16px;
 }
-
 .document-item .font-medium {
   font-weight: 500;
   font-size: 16px;
 }
-
 .document-item .text-muted-foreground {
   font-size: 13px;
   color: #6b7280;
   margin-bottom: 4px;
 }
 
-/* 🌟 Icone auto */
 .action-item::before {
   content: "⚙️";
   margin-right: 12px;
@@ -171,8 +201,6 @@
 }
 
 /* 🔧 AUTOMAZIONI */
-
-/* Contenitore lista automazioni */
 .automation-settings-list {
   display: flex;
   flex-direction: column;
@@ -180,8 +208,6 @@
   margin-top: 20px;
   padding: 0 12px;
 }
-
-/* Card singola */
 .automation-card {
   border-radius: 12px;
   border: 1px solid #e5e7eb;
@@ -190,35 +216,27 @@
   padding: 18px 20px;
   transition: all 0.2s ease;
 }
-
 .automation-card:hover {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
-
-/* Header card */
 .automation-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
 }
-
 .automation-title {
   font-size: 16px;
   font-weight: 600;
   color: #111827;
   margin: 0;
 }
-
-/* Badge piano */
-.badge {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: white;
-  text-transform: uppercase;
+.automation-description {
+  font-size: 14px;
+  color: #4b5563;
+  margin: 8px 0 12px;
+  line-height: 1.5;
 }
 
 .badge.base {
@@ -228,28 +246,17 @@
   background-color: #f59e0b;
 }
 
-/* Descrizione */
-.automation-description {
-  font-size: 14px;
-  color: #4b5563;
-  margin: 8px 0 12px;
-  line-height: 1.5;
-}
-
-/* Toggle moderno */
 .switch {
   position: relative;
   display: inline-block;
   width: 46px;
   height: 26px;
 }
-
 .switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
-
 .slider {
   position: absolute;
   cursor: pointer;
@@ -261,7 +268,6 @@
   transition: 0.4s;
   border-radius: 30px;
 }
-
 .slider:before {
   position: absolute;
   content: "";
@@ -273,16 +279,13 @@
   transition: 0.4s;
   border-radius: 50%;
 }
-
 input:checked + .slider {
   background-color: #22c55e;
 }
-
 input:checked + .slider:before {
   transform: translateX(20px);
 }
 
-/* 🔒 Automazioni bloccate */
 .automation-locked {
   font-size: 13px;
   color: #9ca3af;
@@ -291,18 +294,15 @@ input:checked + .slider:before {
 }
 
 /* 📅 SCHEDULER */
-
 .scheduler-tab-container {
   padding: 16px 12px;
 }
-
 .scheduler-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
   margin-top: 12px;
 }
-
 .scheduler-task-card {
   background: white;
   border: 1px solid #e5e7eb;
@@ -311,33 +311,28 @@ input:checked + .slider:before {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transition: 0.2s ease;
 }
-
 .scheduler-task-card:hover {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
-
 .scheduler-task-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
 }
-
 .task-label {
   font-weight: 500;
   color: #6b7280;
   font-size: 14px;
 }
-
 .scheduler-task-card strong {
   color: #1f2937;
   font-size: 15px;
 }
 
-/* ➕ Bottone Nuovo Task */
 .btn-add-task {
-  background-color: #10b981;
+  background-color: #2440bd;
   color: white;
   font-weight: 600;
   font-size: 14px;
@@ -347,7 +342,6 @@ input:checked + .slider:before {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
-
 .btn-add-task:hover {
   background-color: #059669;
 }
@@ -359,7 +353,7 @@ input:checked + .slider:before {
   margin-bottom: 12px;
 }
 
-/* 🪟 Modal overlay */
+/* 🪟 Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -373,8 +367,6 @@ input:checked + .slider:before {
   align-items: center;
   z-index: 1000;
 }
-
-/* 📦 Modal content */
 .modal-content {
   background: white;
   padding: 24px;
@@ -383,13 +375,11 @@ input:checked + .slider:before {
   max-width: 420px;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
 }
-
 .modal-title {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 16px;
 }
-
 .modal-label {
   font-weight: 500;
   font-size: 14px;
@@ -397,7 +387,6 @@ input:checked + .slider:before {
   display: block;
   color: #374151;
 }
-
 .modal-input {
   width: 100%;
   padding: 8px 10px;
@@ -406,14 +395,12 @@ input:checked + .slider:before {
   border-radius: 6px;
   border: 1px solid #d1d5db;
 }
-
 .modal-buttons {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 24px;
 }
-
 .btn-cancel {
   background-color: #e5e7eb;
   color: #374151;
@@ -423,7 +410,6 @@ input:checked + .slider:before {
   border-radius: 6px;
   cursor: pointer;
 }
-
 .btn-confirm {
   background-color: #10b981;
   color: white;
@@ -433,7 +419,6 @@ input:checked + .slider:before {
   border-radius: 6px;
   cursor: pointer;
 }
-
 .btn-confirm:disabled {
   background-color: #9ca3af;
   cursor: not-allowed;
