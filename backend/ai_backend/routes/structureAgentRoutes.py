@@ -36,6 +36,7 @@ class StructureProfile(BaseModel):
     shuttleService: Optional[bool]
     accessibility: Optional[str]
     notes: Optional[str]
+    logoUrl: Optional[str]
 
 # ✅ POST - Salva profilo struttura
 @router.post("/agent/profile")

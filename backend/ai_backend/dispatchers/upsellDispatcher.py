@@ -1,41 +1,53 @@
-# ✅ FILE: dispatchers/upsellDispatcher.py
-
 from datetime import datetime
 from uuid import uuid4
 from firebase_config import db
+from dispatchers.logUtils import log_info, log_error  # ✅ Logging uniforme
 
-# ✅ Funzione principale: accetta user_id e context
-async def handle(user_id: str, context: dict) -> dict:
+# ✅ Mappa suggerimenti up-sell standard
+UPSERVICES_SUGGESTIONS = {
+    "Deluxe": "Upgrade alla camera Deluxe con colazione inclusa.",
+    "Suite": "Upgrade alla Suite con vista panoramica.",
+    "Spa": "Accesso gratuito alla Spa per 2 persone.",
+    "Parcheggio": "Parcheggio riservato incluso.",
+    "Colazione": "Colazione in camera inclusa.",
+    "Shuttle": "Servizio navetta gratuito verso aeroporto o stazione.",
+    "Cena": "Cena romantica in struttura a prezzo scontato.",
+    "Wine tasting": "Degustazione vini locali inclusa.",
+    "Early check-in": "Early check-in senza costi aggiuntivi.",
+    "Late check-out": "Late check-out garantito gratuito."
+}
+
+# ✅ Funzione principale dell'agente upsell
+async def handle(user_id: str, context: dict):
+    now = datetime.utcnow()
+    action_id = str(uuid4())
+
     try:
-        booking_id = context.get("booking_id", "unknown")
+        # 🎯 Estrai dettagli booking
         guest_name = context.get("guest_name", "Valued Guest")
-        room_type = context.get("room_type", "standard")
-        checkin_date = context.get("checkin_date", "unknown")
-        available_upgrades = context.get("available_upgrades", [])
-        extra_services = context.get("extra_services", [])
-        now = datetime.utcnow()
-        action_id = str(uuid4())
+        booking_id = context.get("booking_id", "N/A")
+        checkin_date = context.get("checkin_date", "N/A")
+        room_type = context.get("room_type", "Standard")
 
-        # 🔎 Genera suggerimenti di up-sell
-        upsell_options = []
+        # 📦 Recupera profilo struttura
+        profile_doc = db.collection("ai_agent_hub").document(user_id).collection("properties").document("main").get()
+        profile_data = profile_doc.to_dict() if profile_doc.exists else {}
 
-        if "Deluxe" in available_upgrades:
-            upsell_options.append("Upgrade alla camera Deluxe con colazione inclusa.")
-        if "Suite" in available_upgrades:
-            upsell_options.append("Upgrade alla Suite con vista panoramica.")
+        # 🔎 Servizi disponibili effettivi
+        available_services = profile_data.get("services", []) + profile_data.get("extraServices", [])
+        available_services_lower = [s.lower() for s in available_services]
 
-        if "Spa" in extra_services:
-            upsell_options.append("Accesso gratuito alla Spa per 2 persone.")
-        if "Parcheggio" in extra_services:
-            upsell_options.append("Parcheggio riservato incluso.")
-        if "Colazione" in extra_services:
-            upsell_options.append("Colazione in camera inclusa.")
+        # 🔍 Crea suggerimenti coerenti
+        suggestions = []
+        for keyword, message in UPSERVICES_SUGGESTIONS.items():
+            if keyword.lower() in available_services_lower:
+                suggestions.append(message)
 
-        # 🔥 Salva azione in Firestore
-        hub_ref = db.collection("ai_agent_hub").document(user_id)
-        actions_ref = hub_ref.collection("actions").document(action_id)
+        if not suggestions:
+            suggestions.append("🎯 Nessun servizio extra disponibile per l'up-sell al momento.")
 
-        actions_ref.set({
+        # 💾 Salva azione IA
+        action_data = {
             "actionId": action_id,
             "type": "upsell",
             "status": "completed",
@@ -43,20 +55,34 @@ async def handle(user_id: str, context: dict) -> dict:
             "completedAt": now,
             "context": context,
             "output": {
-                "suggestions": upsell_options
+                "suggestions": suggestions,
+                "guest_name": guest_name,
+                "booking_id": booking_id,
+                "checkin_date": checkin_date
             }
-        })
+        }
+
+        db.collection("ai_agent_hub").document(user_id).collection("actions").document(action_id).set(action_data)
+        log_info(user_id, "upsellDispatcher", "upsell_suggestions", context, action_data["output"])
 
         return {
             "status": "completed",
-            "message": "✅ Suggerimenti di up-sell generati con successo.",
-            "suggestions": upsell_options,
-            "actionId": action_id
+            "actionId": action_id,
+            "suggestions": suggestions,
+            "message": "✅ Suggerimenti up-sell generati correttamente."
         }
 
     except Exception as e:
+        log_error(user_id, "upsellDispatcher", "upsell_suggestions", e, context)
+        db.collection("ai_agent_hub").document(user_id).collection("actions").document(action_id).set({
+            "status": "error",
+            "startedAt": now,
+            "completedAt": datetime.utcnow(),
+            "context": context,
+            "error": str(e)
+        })
         return {
             "status": "error",
-            "error": str(e),
-            "message": "❌ Errore nella generazione dei suggerimenti di up-sell."
+            "message": "❌ Errore generazione suggerimenti up-sell.",
+            "error": str(e)
         }

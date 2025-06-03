@@ -32,17 +32,17 @@ import AIInsights from "./pages/reports/sections/AIInsightsReport";
 import Notifications from "./pages/notifications/Notifications";
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
+import Subscribe from "./pages/auth/Subscribe"; // ✅ NUOVO ONBOARDING
 import AgentHub from "./pages/AgentHub";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-
-import AgentAccess from "./pages/AgentAccess"; // ✅ Nuovo componente
+import AgentAccess from "./pages/AgentAccess"; // ✅ Sfera IA
 
 import "./App.css";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 
-// ✅ Auto-login sviluppo
+// ✅ Login automatico in sviluppo
 if (process.env.NODE_ENV !== "production") {
   const storedUid = localStorage.getItem("user_id");
   if (!storedUid) {
@@ -64,7 +64,9 @@ if (process.env.NODE_ENV !== "production") {
 
 const LayoutWrapper = ({ children }) => {
   const location = useLocation();
-  const hideLayout = ["/login", "/signup"].includes(location.pathname);
+  const hideLayout = ["/login", "/signup", "/subscribe"].includes(
+    location.pathname
+  );
   return hideLayout ? (
     <>{children}</>
   ) : (
@@ -73,7 +75,7 @@ const LayoutWrapper = ({ children }) => {
       <div className="main-content" style={{ flex: 1, paddingLeft: "220px" }}>
         <TopBar />
         {children}
-        <AgentAccess /> {/* ✅ Nuova sfera IA + Chatbox */}
+        <AgentAccess /> {/* ✅ Sfera IA fluttuante */}
       </div>
     </div>
   );
@@ -88,7 +90,8 @@ function App() {
             {/* Pubbliche */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
-
+            <Route path="/subscribe" element={<Subscribe />} />{" "}
+            {/* ✅ Onboarding Pagamento */}
             {/* Protette */}
             <Route
               path="/"
@@ -130,7 +133,6 @@ function App() {
               path="/reports"
               element={<ProtectedRoute element={<Reports />} />}
             />
-            {/* Report sezioni */}
             <Route
               path="/reports/bookings"
               element={<ProtectedRoute element={<BookingsReport />} />}
@@ -163,7 +165,6 @@ function App() {
               path="/reports/ai-insights"
               element={<ProtectedRoute element={<AIInsights />} />}
             />
-            {/* Extra */}
             <Route
               path="/notifications"
               element={<ProtectedRoute element={<Notifications />} />}

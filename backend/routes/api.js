@@ -89,8 +89,8 @@ export const updateSupplier = (id, data) =>
 export const deleteSupplier = (id) => api.delete(`/deleteSupplier/${id}`);
 
 /* ------- Guests -------------------------------------------- */
-export const getGuests = () => api.get("/getGuests");
-export const addGuest = (data) => api.post("/addGuest", data);
+export const getGuests = (userId) => api.get(`/guests/${userId}`);
+export const addGuest = (userId, data) => api.post(`/guests/${userId}`, data);
 
 /* ------- Rooms --------------------------------------------- */
 export const getRooms = () => api.get("/getRooms");

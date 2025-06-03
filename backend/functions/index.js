@@ -93,11 +93,13 @@ const announcementRoutes = require("./announcementRoutes");
 const adminRoutes = require("./adminRoutes");
 const loginRoutes = require("./loginRoutes");
 const agentRoutes = require("./agentRoutes");
+const adminUserRoutes = require("./adminUserRoutes");
 const backupRoutes = require("./backupRoutes");
 const automationTasksRoutes = require("./automationTasksRoutes");
 const { sendAutoReminders } = require("./aiReminders");
 const { runSchedulerNowHandler } = require("./scheduledDailyTask");
 const { getAgentSummaryHandler } = require("./agentSummary");
+const { createStripeAccountLink } = require("./stripeRoutes");
 
 // Trigger identity v2
 const { addDefaultRole } = require("./triggers/onUserCreated");
@@ -201,6 +203,9 @@ exports.generateEmailCampaign = withCors(marketingRoutes.generateEmailCampaign);
 // 💵 Spese
 exports.getExpenses = withCors(expensesRoutes.getExpenses);
 exports.addExpense = withCors(expensesRoutes.addExpense);
+
+// 💵 Spese
+exports.createStripeAccountLink = createStripeAccountLink;
 
 // 🧹 Housekeeping
 exports.getHousekeepingStatus = withCors(
@@ -336,3 +341,8 @@ exports.eventMatcher = withCors(agentRoutes.eventMatcher);
 
 // 🕐 Scheduler IA giornaliero
 exports.runSchedulerNow = withCors(runSchedulerNowHandler);
+
+// 🧑‍💼 Gestione Utenti Admin
+exports.getAllUsers = withCors(adminUserRoutes.getAllUsers);
+exports.updateUser = withCors(adminUserRoutes.updateUser);
+exports.deleteUser = withCors(adminUserRoutes.deleteUser);

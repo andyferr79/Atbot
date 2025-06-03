@@ -9,7 +9,14 @@ async function verifyToken(req, res, next) {
   const token = header.split(" ")[1];
   try {
     const decoded = await admin.auth().verifyIdToken(token);
-    req.user = decoded; // contiene uid e eventuali custom claims
+
+    // ✅ Estrae UID e role per accesso universale
+    req.userId = decoded.uid;
+    req.user = {
+      ...decoded,
+      role: decoded.role || "base", // fallback se manca
+    };
+
     return next();
   } catch (err) {
     console.error("❌ Token non valido:", err);

@@ -1,10 +1,17 @@
-# ✅ FILE: checkinDispatcher.py
 from firebase_config import db
 from datetime import datetime
 import httpx
+from dispatchers.logUtils import log_info, log_error  # ✅ Logging IA
+from dispatchers.memoryUtils import get_memory_context  # ✅ Memoria GPT
 
+# ✅ Funzione principale
 async def handle(user_id: str, context: dict) -> dict:
     try:
+        # 🧠 Recupera memoria GPT
+        context["memory"] = await get_memory_context(user_id)
+
+        log_info(user_id, "checkinDispatcher", "send_checkin_email", context)
+
         guest_name = context.get("guest_name", "Ospite")
         guest_email = context.get("guest_email")
         reservation_id = context.get("reservation_id")
@@ -35,13 +42,17 @@ async def handle(user_id: str, context: dict) -> dict:
             "linkedProperty": property_id
         })
 
-        return {
+        output = {
             "status": "completed",
             "message": f"✉️ Email inviata a {guest_email}",
             "summary": f"Check-in confermato per {guest_name}",
         }
 
+        log_info(user_id, "checkinDispatcher", "send_checkin_email", context, output)
+        return output
+
     except Exception as e:
+        log_error(user_id, "checkinDispatcher", "send_checkin_email", e, context)
         return {
             "status": "error",
             "message": f"Errore invio email: {str(e)}"

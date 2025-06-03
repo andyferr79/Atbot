@@ -76,6 +76,29 @@ const StructureProfileForm = () => {
     const payload = { ...formData, user_id: userId };
     if (logoUrl) payload.logoUrl = logoUrl;
 
+    // ✅ Converti geo
+    if (payload.geo?.lat && payload.geo?.lng) {
+      payload.geo.lat = parseFloat(payload.geo.lat);
+      payload.geo.lng = parseFloat(payload.geo.lng);
+    } else {
+      delete payload.geo;
+    }
+
+    // ✅ Pulisci array vuoti
+    [
+      "rules",
+      "services",
+      "extraServices",
+      "languages",
+      "conventions",
+      "transports",
+    ].forEach((key) => {
+      if (Array.isArray(payload[key])) {
+        payload[key] = payload[key].filter((val) => val.trim() !== "");
+        if (payload[key].length === 0) delete payload[key];
+      }
+    });
+
     const response = await fetch("http://localhost:8000/agent/profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

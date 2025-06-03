@@ -38,6 +38,7 @@ async def start_chat_session(request: StartSessionRequest):
         }
 
     except Exception as e:
+        print(f"🔥 Errore creazione sessione: {e}")
         raise HTTPException(status_code=500, detail=f"Errore creazione sessione: {str(e)}")
 
 # ✅ Archivia una chat session
@@ -50,6 +51,7 @@ async def archive_chat_session(session_id: str = Path(...)):
         session_ref.update({"status": "archived"})
         return {"message": "✅ Sessione archiviata con successo"}
     except Exception as e:
+        print(f"🔥 Errore archiviazione sessione: {e}")
         raise HTTPException(status_code=500, detail=f"Errore archiviazione: {str(e)}")
 
 # ✅ Elimina una chat session + messaggi
@@ -67,6 +69,7 @@ async def delete_chat_session(session_id: str = Path(...)):
         session_ref.delete()
         return {"message": "🗑️ Sessione eliminata con successo"}
     except Exception as e:
+        print(f"🔥 Errore eliminazione sessione: {e}")
         raise HTTPException(status_code=500, detail=f"Errore eliminazione: {str(e)}")
 
 # ✅ Recupera tutte le azioni associate a una sessione
@@ -77,14 +80,27 @@ async def get_chat_session_actions(session_id: str = Path(...)):
         actions = [doc.to_dict() for doc in query.stream()]
         return actions
     except Exception as e:
+        print(f"🔥 Errore recupero azioni sessione: {e}")
         raise HTTPException(status_code=500, detail=f"Errore recupero azioni per sessione: {str(e)}")
 
 # ✅ Recupera tutte le sessioni di un utente
 @router.get("/chat_sessions/{user_id}")
 async def get_chat_sessions_by_user(user_id: str):
     try:
-        sessions_ref = db.collection("chat_sessions").where("userId", "==", user_id).order_by("lastUpdated", direction=firestore.Query.DESCENDING)
-        sessions = [doc.to_dict() | {"sessionId": doc.id} for doc in sessions_ref.stream()]
-        return sessions
+        sessions_query = (
+            db.collection("chat_sessions")
+            .where("userId", "==", user_id)
+            .order_by("lastUpdated", direction=firestore.Query.DESCENDING)
+        )
+
+        results = []
+        for doc in sessions_query.stream():
+            data = doc.to_dict()
+            if data.get("lastUpdated", datetime.min) > datetime(2000, 1, 1):
+                results.append(data | {"sessionId": doc.id})
+
+        return results
+
     except Exception as e:
+        print(f"🔥 Errore recupero chat_sessions: {e}")
         raise HTTPException(status_code=500, detail=f"Errore recupero chat: {str(e)}")

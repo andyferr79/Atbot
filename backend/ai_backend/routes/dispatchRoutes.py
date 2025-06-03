@@ -38,8 +38,10 @@ DISPATCHER_MAP = {
     "crm": "dispatchers.crmDispatcher",
     "marketing": "dispatchers.marketingDispatcher",
     "support": "dispatchers.supportDispatcher",
-    "followup": "dispatchers.followupDispatcher"
+    "followup": "dispatchers.followupDispatcher",
+    "booking": "dispatchers.bookingDispatcher"  # ✅ AGGIUNTO ORA
 }
+
 
 # ✅ Modello della richiesta
 class DispatchRequest(BaseModel):

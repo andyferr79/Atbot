@@ -1,10 +1,11 @@
 const express = require("express");
 const admin = require("firebase-admin");
 const router = express.Router();
+const { verifyToken } = require("../middlewares/verifyToken"); // ✅ IMPORTATO
 
 // ✅ API per registrare un nuovo utente con salvataggio in Firestore
 router.post("/register", async (req, res) => {
-  const { email, password, role = "user" } = req.body; // Ruolo di default: "user"
+  const { email, password, role = "user" } = req.body;
 
   if (!email || !password) {
     return res
@@ -13,21 +14,15 @@ router.post("/register", async (req, res) => {
   }
 
   try {
-    // 🔥 Crea l'utente in Firebase Authentication
-    const userRecord = await admin.auth().createUser({
-      email,
-      password,
-    });
+    const userRecord = await admin.auth().createUser({ email, password });
 
-    // 🔥 Genera un Custom Token per l'accesso
     const token = await admin.auth().createCustomToken(userRecord.uid);
 
-    // 🔥 Salva i dettagli dell’utente in Firestore
     const db = admin.firestore();
     await db.collection("users").doc(userRecord.uid).set({
       uid: userRecord.uid,
       email: userRecord.email,
-      role, // Ruolo dell'utente (admin, user, staff)
+      role,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -44,21 +39,13 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ✅ API per ottenere i dettagli dell'utente autenticato
-router.get("/user", async (req, res) => {
+// ✅ API protetta per ottenere i dettagli dell'utente autenticato
+router.get("/user", verifyToken, async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-      return res.status(401).json({ error: "❌ Token mancante" });
-    }
+    const uid = req.user.uid; // Iniettato dal middleware
 
-    // 🔥 Verifica il token JWT con Firebase
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    const userRecord = await admin.auth().getUser(decodedToken.uid);
-
-    // 🔥 Recupera i dati aggiuntivi da Firestore
     const db = admin.firestore();
-    const userDoc = await db.collection("users").doc(userRecord.uid).get();
+    const userDoc = await db.collection("users").doc(uid).get();
 
     if (!userDoc.exists) {
       return res
@@ -66,14 +53,16 @@ router.get("/user", async (req, res) => {
         .json({ error: "❌ Utente non trovato in Firestore" });
     }
 
+    const userRecord = await admin.auth().getUser(uid);
+
     res.status(200).json({
-      uid: userRecord.uid,
+      uid,
       email: userRecord.email,
       displayName: userRecord.displayName || "",
       photoURL: userRecord.photoURL || "",
       createdAt: userRecord.metadata.creationTime,
       lastLogin: userRecord.metadata.lastSignInTime,
-      role: userDoc.data().role || "user", // Recupera il ruolo da Firestore
+      role: userDoc.data().role || "user",
     });
   } catch (error) {
     console.error("❌ Errore nel recupero dell'utente:", error);
@@ -89,10 +78,7 @@ router.post("/logout", async (req, res) => {
       return res.status(401).json({ error: "❌ Token mancante" });
     }
 
-    // 🔥 Verifica il token con Firebase
     const decodedToken = await admin.auth().verifyIdToken(token);
-
-    // 🔥 Revoca il token per invalidarlo (logout effettivo)
     await admin.auth().revokeRefreshTokens(decodedToken.uid);
 
     res.status(200).json({ message: "✅ Logout effettuato con successo" });

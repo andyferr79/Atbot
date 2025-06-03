@@ -11,6 +11,8 @@ import AutomationsPanel from "../../components/admin/AutomationsPanel";
 import BenchmarkStats from "../../components/admin/BenchmarkStats";
 import UserTimelineModal from "../../components/admin/UserTimelineModal";
 import LogsPanel from "../../components/admin/LogsPanel";
+import AdminAlertPanel from "./AdminAlertPanel";
+
 import api from "../../services/api";
 
 const AdminDashboard = () => {
@@ -51,6 +53,11 @@ const AdminDashboard = () => {
   return (
     <div className="admin-dashboard-container">
       <h1 className="admin-title">Dashboard Amministratore StayPro</h1>
+
+      {/* 🔴 Alert Ticket Urgenti */}
+      <section className="dashboard-section">
+        <AdminAlertPanel enableFilters={true} groupByType={true} />
+      </section>
 
       {/* 🔹 KPI */}
       <section className="dashboard-section">

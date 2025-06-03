@@ -1,6 +1,3 @@
-// 📂 E:/ATBot/backend/functions/adminRoutes.js
-// Handler puri per KPI e amministrazione, usati da index.js con withCors()
-
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
@@ -8,6 +5,10 @@ const db = admin.firestore();
  * 1. Entrate mensili (KPI)
  */
 exports.getRevenueKPI = async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
+  }
+
   console.log("📊 [getRevenueKPI] Avvio calcolo entrate mensili");
   try {
     const now = new Date();
@@ -39,6 +40,10 @@ exports.getRevenueKPI = async (req, res) => {
  * 2. Abbonamenti attivi (KPI)
  */
 exports.getActiveSubscriptions = async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
+  }
+
   console.log("📦 [getActiveSubscriptions] Conteggio abbonamenti attivi");
   try {
     const usersSnap = await db
@@ -60,6 +65,10 @@ exports.getActiveSubscriptions = async (req, res) => {
  * 3. Tasso di abbandono (KPI)
  */
 exports.getChurnRate = async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
+  }
+
   console.log("📉 [getChurnRate] Calcolo utenti disdetti");
   try {
     const now = new Date();
@@ -85,6 +94,10 @@ exports.getChurnRate = async (req, res) => {
  * 4. Stato sistema (KPI dummy)
  */
 exports.getSystemStatus = async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
+  }
+
   console.log("🔧 [getSystemStatus] Recupero stato sistema");
   try {
     return res.json({
@@ -105,7 +118,7 @@ exports.getSystemStatus = async (req, res) => {
 exports.getUserInfo = async (req, res) => {
   console.log("🔐 [getUserInfo] Recupero dati utente da req.user");
   try {
-    const { uid } = req.user; // iniettato da verifyToken
+    const { uid } = req.user;
     console.log("✅ [getUserInfo] UID verificato:", uid);
 
     const doc = await db.collection("users").doc(uid).get();
@@ -132,6 +145,10 @@ exports.getUserInfo = async (req, res) => {
  * 6. Statistiche uso IA (dummy)
  */
 exports.getAIUsageStats = async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
+  }
+
   console.log("🤖 [getAIUsageStats] Recupero dati IA");
   try {
     return res.json({
@@ -149,6 +166,10 @@ exports.getAIUsageStats = async (req, res) => {
  * 7. Logs di sistema (dummy)
  */
 exports.getSystemLogs = async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
+  }
+
   console.log("📋 [getSystemLogs] Invio log fittizi");
   try {
     return res.json([
@@ -178,6 +199,10 @@ exports.getSystemLogs = async (req, res) => {
  * 8. Stato backup (dummy)
  */
 exports.getBackupStatus = async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
+  }
+
   console.log("💾 [getBackupStatus] Stato backup");
   try {
     return res.json({ status: "Ultimo backup: oggi alle 02:30" });
@@ -191,6 +216,10 @@ exports.getBackupStatus = async (req, res) => {
  * 9. Avvia backup manuale (dummy)
  */
 exports.startBackup = async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
+  }
+
   console.log("🚀 [startBackup] Avvio backup manuale");
   try {
     return res.status(200).json({ message: "Backup manuale avviato." });

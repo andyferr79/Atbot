@@ -1,10 +1,10 @@
-# ✅ FILE: dispatchers/faqDispatcher.py
-
 from firebase_config import db
 from datetime import datetime
 from uuid import uuid4
 import openai
 import os
+from dispatchers.logUtils import log_info, log_error  # ✅ Logging IA
+from dispatchers.memoryUtils import get_memory_context  # ✅ Opzionale per futura integrazione
 
 # ✅ Configura OpenAI
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -14,9 +14,11 @@ client = openai.OpenAI(api_key=openai_api_key)
 
 # ✅ Funzione principale
 async def handle(user_id: str, context: dict):
+    now = datetime.utcnow()
+    action_id = str(uuid4())
+
     try:
-        now = datetime.utcnow()
-        action_id = str(uuid4())
+        log_info(user_id, "faqDispatcher", "generate_faq_response", context)
 
         question = context.get("question", "").strip()
         if not question:
@@ -61,13 +63,17 @@ async def handle(user_id: str, context: dict):
             }
         })
 
-        return {
+        output = {
             "status": "completed",
             "answer": answer,
             "actionId": action_id
         }
 
+        log_info(user_id, "faqDispatcher", "generate_faq_response", context, output)
+        return output
+
     except Exception as e:
+        log_error(user_id, "faqDispatcher", "generate_faq_response", e, context)
         return {
             "status": "error",
             "message": "❌ Errore generazione risposta FAQ",

@@ -1,15 +1,13 @@
-# ✅ FILE: dispatchers/supportDispatcher.py
-
-from firebase_admin import firestore
 from datetime import datetime, timedelta
-import openai
 import uuid
+import openai
+import os
+from firebase_config import db  # ✅ Connessione centralizzata
+from dispatchers.logUtils import log_info, log_error  # ✅ Logging
 
-# 🔐 Chiavi e modelli OpenAI
-openai.api_key = "sk-..."  # Sostituisci con la tua key reale o importa da settings.py
 MODEL = "gpt-4"
 
-# 🔄 Fallback automatici (espansi)
+# 🔄 Fallback automatici
 FALLBACKS = {
     "problemi login": "Effettua logout e login. Se persiste, svuota la cache del browser.",
     "fatturazione": "Accedi alla sezione 'Fatture' del tuo profilo o scrivici per assistenza.",
@@ -31,7 +29,7 @@ FALLBACKS = {
     "problema sincronizzazione": "La sincronizzazione potrebbe impiegare alcuni minuti. Attendi e riprova.",
 }
 
-# ⚙️ Analisi automatica della priorità
+# 🔍 Classifica la priorità
 def classify_priority(issue: str) -> str:
     issue = issue.lower()
     if any(kw in issue for kw in ["login", "errore", "bloccato", "non accede", "non funziona", "check-in", "pagamento", "accesso"]):
@@ -40,19 +38,17 @@ def classify_priority(issue: str) -> str:
         return "media"
     return "bassa"
 
-# 📥 Funzione principale dell'agente di supporto
+# ✅ Funzione principale del dispatcher
 async def handle(user_id: str, context: dict):
-    db = firestore.client()
     now = datetime.utcnow()
     support_id = str(uuid.uuid4())
-
     issue = context.get("message", "").lower()
     priority = classify_priority(issue)
 
-    # 🔍 Fallback statico
+    # 🔍 Cerca risposta tra fallback
     for keyword, reply in FALLBACKS.items():
         if keyword in issue:
-            _log_ticket(db, user_id, support_id, issue, reply, handled=True, method="fallback", priority=priority)
+            _log_ticket(user_id, support_id, issue, reply, handled=True, method="fallback", priority=priority)
             return {
                 "status": "completed",
                 "handledBy": "fallback",
@@ -60,23 +56,28 @@ async def handle(user_id: str, context: dict):
                 "ticketId": support_id
             }
 
-    # 🧠 Risposta AI
+    # 🤖 Se non trovato → usa GPT
     try:
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            raise RuntimeError("❌ OPENAI_API_KEY mancante")
+
+        client = openai.OpenAI(api_key=openai_api_key)
         messages = [
-            {"role": "system", "content": "Sei un assistente supporto tecnico per utenti SaaS. Non fornire spiegazioni tecniche dettagliate se non richieste."},
+            {"role": "system", "content": "Sei un assistente supporto tecnico per utenti SaaS. Dai risposte brevi, utili e amichevoli."},
             {"role": "user", "content": issue}
         ]
-
-        completion = openai.ChatCompletion.create(
+        completion = client.chat.completions.create(
             model=MODEL,
             messages=messages,
             temperature=0.2,
             max_tokens=400
         )
 
-        response = completion.choices[0].message["content"]
-        _log_ticket(db, user_id, support_id, issue, response, handled=True, method="gpt", priority=priority)
+        response = completion.choices[0].message.content.strip()
+        _log_ticket(user_id, support_id, issue, response, handled=True, method="gpt", priority=priority)
 
+        log_info(user_id, "supportDispatcher", "support_request", context, {"response": response})
         return {
             "status": "completed",
             "handledBy": "gpt",
@@ -86,8 +87,8 @@ async def handle(user_id: str, context: dict):
 
     except Exception as e:
         fallback_msg = "Al momento non riesco a risolvere il problema. Ti ricontatteremo a breve con una soluzione."
-        _log_ticket(db, user_id, support_id, issue, fallback_msg, handled=False, method="fallback_error", error=str(e), priority=priority)
-
+        _log_ticket(user_id, support_id, issue, fallback_msg, handled=False, method="fallback_error", error=str(e), priority=priority)
+        log_error(user_id, "supportDispatcher", "support_request", e, context)
         return {
             "status": "error",
             "handledBy": "fallback_error",
@@ -96,8 +97,8 @@ async def handle(user_id: str, context: dict):
             "error": str(e)
         }
 
-# 📝 Log su Firestore con distinzione ADMIN / USER e deadline urgenti
-def _log_ticket(db, user_id, ticket_id, issue, response, handled=True, method="fallback", error=None, priority="media"):
+# 📝 Logging del ticket su Firestore
+def _log_ticket(user_id, ticket_id, issue, response, handled=True, method="fallback", error=None, priority="media"):
     deadline = datetime.utcnow() + timedelta(minutes=30) if priority == "alta" else None
 
     db.collection("support_tickets").document(ticket_id).set({

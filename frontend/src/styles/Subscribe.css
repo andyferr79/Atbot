@@ -1,0 +1,61 @@
+.subscription-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.subscription-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.plan-card {
+  border: 2px solid #007bff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  background-color: #fff;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.plan-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.plan-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #007bff;
+  display: flex;
+  justify-content: center;
+}
+
+.plan-title {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.plan-description {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.plan-price {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-top: 1rem;
+  color: #28a745;
+}

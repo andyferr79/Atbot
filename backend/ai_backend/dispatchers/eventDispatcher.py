@@ -1,15 +1,17 @@
-# ✅ FILE: dispatchers/eventDispatcher.py
-
 from datetime import datetime
 from uuid import uuid4
 from firebase_config import db
 import httpx
+from dispatchers.logUtils import log_info, log_error  # ✅ Logging
+from dispatchers.memoryUtils import get_memory_context  # ✅ (futura integrazione)
 
 # ✅ Funzione principale
 async def handle(user_id: str, context: dict):
+    now = datetime.utcnow()
+    event_id = str(uuid4())
+
     try:
-        now = datetime.utcnow()
-        event_id = str(uuid4())
+        log_info(user_id, "eventDispatcher", "process_event", context)
 
         # 🔍 Estrai parametri richiesti
         trigger = context.get("trigger")
@@ -52,13 +54,17 @@ async def handle(user_id: str, context: dict):
             "output_summary": output.get("output", {})
         })
 
-        return {
+        response = {
             "status": "completed",
             "message": f"📨 Evento '{trigger}' processato e inoltrato a {next_agent}",
             "linked_action_id": linked_action_id
         }
 
+        log_info(user_id, "eventDispatcher", "process_event", context, response)
+        return response
+
     except Exception as e:
+        log_error(user_id, "eventDispatcher", "process_event", e, context)
         return {
             "status": "error",
             "message": f"❌ Errore evento IA: {str(e)}"
