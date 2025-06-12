@@ -27,15 +27,17 @@ from routes import (
     structureAgentRoutes,
     feedback_routes,
     statusAgentRoutes,
-    trackAgentRoutes,  # ✅ AGGIUNTO QUI!
+    trackAgentRoutes,
     actionsAgentRoutes,
 
-
-    # Altri agenti già modularizzati
+    # Altri agenti modularizzati
     pricingRoutes,
     dispatchRoutes,
     checkinRoutes,
-    automationRoutes
+    automationRoutes,
+
+    # ✅ Rotte Admin
+    admin_routes
 )
 
 # ✅ Includi i router IA modulari
@@ -50,14 +52,17 @@ app.include_router(configAgentRoutes.router)
 app.include_router(structureAgentRoutes.router)
 app.include_router(feedback_routes.router)
 app.include_router(statusAgentRoutes.router)
-app.include_router(trackAgentRoutes.router)  # ✅ AGGIUNTO QUI!
+app.include_router(trackAgentRoutes.router)
+app.include_router(actionsAgentRoutes.router)
 
-# ✅ Includi router legacy modulari già separati
+# ✅ Includi router legacy
 app.include_router(pricingRoutes.router)
 app.include_router(dispatchRoutes.router)
 app.include_router(checkinRoutes.router)
 app.include_router(automationRoutes.router)
-app.include_router(actionsAgentRoutes.router)
+
+# ✅ Includi router Admin
+app.include_router(admin_routes.router)
 
 # ✅ CORS Debug per frontend
 app.add_middleware(

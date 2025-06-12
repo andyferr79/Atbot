@@ -1,12 +1,10 @@
-const functions = require("firebase-functions");
+const express = require("express");
 const admin = require("firebase-admin");
 const { sendNotification } = require("./lib/sendNotification");
 
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
-
+const router = express.Router();
 const db = admin.firestore();
+router.use(express.json());
 
 // ✅ Middleware Autenticazione
 async function authenticate(req) {
@@ -15,7 +13,7 @@ async function authenticate(req) {
   try {
     return await admin.auth().verifyIdToken(token);
   } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
+    console.error("❌ Token non valido:", error);
     throw { status: 401, message: "❌ Token non valido" };
   }
 }
@@ -41,13 +39,10 @@ async function checkRateLimit(ip, maxRequests, windowMs) {
 }
 
 // ==============================
-// 📌 POST SOCIAL MEDIA
+// 📌 SOCIAL MEDIA POSTS
 // ==============================
 
-exports.getSocialMediaPosts = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-
+router.get("/social-posts", async (req, res) => {
   try {
     await authenticate(req);
     const ip =
@@ -65,18 +60,14 @@ exports.getSocialMediaPosts = functions.https.onRequest(async (req, res) => {
 
     return res.json(posts);
   } catch (error) {
-    functions.logger.error("❌ Errore recupero post social:", error);
+    console.error("❌ Errore recupero post social:", error);
     return res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
 
-exports.createSocialPost = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST." });
-  }
-
+router.post("/social-posts", async (req, res) => {
   try {
     await authenticate(req);
     const ip =
@@ -100,18 +91,14 @@ exports.createSocialPost = functions.https.onRequest(async (req, res) => {
     const docRef = await db.collection("SocialPosts").add(newPost);
     return res.json({ id: docRef.id, ...newPost });
   } catch (error) {
-    functions.logger.error("❌ Errore creazione post:", error);
-    res
+    console.error("❌ Errore creazione post:", error);
+    return res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
 
-exports.deleteSocialPost = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE") {
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-  }
-
+router.delete("/social-posts", async (req, res) => {
   try {
     await authenticate(req);
     const { postId } = req.query;
@@ -122,7 +109,7 @@ exports.deleteSocialPost = functions.https.onRequest(async (req, res) => {
     await db.collection("SocialPosts").doc(postId).delete();
     return res.json({ message: "✅ Post eliminato." });
   } catch (error) {
-    functions.logger.error("❌ Errore eliminazione post:", error);
+    console.error("❌ Errore eliminazione post:", error);
     return res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
@@ -133,10 +120,7 @@ exports.deleteSocialPost = functions.https.onRequest(async (req, res) => {
 // 📌 CAMPAGNE MARKETING
 // ==============================
 
-exports.getMarketingCampaigns = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-
+router.get("/campaigns", async (req, res) => {
   try {
     await authenticate(req);
     const ip =
@@ -154,7 +138,7 @@ exports.getMarketingCampaigns = functions.https.onRequest(async (req, res) => {
 
     res.json(campaigns);
   } catch (error) {
-    functions.logger.error("❌ Errore recupero campagne marketing:", error);
+    console.error("❌ Errore recupero campagne marketing:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
@@ -162,11 +146,7 @@ exports.getMarketingCampaigns = functions.https.onRequest(async (req, res) => {
 });
 
 // 📌 POST - Email marketing IA
-exports.generateEmailCampaign = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST." });
-  }
-
+router.post("/generate-email", async (req, res) => {
   try {
     await authenticate(req);
     const ip =
@@ -181,7 +161,6 @@ exports.generateEmailCampaign = functions.https.onRequest(async (req, res) => {
     }
 
     const now = new Date();
-
     const subject = `Offerta esclusiva da ${structureName}`;
     const content = `
 Ciao 👋
@@ -205,7 +184,6 @@ Grazie per aver scelto ${structureName}! 💙
       .doc(userId)
       .collection("actions")
       .doc();
-
     await actionRef.set({
       actionId: actionRef.id,
       type: "email_marketing",
@@ -230,9 +208,11 @@ Grazie per aver scelto ${structureName}! 💙
       content,
     });
   } catch (err) {
-    functions.logger.error("❌ Errore generateEmailCampaign:", err);
+    console.error("❌ Errore generateEmailCampaign:", err);
     return res
       .status(err.status || 500)
       .json({ error: err.message || "Errore generazione email IA" });
   }
 });
+
+module.exports = router;

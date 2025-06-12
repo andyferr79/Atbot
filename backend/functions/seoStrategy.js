@@ -1,18 +1,22 @@
 // 📁 functions/seoStrategy.js
-const admin = require("firebase-admin");
+const express = require("express");
+const { admin } = require("./firebase");
 const { sendNotification } = require("./lib/sendNotification");
+const { verifyToken } = require("../middlewares/verifyToken");
+const withRateLimit = require("./middlewares/withRateLimit");
 
 const db = admin.firestore();
+const router = express.Router();
 
-async function seoStrategyHandler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST." });
-  }
+// 🔐 Sicurezza middleware
+router.use(verifyToken);
+router.use(withRateLimit(10, 60 * 1000)); // Max 10 al minuto
 
+// 📌 POST /seo-strategy → Genera strategia SEO personalizzata
+router.post("/", async (req, res) => {
   try {
-    const body = req.body || req.rawBody.toString();
-    const data = typeof body === "string" ? JSON.parse(body) : body;
-    const { userId, websiteUrl, businessType = "hotel" } = data;
+    const { websiteUrl, businessType = "hotel" } = req.body;
+    const userId = req.userId;
 
     if (!userId || !websiteUrl) {
       return res
@@ -66,6 +70,6 @@ async function seoStrategyHandler(req, res) {
     console.error("❌ Errore seoStrategyHandler:", err);
     return res.status(500).json({ error: "Errore generazione strategia SEO" });
   }
-}
+});
 
-module.exports = { seoStrategyHandler };
+module.exports = router;

@@ -1,63 +1,31 @@
-const functions = require("firebase-functions");
+// ✅ reportsExportRoutes.js – Compatibile Express Gen 2
+const express = require("express");
 const admin = require("firebase-admin");
 const json2csv = require("json2csv").parse;
 const excelJS = require("exceljs");
 const PDFDocument = require("pdfkit");
+const { withCors } = require("./middlewares/withCors");
+const { verifyToken } = require("./middlewares/verifyToken");
+const rateLimit = require("express-rate-limit");
 
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
-
+const router = express.Router();
 const db = admin.firestore();
 
-// ✅ Middleware autenticazione riutilizzabile
-async function authenticate(req) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante" };
+// ✅ Middleware rate limit fuori dalla route (creato 1 sola volta)
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 30,
+  message: "Troppe richieste. Riprova più tardi.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// 📌 GET /reports-export?format=pdf|csv|excel&type=...
+router.get("/", withCors, verifyToken, limiter, async (req, res) => {
   try {
-    return await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
-  }
-}
-
-// ✅ Middleware Rate Limiting
-async function checkRateLimit(ip, maxRequests, windowMs) {
-  const rateDocRef = db.collection("RateLimits").doc(ip);
-  const rateDoc = await rateDocRef.get();
-  const now = Date.now();
-
-  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
-
-  if (now - data.firstRequest < windowMs) {
-    if (data.count >= maxRequests) {
-      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
-    }
-    data.count++;
-  } else {
-    data = { count: 1, firstRequest: now };
-  }
-
-  await rateDocRef.set(data);
-}
-
-// 📌 Esporta report in formato PDF, CSV, Excel
-exports.exportReports = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-
-  try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 30, 10 * 60 * 1000);
-
     const { format, type } = req.query;
 
-    if (!["pdf", "csv", "excel"].includes(format?.toLowerCase())) {
+    if (!format || !["pdf", "csv", "excel"].includes(format.toLowerCase())) {
       return res.status(400).json({ error: "❌ Formato non valido." });
     }
 
@@ -65,6 +33,7 @@ exports.exportReports = functions.https.onRequest(async (req, res) => {
       .collection("Reports")
       .where("type", "==", type)
       .get();
+
     if (snapshot.empty) {
       return res.status(404).json({ error: "⚠️ Nessun report trovato." });
     }
@@ -85,7 +54,6 @@ exports.exportReports = functions.https.onRequest(async (req, res) => {
     if (format === "excel") {
       const workbook = new excelJS.Workbook();
       const sheet = workbook.addWorksheet("Report");
-
       sheet.columns = Object.keys(reports[0]).map((key) => ({
         header: key,
         key,
@@ -119,11 +87,13 @@ exports.exportReports = functions.https.onRequest(async (req, res) => {
       return;
     }
 
-    res.status(400).json({ error: "❌ Formato non valido." });
+    return res.status(400).json({ error: "❌ Formato non gestito." });
   } catch (error) {
-    functions.logger.error("❌ Errore esportazione report:", error);
+    console.error("❌ Errore esportazione report:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
+
+module.exports = router;

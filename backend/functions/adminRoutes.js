@@ -1,15 +1,27 @@
+// 📁 functions/adminRoutes.js
+
+const express = require("express");
 const admin = require("firebase-admin");
+const { verifyToken } = require("../middlewares/verifyToken");
+const { withCors } = require("../middlewares/withCors");
+
+const router = express.Router();
 const db = admin.firestore();
 
-/**
- * 1. Entrate mensili (KPI)
- */
-exports.getRevenueKPI = async (req, res) => {
-  if (req.user.role !== "admin") {
+// ✅ Middleware globali
+router.use(withCors);
+router.use(verifyToken);
+
+// ✅ Middleware: solo admin
+const requireAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== "admin") {
     return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
   }
+  next();
+};
 
-  console.log("📊 [getRevenueKPI] Avvio calcolo entrate mensili");
+// 📌 1. Entrate mensili
+router.get("/revenue", requireAdmin, async (req, res) => {
   try {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -26,50 +38,31 @@ exports.getRevenueKPI = async (req, res) => {
       total += doc.data().amount || 0;
     });
 
-    console.log("✅ [getRevenueKPI] Totale entrate:", total);
-    return res.json({ monthlyRevenue: total });
+    console.log("📊 Revenue calcolato:", total);
+    res.json({ monthlyRevenue: total });
   } catch (error) {
-    console.error("❌ Errore getRevenueKPI:", error);
-    return res
-      .status(500)
-      .json({ message: "Errore nel calcolo delle entrate." });
+    console.error("❌ getRevenueKPI:", error);
+    res.status(500).json({ message: "Errore nel calcolo delle entrate." });
   }
-};
+});
 
-/**
- * 2. Abbonamenti attivi (KPI)
- */
-exports.getActiveSubscriptions = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
-  }
-
-  console.log("📦 [getActiveSubscriptions] Conteggio abbonamenti attivi");
+// 📌 2. Abbonamenti attivi
+router.get("/subscriptions", requireAdmin, async (req, res) => {
   try {
     const usersSnap = await db
       .collection("users")
       .where("subscriptionStatus", "==", "active")
       .get();
 
-    console.log("✅ [getActiveSubscriptions] Attivi:", usersSnap.size);
-    return res.json({ activeSubscriptions: usersSnap.size });
+    res.json({ activeSubscriptions: usersSnap.size });
   } catch (error) {
-    console.error("❌ Errore getActiveSubscriptions:", error);
-    return res
-      .status(500)
-      .json({ message: "Errore nel recupero abbonamenti." });
+    console.error("❌ getActiveSubscriptions:", error);
+    res.status(500).json({ message: "Errore nel recupero abbonamenti." });
   }
-};
+});
 
-/**
- * 3. Tasso di abbandono (KPI)
- */
-exports.getChurnRate = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
-  }
-
-  console.log("📉 [getChurnRate] Calcolo utenti disdetti");
+// 📌 3. Tasso abbandono (churn)
+router.get("/churn", requireAdmin, async (req, res) => {
   try {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -82,149 +75,83 @@ exports.getChurnRate = async (req, res) => {
       .where("subscriptionEnd", "<=", lastDay)
       .get();
 
-    console.log("✅ [getChurnRate] Utenti disdetti:", snapshot.size);
-    return res.json({ churnedUsers: snapshot.size });
+    res.json({ churnedUsers: snapshot.size });
   } catch (error) {
-    console.error("❌ Errore getChurnRate:", error);
-    return res.status(500).json({ message: "Errore nel calcolo churn rate." });
+    console.error("❌ getChurnRate:", error);
+    res.status(500).json({ message: "Errore nel calcolo churn rate." });
   }
-};
+});
 
-/**
- * 4. Stato sistema (KPI dummy)
- */
-exports.getSystemStatus = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
-  }
+// 📌 4. Stato sistema
+router.get("/status", requireAdmin, (req, res) => {
+  res.json({
+    apiUptime: "99.98%",
+    lastBackup: "Oggi alle 02:30",
+    systemLoad: "Basso",
+    status: "✅ Tutto operativo",
+  });
+});
 
-  console.log("🔧 [getSystemStatus] Recupero stato sistema");
+// 📌 5. Info utente autenticato
+router.get("/me", async (req, res) => {
   try {
-    return res.json({
-      apiUptime: "99.98%",
-      lastBackup: "Oggi alle 02:30",
-      systemLoad: "Basso",
-      status: "✅ Tutto operativo",
-    });
-  } catch (error) {
-    console.error("❌ Errore getSystemStatus:", error);
-    return res.status(500).json({ message: "Errore stato sistema." });
-  }
-};
-
-/**
- * 5. Informazioni utente (ruolo/piano/email)
- */
-exports.getUserInfo = async (req, res) => {
-  console.log("🔐 [getUserInfo] Recupero dati utente da req.user");
-  try {
-    const { uid } = req.user;
-    console.log("✅ [getUserInfo] UID verificato:", uid);
-
+    const uid = req.userId;
     const doc = await db.collection("users").doc(uid).get();
     if (!doc.exists) {
-      console.warn("⚠️ [getUserInfo] Utente non trovato:", uid);
       return res.status(404).json({ message: "Utente non trovato" });
     }
 
     const data = doc.data();
-    console.log("✅ [getUserInfo] Ruolo:", data.role, " Piano:", data.plan);
-    return res.status(200).json({
+    res.status(200).json({
       uid,
       email: data.email,
       role: data.role,
       plan: data.plan,
     });
   } catch (error) {
-    console.error("❌ Errore getUserInfo:", error);
-    return res.status(500).json({ message: "Errore durante getUserInfo." });
+    console.error("❌ getUserInfo:", error);
+    res.status(500).json({ message: "Errore durante getUserInfo." });
   }
-};
+});
 
-/**
- * 6. Statistiche uso IA (dummy)
- */
-exports.getAIUsageStats = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
-  }
+// 📌 6. Statistiche utilizzo IA
+router.get("/ai-usage", requireAdmin, (req, res) => {
+  res.json({
+    totalRequests: 835,
+    avgResponseTime: "1.2s",
+    topFeature: "Auto Risposte Clienti",
+  });
+});
 
-  console.log("🤖 [getAIUsageStats] Recupero dati IA");
-  try {
-    return res.json({
-      totalRequests: 835,
-      avgResponseTime: "1.2s",
-      topFeature: "Auto Risposte Clienti",
-    });
-  } catch (error) {
-    console.error("❌ Errore getAIUsageStats:", error);
-    return res.status(500).json({ message: "Errore statistiche AI." });
-  }
-};
+// 📌 7. Log di sistema
+router.get("/logs", requireAdmin, (req, res) => {
+  res.json([
+    {
+      type: "INFO",
+      message: "Backup completato con successo.",
+      timestamp: new Date(),
+    },
+    {
+      type: "ERROR",
+      message: "Tentativo di login fallito da IP 192.168.1.10",
+      timestamp: new Date(),
+    },
+    {
+      type: "WARNING",
+      message: "Uptime API sotto al 99.9% ieri.",
+      timestamp: new Date(),
+    },
+  ]);
+});
 
-/**
- * 7. Logs di sistema (dummy)
- */
-exports.getSystemLogs = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
-  }
+// 📌 8. Stato backup
+router.get("/backup-status", requireAdmin, (req, res) => {
+  res.json({ status: "Ultimo backup: oggi alle 02:30" });
+});
 
-  console.log("📋 [getSystemLogs] Invio log fittizi");
-  try {
-    return res.json([
-      {
-        type: "INFO",
-        message: "Backup completato con successo.",
-        timestamp: new Date(),
-      },
-      {
-        type: "ERROR",
-        message: "Tentativo di login fallito da IP 192.168.1.10",
-        timestamp: new Date(),
-      },
-      {
-        type: "WARNING",
-        message: "Uptime API sotto al 99.9% ieri.",
-        timestamp: new Date(),
-      },
-    ]);
-  } catch (error) {
-    console.error("❌ Errore getSystemLogs:", error);
-    return res.status(500).json({ message: "Errore logs sistema." });
-  }
-};
+// 📌 9. Avvia backup manuale
+router.post("/backup", requireAdmin, (req, res) => {
+  res.status(200).json({ message: "Backup manuale avviato." });
+});
 
-/**
- * 8. Stato backup (dummy)
- */
-exports.getBackupStatus = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
-  }
-
-  console.log("💾 [getBackupStatus] Stato backup");
-  try {
-    return res.json({ status: "Ultimo backup: oggi alle 02:30" });
-  } catch (error) {
-    console.error("❌ Errore getBackupStatus:", error);
-    return res.status(500).json({ message: "Errore stato backup." });
-  }
-};
-
-/**
- * 9. Avvia backup manuale (dummy)
- */
-exports.startBackup = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
-  }
-
-  console.log("🚀 [startBackup] Avvio backup manuale");
-  try {
-    return res.status(200).json({ message: "Backup manuale avviato." });
-  } catch (error) {
-    console.error("❌ Errore startBackup:", error);
-    return res.status(500).json({ message: "Errore avvio backup." });
-  }
-};
+module.exports = router;

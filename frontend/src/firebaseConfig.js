@@ -3,9 +3,12 @@ import { initializeApp } from "firebase/app";
 import {
   getAuth,
   GoogleAuthProvider,
-  connectAuthEmulator,
+  // connectAuthEmulator,  // ❌ Disattivato
 } from "firebase/auth";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import {
+  getFirestore,
+  // connectFirestoreEmulator,  // ❌ Disattivato
+} from "firebase/firestore";
 import { getPerformance } from "firebase/performance";
 
 const firebaseConfig = {
@@ -25,10 +28,10 @@ const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 const perf = getPerformance(app);
 
-// Collega gli emulatori SOLO in sviluppo
-if (process.env.NODE_ENV !== "production" && !window.Cypress) {
-  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-  connectFirestoreEmulator(db, "127.0.0.1", 8080);
-}
+// ✅ Emulatori disattivati per usare Firebase reale
+// if (process.env.NODE_ENV !== "production" && !window.Cypress) {
+//   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+//   connectFirestoreEmulator(db, "127.0.0.1", 8080);
+// }
 
 export { app, auth, db, googleProvider, perf };

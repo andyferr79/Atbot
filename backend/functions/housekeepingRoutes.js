@@ -1,4 +1,5 @@
-const functions = require("firebase-functions");
+const express = require("express");
+const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 
 if (!admin.apps.length) {
@@ -6,20 +7,23 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
+const router = express.Router();
+router.use(express.json());
 
 // ✅ Middleware Autenticazione
-async function authenticate(req) {
+async function authenticate(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante" };
+  if (!token) return res.status(403).json({ error: "❌ Token mancante" });
   try {
-    return await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
+    req.user = await admin.auth().verifyIdToken(token);
+    next();
+  } catch (err) {
+    console.error("❌ Token non valido:", err);
+    res.status(401).json({ error: "❌ Token non valido" });
   }
 }
 
-// ✅ Middleware Rate Limiting avanzato
+// ✅ Middleware Rate Limiting
 async function checkRateLimit(ip, maxRequests, windowMs) {
   const rateDocRef = db.collection("RateLimits").doc(ip);
   const rateDoc = await rateDocRef.get();
@@ -39,22 +43,16 @@ async function checkRateLimit(ip, maxRequests, windowMs) {
   await rateDocRef.set(data);
 }
 
-// 📌 GET - Ottenere stato delle camere
-exports.getHousekeepingStatus = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "❌ Usa GET." });
-  }
-
+// ✅ GET - Stato camere
+router.get("/status", authenticate, async (req, res) => {
   try {
-    await authenticate(req);
     const ip =
       req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
+      req.socket?.remoteAddress ||
       "unknown_ip";
     await checkRateLimit(ip, 50, 10 * 60 * 1000);
 
     const roomsSnapshot = await db.collection("Rooms").get();
-
     let totalRooms = 0,
       occupiedRooms = 0,
       availableRooms = 0,
@@ -64,7 +62,6 @@ exports.getHousekeepingStatus = functions.https.onRequest(async (req, res) => {
     roomsSnapshot.forEach((doc) => {
       const room = doc.data();
       totalRooms++;
-
       if (room.status === "occupied") occupiedRooms++;
       if (room.status === "available") availableRooms++;
       if (room.status === "toClean") roomsToClean++;
@@ -77,7 +74,7 @@ exports.getHousekeepingStatus = functions.https.onRequest(async (req, res) => {
       });
     });
 
-    return res.json({
+    res.json({
       totalRooms,
       occupiedRooms,
       availableRooms,
@@ -85,35 +82,29 @@ exports.getHousekeepingStatus = functions.https.onRequest(async (req, res) => {
       roomStatus,
     });
   } catch (error) {
-    functions.logger.error("❌ Errore recupero camere:", error);
-    return res
+    console.error("❌ Errore recupero camere:", error);
+    res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 POST - Aggiungere nuova camera
-exports.addRoom = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST." });
-  }
-
+// ✅ POST - Aggiungere camera
+router.post("/", authenticate, async (req, res) => {
   try {
-    await authenticate(req);
     const ip =
       req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
+      req.socket?.remoteAddress ||
       "unknown_ip";
     await checkRateLimit(ip, 20, 10 * 60 * 1000);
 
     const { roomNumber, status } = req.body;
-
     if (!roomNumber || !status) {
       return res.status(400).json({ error: "❌ Campi obbligatori mancanti." });
     }
 
     const newRoom = {
-      roomNumber: req.body.roomNumber,
+      roomNumber,
       status,
       lastCleaned: new Date(),
       createdAt: new Date(),
@@ -122,24 +113,19 @@ exports.addRoom = functions.https.onRequest(async (req, res) => {
     const docRef = await db.collection("Rooms").add(newRoom);
     res.json({ id: docRef.id, ...newRoom });
   } catch (error) {
-    functions.logger.error("❌ Errore creazione camera:", error);
-    return res
+    console.error("❌ Errore creazione camera:", error);
+    res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 PUT - Aggiornare lo stato di una camera
-exports.updateRoomStatus = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT") {
-    return res.status(405).json({ error: "❌ Usa PUT." });
-  }
-
+// ✅ PUT - Aggiorna stato camera
+router.put("/", authenticate, async (req, res) => {
   try {
-    await authenticate(req);
     const ip =
       req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
+      req.socket?.remoteAddress ||
       "unknown_ip";
     await checkRateLimit(ip, 50, 10 * 60 * 1000);
 
@@ -152,26 +138,21 @@ exports.updateRoomStatus = functions.https.onRequest(async (req, res) => {
     if (lastCleaned) updates.lastCleaned = new Date(lastCleaned);
 
     await db.collection("Rooms").doc(roomId).update(updates);
-    return res.json({ message: "✅ Stato camera aggiornato." });
+    res.json({ message: "✅ Stato camera aggiornato." });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento camera:", error);
-    return res
+    console.error("❌ Errore aggiornamento camera:", error);
+    res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 DELETE - Eliminare camera (rimuovere dalla gestione housekeeping)
-exports.deleteRoom = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE") {
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-  }
-
+// ✅ DELETE - Elimina camera
+router.delete("/", authenticate, async (req, res) => {
   try {
-    await authenticate(req);
     const ip =
       req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
+      req.socket?.remoteAddress ||
       "unknown_ip";
     await checkRateLimit(ip, 20, 10 * 60 * 1000);
 
@@ -186,11 +167,13 @@ exports.deleteRoom = functions.https.onRequest(async (req, res) => {
     }
 
     await db.collection("Rooms").doc(roomId).delete();
-    return res.json({ message: "✅ Camera eliminata." });
+    res.json({ message: "✅ Camera eliminata." });
   } catch (error) {
-    functions.logger.error("❌ Errore eliminazione camera:", error);
-    return res
+    console.error("❌ Errore eliminazione camera:", error);
+    res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
+
+module.exports = router;

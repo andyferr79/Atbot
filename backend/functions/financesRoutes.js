@@ -1,58 +1,19 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+// 📁 functions/financesRoutes.js (Versione aggiornata Express Router)
+const express = require("express");
+const { admin } = require("./firebase");
+const { verifyToken } = require("./middlewares/verifyToken");
+const withRateLimit = require("./middlewares/withRateLimit");
 
 const db = admin.firestore();
+const router = express.Router();
 
-// ✅ Middleware Autenticazione
-async function authenticate(req) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante" };
+// ✅ Middleware
+router.use(verifyToken);
+router.use(withRateLimit(50, 10 * 60 * 1000)); // 50 richieste ogni 10 minuti
+
+// 📌 GET /finances → Recupera dati finanziari
+router.get("/", async (req, res) => {
   try {
-    return await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
-  }
-}
-
-// ✅ Middleware Rate Limiting
-async function checkRateLimit(ip, maxRequests, windowMs) {
-  const rateDocRef = db.collection("RateLimits").doc(ip);
-  const rateDoc = await rateDocRef.get();
-  const now = Date.now();
-
-  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
-
-  if (now - data.firstRequest < windowMs) {
-    if (data.count >= maxRequests) {
-      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
-    }
-    data.count++;
-  } else {
-    data = { count: 1, firstRequest: now };
-  }
-
-  await rateDocRef.set(data);
-}
-
-// 📌 GET - Ottenere dati finanziari
-exports.getFinances = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "❌ Usa GET." });
-  }
-
-  try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
     const snapshot = await db.collection("FinancialReports").get();
     let totalRevenue = 0,
       receivedPayments = 0,
@@ -79,127 +40,77 @@ exports.getFinances = functions.https.onRequest(async (req, res) => {
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .slice(0, 5);
 
-    return res.json({
+    res.json({
       totalRevenue,
       receivedPayments,
       pendingPayments,
       recentTransactions,
     });
   } catch (error) {
-    functions.logger.error("❌ Errore recupero dati finanziari:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore recupero dati finanziari:", error);
+    res.status(500).json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 POST - Aggiungere nuova transazione finanziaria
-exports.addFinancialTransaction = functions.https.onRequest(
-  async (req, res) => {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "❌ Usa POST." });
-    }
+// 📌 POST /finances → Aggiungi transazione
+router.post("/", async (req, res) => {
+  try {
+    const { amount, status, customer, date } = req.body;
 
-    try {
-      await authenticate(req);
-      const ip =
-        req.headers["x-forwarded-for"] ||
-        req.connection?.remoteAddress ||
-        "unknown_ip";
-      await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
-      const { amount, status, customer, date } = req.body;
-
-      if (!amount || isNaN(amount) || amount <= 0 || !status || !customer) {
-        return res
-          .status(400)
-          .json({ error: "❌ Campi obbligatori mancanti o invalidi." });
-      }
-
-      const newTransaction = {
-        amount: parseFloat(amount),
-        status,
-        customer,
-        date: date ? new Date(date) : new Date(),
-      };
-
-      const docRef = await db
-        .collection("FinancialReports")
-        .add(newTransaction);
-      return res.status(201).json({ id: docRef.id, ...newTransaction });
-    } catch (error) {
-      functions.logger.error("❌ Errore aggiunta transazione:", error);
+    if (!amount || isNaN(amount) || amount <= 0 || !status || !customer) {
       return res
-        .status(error.status || 500)
-        .json({ error: error.message || "Errore interno" });
+        .status(400)
+        .json({ error: "❌ Campi obbligatori mancanti o invalidi." });
     }
+
+    const newTransaction = {
+      amount: parseFloat(amount),
+      status,
+      customer,
+      date: date ? new Date(date) : new Date(),
+    };
+
+    const docRef = await db.collection("FinancialReports").add(newTransaction);
+    res.status(201).json({ id: docRef.id, ...newTransaction });
+  } catch (error) {
+    console.error("❌ Errore aggiunta transazione:", error);
+    res.status(500).json({ error: error.message || "Errore interno" });
   }
-);
+});
 
-// 📌 PUT - Aggiornare transazione finanziaria
-exports.updateFinancialTransaction = functions.https.onRequest(
-  async (req, res) => {
-    if (req.method !== "PUT") {
-      return res.status(405).json({ error: "❌ Usa PUT." });
-    }
-
-    try {
-      await authenticate(req);
-      const ip =
-        req.headers["x-forwarded-for"] ||
-        req.connection?.remoteAddress ||
-        "unknown_ip";
-      await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
-      const { transactionId, updates } = req.body;
-      if (!transactionId || !updates) {
-        return res
-          .status(400)
-          .json({ error: "❌ transactionId e updates richiesti." });
-      }
-
-      if (updates.date) updates.date = new Date(updates.date);
-      await db
-        .collection("FinancialReports")
-        .doc(transactionId)
-        .update(updates);
-      return res.json({ message: "✅ Transazione aggiornata." });
-    } catch (error) {
-      functions.logger.error("❌ Errore aggiornamento transazione:", error);
+// 📌 PUT /finances → Aggiorna transazione
+router.put("/", async (req, res) => {
+  try {
+    const { transactionId, updates } = req.body;
+    if (!transactionId || !updates) {
       return res
-        .status(error.status || 500)
-        .json({ error: error.message || "Errore interno" });
+        .status(400)
+        .json({ error: "❌ transactionId e updates richiesti." });
     }
+
+    if (updates.date) updates.date = new Date(updates.date);
+    await db.collection("FinancialReports").doc(transactionId).update(updates);
+    res.json({ message: "✅ Transazione aggiornata." });
+  } catch (error) {
+    console.error("❌ Errore aggiornamento transazione:", error);
+    res.status(500).json({ error: error.message || "Errore interno" });
   }
-);
+});
 
-// 📌 DELETE - Eliminare transazione finanziaria
-exports.deleteFinancialTransaction = functions.https.onRequest(
-  async (req, res) => {
-    if (req.method !== "DELETE") {
-      return res.status(405).json({ error: "❌ Usa DELETE." });
+// 📌 DELETE /finances → Elimina transazione
+router.delete("/", async (req, res) => {
+  try {
+    const { transactionId } = req.query;
+    if (!transactionId) {
+      return res.status(400).json({ error: "❌ transactionId richiesto." });
     }
 
-    try {
-      await authenticate(req);
-      const ip =
-        req.headers["x-forwarded-for"] ||
-        req.connection?.remoteAddress ||
-        "unknown_ip";
-      await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
-      const { transactionId } = req.query;
-      if (!transactionId) {
-        return res.status(400).json({ error: "❌ transactionId richiesto." });
-      }
-
-      await db.collection("FinancialReports").doc(transactionId).delete();
-      return res.json({ message: "✅ Transazione eliminata." });
-    } catch (error) {
-      functions.logger.error("❌ Errore eliminazione transazione:", error);
-      return res
-        .status(error.status || 500)
-        .json({ error: error.message || "Errore interno" });
-    }
+    await db.collection("FinancialReports").doc(transactionId).delete();
+    res.json({ message: "✅ Transazione eliminata." });
+  } catch (error) {
+    console.error("❌ Errore eliminazione transazione:", error);
+    res.status(500).json({ error: error.message || "Errore interno" });
   }
-);
+});
+
+module.exports = router;

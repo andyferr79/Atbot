@@ -1,5 +1,6 @@
 const axios = require("axios");
 const admin = require("firebase-admin");
+const rateLimit = require("express-rate-limit");
 
 const FIREBASE_AUTH_URL =
   "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword";
@@ -11,6 +12,17 @@ let API_KEY = "";
 exports.setApiKey = (key) => {
   API_KEY = key;
 };
+
+// ✅ Middleware rate limiter login (5 richieste / 5 minuti per IP)
+exports.loginLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minuti
+  max: 5,
+  message: {
+    error: "❌ Troppe richieste di login. Riprova tra qualche minuto.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;

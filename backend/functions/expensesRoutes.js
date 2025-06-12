@@ -1,59 +1,23 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+const express = require("express");
+const { admin } = require("./firebase");
+const { verifyToken } = require("./middlewares/verifyToken");
+const withRateLimit = require("./middlewares/withRateLimit");
 
 const db = admin.firestore();
+const router = express.Router();
 
-// ✅ Middleware Autenticazione
-async function authenticate(req) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante" };
+// 🔐 Middleware globali
+router.use(verifyToken);
+router.use(withRateLimit(50, 10 * 60 * 1000)); // 50 richieste ogni 10 minuti
+
+// 📌 GET /expenses → Recupera spese utente
+router.get("/", async (req, res) => {
   try {
-    return await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
-  }
-}
+    const snapshot = await db
+      .collection("Expenses")
+      .where("userId", "==", req.userId)
+      .get();
 
-// ✅ Middleware Rate Limiting
-async function checkRateLimit(ip, maxRequests, windowMs) {
-  const rateDocRef = db.collection("RateLimits").doc(ip);
-  const rateDoc = await rateDocRef.get();
-  const now = Date.now();
-
-  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
-
-  if (now - data.firstRequest < windowMs) {
-    if (data.count >= maxRequests) {
-      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
-    }
-    data.count++;
-  } else {
-    data = { count: 1, firstRequest: now };
-  }
-
-  await rateDocRef.set(data);
-}
-
-// 📌 GET - Ottenere tutte le spese
-exports.getExpenses = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "❌ Usa GET." });
-  }
-
-  try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
-    const snapshot = await db.collection("Expenses").get();
     let totalExpenses = 0;
     const expenses = snapshot.docs.map((doc) => {
       const data = doc.data();
@@ -67,29 +31,16 @@ exports.getExpenses = functions.https.onRequest(async (req, res) => {
       };
     });
 
-    return res.json({ expenses, totalExpenses });
+    res.json({ expenses, totalExpenses });
   } catch (error) {
-    functions.logger.error("❌ Errore recupero spese:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore recupero spese:", error);
+    res.status(500).json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 POST - Aggiungere nuova spesa
-exports.addExpense = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST." });
-  }
-
+// 📌 POST /expenses → Aggiungi spesa
+router.post("/", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
     const { category, amount, description, date } = req.body;
 
     if (!amount || isNaN(amount) || amount <= 0) {
@@ -99,79 +50,62 @@ exports.addExpense = functions.https.onRequest(async (req, res) => {
     }
 
     const newExpense = {
+      userId: req.userId,
       category: category || "Varie",
       amount: parseFloat(amount),
       description: description || "",
       date: date ? new Date(date) : new Date(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
     const docRef = await db.collection("Expenses").add(newExpense);
-    return res.status(201).json({ id: docRef.id, ...newExpense });
+    res.status(201).json({ id: docRef.id, ...newExpense });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiunta spesa:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore aggiunta spesa:", error);
+    res.status(500).json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 PUT - Aggiornare spesa
-exports.updateExpense = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT") {
-    return res.status(405).json({ error: "❌ Usa PUT." });
-  }
-
+// 📌 PATCH /expenses/:expenseId → Aggiorna spesa
+router.patch("/:expenseId", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
+    const { expenseId } = req.params;
+    const docRef = db.collection("Expenses").doc(expenseId);
+    const doc = await docRef.get();
 
-    const { expenseId, updates } = req.body;
-    if (!expenseId || !updates) {
-      return res
-        .status(400)
-        .json({ error: "❌ expenseId e aggiornamenti richiesti." });
+    if (!doc.exists || doc.data().userId !== req.userId) {
+      return res.status(404).json({ error: "❌ Spesa non trovata." });
     }
 
+    const updates = { ...req.body };
     if (updates.date) updates.date = new Date(updates.date);
-    await db.collection("Expenses").doc(expenseId).update(updates);
-    return res.json({ message: "✅ Spesa aggiornata." });
+    updates.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+
+    await docRef.update(updates);
+    res.json({ message: "✅ Spesa aggiornata." });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento spesa:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore aggiornamento spesa:", error);
+    res.status(500).json({ error: error.message || "Errore interno" });
   }
 });
 
-// 📌 DELETE - Eliminare spesa
-exports.deleteExpense = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE") {
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-  }
-
+// 📌 DELETE /expenses/:expenseId → Elimina spesa
+router.delete("/:expenseId", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
+    const { expenseId } = req.params;
+    const docRef = db.collection("Expenses").doc(expenseId);
+    const doc = await docRef.get();
 
-    const { expenseId } = req.query;
-    if (!expenseId) {
-      return res.status(400).json({ error: "❌ expenseId richiesto." });
+    if (!doc.exists || doc.data().userId !== req.userId) {
+      return res.status(404).json({ error: "❌ Spesa non trovata." });
     }
 
-    await db.collection("Expenses").doc(expenseId).delete();
-    return res.json({ message: "✅ Spesa eliminata." });
+    await docRef.delete();
+    res.json({ message: "✅ Spesa eliminata." });
   } catch (error) {
-    functions.logger.error("❌ Errore eliminazione spesa:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore eliminazione spesa:", error);
+    res.status(500).json({ error: error.message || "Errore interno" });
   }
 });
+
+module.exports = router;

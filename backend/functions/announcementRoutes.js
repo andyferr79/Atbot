@@ -1,41 +1,46 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+// 📁 functions/announcementRoutes.js
 
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+const express = require("express");
+const router = express.Router();
+const { admin } = require("../firebase");
 
 const db = admin.firestore();
 
-// ✅ Middleware autenticazione
-async function authenticate(req) {
+// 🔐 Middleware autenticazione
+async function verifyToken(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    throw { status: 403, message: "❌ Token mancante" };
-  }
+  if (!token) return res.status(403).json({ message: "❌ Token mancante" });
+
   try {
-    return await admin.auth().verifyIdToken(token);
+    req.user = await admin.auth().verifyIdToken(token);
+    next();
   } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
+    console.error("❌ Token non valido:", error);
+    res.status(401).json({ message: "❌ Token non valido" });
   }
 }
 
-/**
- * 🔹 GET /getOfficialAnnouncements
- */
-const getOfficialAnnouncements = async (req, res) => {
-  try {
-    const user = await authenticate(req);
-    const userId = user.uid;
+// 🔒 Middleware admin
+async function checkAdminRole(req, res, next) {
+  const userDoc = await db.collection("users").doc(req.user.uid).get();
+  if (userDoc.exists && userDoc.data().role === "admin") {
+    req.userDoc = userDoc.data();
+    next();
+  } else {
+    res.status(403).json({ message: "Accesso non autorizzato" });
+  }
+}
 
+// 🔹 GET /announcements → visibili per piano
+router.get("/", verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.uid;
     const userDoc = await db.collection("users").doc(userId).get();
-    if (!userDoc.exists) {
-      return res.status(404).json({ message: "Utente non trovato." });
-    }
+    if (!userDoc.exists)
+      return res.status(404).json({ message: "Utente non trovato" });
 
     const userPlan = userDoc.data().plan || "base";
-    const announcementsSnapshot = await db
+    const snapshot = await db
       .collection("official_announcements")
       .orderBy("pinned", "desc")
       .orderBy("date", "desc")
@@ -43,7 +48,7 @@ const getOfficialAnnouncements = async (req, res) => {
 
     const results = [];
 
-    for (const doc of announcementsSnapshot.docs) {
+    for (const doc of snapshot.docs) {
       const data = doc.data();
       const destinatari = data.destinatari || ["all"];
 
@@ -72,153 +77,97 @@ const getOfficialAnnouncements = async (req, res) => {
       }
     }
 
-    return res.status(200).json(results);
-  } catch (error) {
-    functions.logger.error("❌ Errore getOfficialAnnouncements:", error);
-    const status = error.status || 500;
-    return res
-      .status(status)
-      .json({ message: error.message || "Errore server" });
+    res.status(200).json(results);
+  } catch (err) {
+    console.error("❌ Errore getOfficialAnnouncements:", err);
+    res.status(500).json({ message: "Errore server" });
   }
-};
+});
 
-/**
- * 🔹 POST /createOfficialAnnouncement
- */
-const createOfficialAnnouncement = async (req, res) => {
+// 🔹 POST /announcements → creazione (solo admin)
+router.post("/", verifyToken, checkAdminRole, async (req, res) => {
+  const { title, message, pinned = false, destinatari = ["all"] } = req.body;
+  if (!title || !message)
+    return res.status(400).json({ message: "Titolo e messaggio obbligatori." });
+
   try {
-    const user = await authenticate(req);
-    const userId = user.uid;
-
-    const userDoc = await db.collection("users").doc(userId).get();
-    const userRole = userDoc.data()?.role || "base";
-
-    if (userRole !== "admin") {
-      return res.status(403).json({ message: "Accesso non autorizzato" });
-    }
-
-    const { title, message, pinned = false, destinatari = ["all"] } = req.body;
-
-    if (!title || !message) {
-      return res
-        .status(400)
-        .json({ message: "Titolo e messaggio sono obbligatori." });
-    }
-
     await db.collection("official_announcements").add({
       title,
       message,
       date: new Date(),
       pinned,
       destinatari,
-      author: userDoc.data()?.email || "admin",
+      author: req.userDoc.email || "admin",
     });
 
-    return res.status(201).json({ message: "Annuncio creato con successo." });
-  } catch (error) {
-    functions.logger.error("❌ Errore createOfficialAnnouncement:", error);
-    const status = error.status || 500;
-    return res
-      .status(status)
-      .json({ message: error.message || "Errore server" });
+    res.status(201).json({ message: "✅ Annuncio creato con successo." });
+  } catch (err) {
+    console.error("❌ Errore createOfficialAnnouncement:", err);
+    res.status(500).json({ message: "Errore server" });
   }
-};
+});
 
-/**
- * 🔹 POST /markAnnouncementAsRead
- */
-const markAnnouncementAsRead = async (req, res) => {
+// 🔹 POST /announcements/mark-read
+router.post("/mark-read", verifyToken, async (req, res) => {
+  const { announcementId } = req.body;
+  if (!announcementId)
+    return res.status(400).json({ message: "ID annuncio mancante" });
+
   try {
-    const user = await authenticate(req);
-    const userId = user.uid;
-    const { announcementId } = req.body;
-
-    if (!announcementId) {
-      return res.status(400).json({ message: "ID annuncio mancante." });
-    }
-
     await db
       .collection("users")
-      .doc(userId)
+      .doc(req.user.uid)
       .collection("announcements_status")
       .doc(announcementId)
       .set({ read: true, readAt: new Date() }, { merge: true });
 
-    return res.status(200).json({ message: "Annuncio segnato come letto." });
-  } catch (error) {
-    functions.logger.error("❌ Errore markAnnouncementAsRead:", error);
-    const status = error.status || 500;
-    return res
-      .status(status)
-      .json({ message: error.message || "Errore interno" });
+    res.status(200).json({ message: "✅ Annuncio segnato come letto." });
+  } catch (err) {
+    console.error("❌ Errore markAnnouncementAsRead:", err);
+    res.status(500).json({ message: "Errore interno" });
   }
-};
+});
 
-/**
- * 🔹 POST /archiveAnnouncement
- */
-const archiveAnnouncement = async (req, res) => {
+// 🔹 POST /announcements/archive
+router.post("/archive", verifyToken, async (req, res) => {
+  const { announcementId } = req.body;
+  if (!announcementId)
+    return res.status(400).json({ message: "ID annuncio mancante" });
+
   try {
-    const user = await authenticate(req);
-    const userId = user.uid;
-    const { announcementId } = req.body;
-
-    if (!announcementId) {
-      return res.status(400).json({ message: "ID annuncio mancante." });
-    }
-
     await db
       .collection("users")
-      .doc(userId)
+      .doc(req.user.uid)
       .collection("announcements_status")
       .doc(announcementId)
       .set({ archived: true, archivedAt: new Date() }, { merge: true });
 
-    return res.status(200).json({ message: "Annuncio archiviato." });
-  } catch (error) {
-    functions.logger.error("❌ Errore archiveAnnouncement:", error);
-    const status = error.status || 500;
-    return res
-      .status(status)
-      .json({ message: error.message || "Errore interno" });
+    res.status(200).json({ message: "✅ Annuncio archiviato." });
+  } catch (err) {
+    console.error("❌ Errore archiveAnnouncement:", err);
+    res.status(500).json({ message: "Errore interno" });
   }
-};
+});
 
-/**
- * 🔹 POST /deleteAnnouncement
- */
-const deleteAnnouncement = async (req, res) => {
+// 🔹 POST /announcements/delete
+router.post("/delete", verifyToken, async (req, res) => {
+  const { announcementId } = req.body;
+  if (!announcementId)
+    return res.status(400).json({ message: "ID annuncio mancante" });
+
   try {
-    const user = await authenticate(req);
-    const userId = user.uid;
-    const { announcementId } = req.body;
-
-    if (!announcementId) {
-      return res.status(400).json({ message: "ID annuncio mancante." });
-    }
-
     await db
       .collection("users")
-      .doc(userId)
+      .doc(req.user.uid)
       .collection("announcements_status")
       .doc(announcementId)
       .set({ deleted: true, deletedAt: new Date() }, { merge: true });
 
-    return res.status(200).json({ message: "Annuncio eliminato." });
-  } catch (error) {
-    functions.logger.error("❌ Errore deleteAnnouncement:", error);
-    const status = error.status || 500;
-    return res
-      .status(status)
-      .json({ message: error.message || "Errore interno" });
+    res.status(200).json({ message: "✅ Annuncio eliminato." });
+  } catch (err) {
+    console.error("❌ Errore deleteAnnouncement:", err);
+    res.status(500).json({ message: "Errore interno" });
   }
-};
+});
 
-// ✅ Export di tutte le API
-module.exports = {
-  getOfficialAnnouncements,
-  createOfficialAnnouncement,
-  markAnnouncementAsRead,
-  archiveAnnouncement,
-  deleteAnnouncement,
-};
+module.exports = router;

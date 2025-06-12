@@ -1,81 +1,40 @@
-const admin = require("firebase-admin");
-const functions = require("firebase-functions");
-
-// 🔐 Inizializza Firebase Admin se non già fatto
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+// 📁 functions/roomsRoutes.js
+const express = require("express");
+const { admin } = require("./firebase");
+const { verifyToken } = require("../middlewares/verifyToken");
+const withRateLimit = require("./middlewares/withRateLimit");
 
 const db = admin.firestore();
+const router = express.Router();
 
-// ✅ Middleware autenticazione
-async function authenticate(req) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante" };
+// 🔐 Middleware
+router.use(verifyToken);
+router.use(withRateLimit(100, 10 * 60 * 1000)); // 100 richieste ogni 10 minuti
+
+// 📌 GET /rooms → Recupera tutte le camere
+router.get("/", async (req, res) => {
   try {
-    await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
-  }
-}
+    const snapshot = await db
+      .collection("Rooms")
+      .where("userId", "==", req.userId)
+      .get();
 
-// ✅ Middleware Rate Limiting
-async function checkRateLimit(ip, maxRequests, windowMs) {
-  const rateDocRef = db.collection("RateLimits").doc(ip);
-  const rateDoc = await rateDocRef.get();
-  const now = Date.now();
-
-  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
-
-  if (now - data.firstRequest < windowMs) {
-    if (data.count >= maxRequests) {
-      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
-    }
-    data.count++;
-  } else {
-    data = { count: 1, firstRequest: now };
-  }
-
-  await rateDocRef.set(data);
-}
-
-// 📌 GET - Recupera tutte le camere
-exports.getRooms = async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-
-  try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
-    const roomsSnapshot = await db.collection("Rooms").get();
-    const rooms = roomsSnapshot.docs.map((doc) => ({
+    const rooms = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate().toISOString() || "N/A",
+      createdAt: doc.data().createdAt?.toDate().toISOString() || null,
     }));
 
-    res.json({ totalRooms: rooms.length, rooms });
+    res.json({ rooms });
   } catch (error) {
-    functions.logger.error("❌ Errore recupero camere:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore getRooms:", error);
+    res.status(500).json({ error: "Errore nel recupero delle camere." });
   }
-};
+});
 
-// 📌 POST - Crea nuova camera
-exports.createRoom = async (req, res) => {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "❌ Usa POST." });
-
+// 📌 POST /rooms → Crea nuova camera
+router.post("/", async (req, res) => {
   try {
-    await authenticate(req);
     const { name, type, price, status } = req.body;
     if (!name || !type || !price || !status) {
       return res.status(400).json({ error: "❌ Tutti i campi obbligatori." });
@@ -86,66 +45,64 @@ exports.createRoom = async (req, res) => {
       type,
       price: parseFloat(price),
       status,
-      createdAt: new Date(),
+      userId: req.userId,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
-    const docRef = await db.collection("Rooms").add(newRoom);
-    res.status(201).json({ id: docRef.id, ...newRoom });
+    const ref = await db.collection("Rooms").add(newRoom);
+    const savedDoc = await ref.get();
+    const data = savedDoc.data();
+
+    res.status(201).json({
+      id: savedDoc.id,
+      ...data,
+      createdAt: data.createdAt?.toDate().toISOString(),
+    });
   } catch (error) {
-    functions.logger.error("❌ Errore creazione camera:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore createRoom:", error);
+    res.status(500).json({ error: "Errore creazione camera." });
   }
-};
+});
 
-// 📌 PUT - Aggiorna camera
-exports.updateRoom = async (req, res) => {
-  if (req.method !== "PUT")
-    return res.status(405).json({ error: "❌ Usa PUT." });
-
+// 📌 PATCH /rooms/:id → Aggiorna camera
+router.patch("/:id", async (req, res) => {
   try {
-    await authenticate(req);
-    const { roomId, updates } = req.body;
-    if (!roomId || !updates) {
-      return res
-        .status(400)
-        .json({ error: "❌ roomId e aggiornamenti richiesti." });
+    const updates = { ...req.body };
+    const docRef = db.collection("Rooms").doc(req.params.id);
+    const doc = await docRef.get();
+
+    if (!doc.exists || doc.data().userId !== req.userId) {
+      return res.status(404).json({ error: "❌ Camera non trovata." });
     }
 
-    await db
-      .collection("Rooms")
-      .doc(roomId)
-      .update({
-        ...updates,
-        updatedAt: new Date(),
-      });
+    await docRef.update({
+      ...updates,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
     res.json({ message: "✅ Camera aggiornata." });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento camera:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore updateRoom:", error);
+    res.status(500).json({ error: "Errore aggiornamento camera." });
   }
-};
+});
 
-// 📌 DELETE - Elimina camera
-exports.deleteRoom = async (req, res) => {
-  if (req.method !== "DELETE")
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-
+// 📌 DELETE /rooms/:id → Elimina camera
+router.delete("/:id", async (req, res) => {
   try {
-    await authenticate(req);
-    const { roomId } = req.query;
-    if (!roomId) return res.status(400).json({ error: "❌ roomId richiesto." });
+    const docRef = db.collection("Rooms").doc(req.params.id);
+    const doc = await docRef.get();
 
-    await db.collection("Rooms").doc(roomId).delete();
+    if (!doc.exists || doc.data().userId !== req.userId) {
+      return res.status(404).json({ error: "❌ Camera non trovata." });
+    }
+
+    await docRef.delete();
     res.json({ message: "✅ Camera eliminata." });
   } catch (error) {
-    functions.logger.error("❌ Errore eliminazione camera:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore deleteRoom:", error);
+    res.status(500).json({ error: "Errore eliminazione camera." });
   }
-};
+});
+
+module.exports = router;

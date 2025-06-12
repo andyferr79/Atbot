@@ -1,72 +1,22 @@
-// E:/ATBot/backend/functions/notificationsRoutes.js
-
+// 📁 functions/notificationsRoutes.js
+const express = require("express");
 const admin = require("firebase-admin");
-const db = admin.apps.length
-  ? admin.firestore()
-  : (() => {
-      admin.initializeApp();
-      return admin.firestore();
-    })();
+const { verifyToken } = require("./middlewares/verifyToken");
+const withRateLimit = require("./middlewares/withRateLimit");
 
-// ✅ Middleware autenticazione
-async function authenticate(req) {
-  const authHeader = req.headers.authorization || "";
-  const token = authHeader.startsWith("Bearer ")
-    ? authHeader.split(" ")[1]
-    : null;
-  if (!token) {
-    const err = new Error("❌ Token mancante");
-    err.status = 403;
-    throw err;
-  }
+const db = admin.firestore();
+const router = express.Router();
+
+// 🔐 Middleware globale
+router.use(verifyToken);
+router.use(withRateLimit(100, 60 * 1000)); // 100 richieste/minuto
+
+// 📌 GET /notifications → Recupera notifiche dell’utente
+router.get("/", async (req, res) => {
   try {
-    req.user = await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    console.error("❌ Token non valido:", error);
-    const err = new Error("❌ Token non valido");
-    err.status = 401;
-    throw err;
-  }
-}
-
-// ✅ Middleware Rate Limiting
-async function checkRateLimit(ip, maxRequests = 100, windowMs = 60_000) {
-  // se ip non valido, usiamo fallback 'global'
-  const key = typeof ip === "string" && ip.trim() !== "" ? ip : "global";
-
-  const rateDocRef = db.collection("RateLimits").doc(key);
-  const rateDoc = await rateDocRef.get();
-  const now = Date.now();
-
-  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
-
-  if (now - data.firstRequest < windowMs) {
-    if (data.count >= maxRequests) {
-      const err = new Error("❌ Troppe richieste. Riprova più tardi.");
-      err.status = 429;
-      throw err;
-    }
-    data.count++;
-  } else {
-    data = { count: 1, firstRequest: now };
-  }
-
-  await rateDocRef.set(data);
-}
-
-// 🔔 GET: Tutte le notifiche dell'utente
-async function getNotificationsHandler(req, res) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "❌ Usa GET." });
-  }
-  try {
-    await authenticate(req);
-    await checkRateLimit(req.ip);
-
-    const userId = req.user.uid;
     const snapshot = await db
       .collection("Notifications")
-      .where("userId", "==", userId)
+      .where("userId", "==", req.userId)
       .get();
 
     const notifications = snapshot.docs.map((doc) => ({
@@ -77,25 +27,51 @@ async function getNotificationsHandler(req, res) {
 
     res.json({ notifications });
   } catch (error) {
-    console.error("❌ Errore recupero notifiche:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore getNotifications:", error);
+    res.status(500).json({ error: "Errore interno" });
   }
-}
+});
 
-// 🔔 POST: Creare una nuova notifica
-async function createNotificationHandler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST." });
-  }
+// 📌 GET /notifications/unread-count → Notifiche non lette totali
+router.get("/unread-count", async (req, res) => {
   try {
-    await authenticate(req);
-    await checkRateLimit(req.ip);
+    const snapshot = await db
+      .collection("Notifications")
+      .where("userId", "==", req.userId)
+      .where("status", "==", "unread")
+      .get();
 
+    res.json({ unreadCount: snapshot.size });
+  } catch (error) {
+    console.error("❌ Errore unread-count:", error);
+    res.status(500).json({ error: "Errore interno" });
+  }
+});
+
+// 📌 GET /notifications/unread-by-type?type=ai → Non letti per tipo
+router.get("/unread-by-type", async (req, res) => {
+  try {
+    const type = req.query.type || "ai";
+    const snapshot = await db
+      .collection("Notifications")
+      .where("userId", "==", req.userId)
+      .where("status", "==", "unread")
+      .where("type", "==", type)
+      .get();
+
+    res.json({ unreadCount: snapshot.size, type });
+  } catch (error) {
+    console.error("❌ Errore unread-by-type:", error);
+    res.status(500).json({ error: "Errore interno" });
+  }
+});
+
+// 📌 POST /notifications → Crea nuova notifica
+router.post("/", async (req, res) => {
+  try {
     const { userId, message, type } = req.body;
     if (!userId || !message || !type) {
-      return res.status(400).json({ error: "❌ Campi obbligatori mancanti." });
+      return res.status(400).json({ error: "❌ Dati mancanti" });
     }
 
     const newNotification = {
@@ -107,28 +83,19 @@ async function createNotificationHandler(req, res) {
     };
 
     const docRef = await db.collection("Notifications").add(newNotification);
-
     res.status(201).json({ id: docRef.id, ...newNotification });
   } catch (error) {
     console.error("❌ Errore creazione notifica:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    res.status(500).json({ error: "Errore interno" });
   }
-}
+});
 
-// 🔔 PUT: Segnare una notifica come letta
-async function markNotificationAsReadHandler(req, res) {
-  if (req.method !== "PUT") {
-    return res.status(405).json({ error: "❌ Usa PUT." });
-  }
+// 📌 PUT /notifications/read → Segna notifica come letta
+router.put("/read", async (req, res) => {
   try {
-    await authenticate(req);
-    await checkRateLimit(req.ip);
-
     const { notificationId } = req.body;
     if (!notificationId) {
-      return res.status(400).json({ error: "❌ notificationId richiesto." });
+      return res.status(400).json({ error: "❌ notificationId richiesto" });
     }
 
     await db
@@ -136,28 +103,19 @@ async function markNotificationAsReadHandler(req, res) {
       .doc(notificationId)
       .update({ status: "read" });
 
-    res.json({ message: "✅ Notifica segnata come letta." });
+    res.json({ message: "✅ Notifica letta" });
   } catch (error) {
-    console.error("❌ Errore aggiornamento notifica:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore segna come letta:", error);
+    res.status(500).json({ error: "Errore interno" });
   }
-}
+});
 
-// 🔔 PUT: Segnare tutte le notifiche come lette
-async function markAllNotificationsAsReadHandler(req, res) {
-  if (req.method !== "PUT") {
-    return res.status(405).json({ error: "❌ Usa PUT." });
-  }
+// 📌 PUT /notifications/read-all → Segna tutte come lette
+router.put("/read-all", async (req, res) => {
   try {
-    await authenticate(req);
-    await checkRateLimit(req.ip);
-
-    const userId = req.user.uid;
     const snapshot = await db
       .collection("Notifications")
-      .where("userId", "==", userId)
+      .where("userId", "==", req.userId)
       .where("status", "!=", "read")
       .get();
 
@@ -165,97 +123,27 @@ async function markAllNotificationsAsReadHandler(req, res) {
     snapshot.docs.forEach((doc) => batch.update(doc.ref, { status: "read" }));
     await batch.commit();
 
-    res.json({ message: "✅ Tutte le notifiche segnate come lette." });
+    res.json({ message: "✅ Tutte le notifiche lette" });
   } catch (error) {
-    console.error("❌ Errore aggiornamento notifiche:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore read-all:", error);
+    res.status(500).json({ error: "Errore interno" });
   }
-}
+});
 
-// 🔔 DELETE: Eliminare una notifica
-async function deleteNotificationHandler(req, res) {
-  if (req.method !== "DELETE") {
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-  }
+// 📌 DELETE /notifications/:id → Elimina notifica
+router.delete("/:id", async (req, res) => {
   try {
-    await authenticate(req);
-    await checkRateLimit(req.ip);
-
-    const notificationId = req.query.notificationId;
+    const notificationId = req.params.id;
     if (!notificationId) {
-      return res.status(400).json({ error: "❌ notificationId richiesto." });
+      return res.status(400).json({ error: "❌ ID mancante" });
     }
 
     await db.collection("Notifications").doc(notificationId).delete();
-    res.json({ message: "✅ Notifica eliminata." });
+    res.json({ message: "✅ Notifica eliminata" });
   } catch (error) {
-    console.error("❌ Errore eliminazione notifica:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore deleteNotification:", error);
+    res.status(500).json({ error: "Errore interno" });
   }
-}
+});
 
-// 🔔 GET: Numero notifiche non lette per l'utente
-async function getUnreadNotificationsCountHandler(req, res) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "❌ Usa GET." });
-  }
-  try {
-    await authenticate(req);
-    await checkRateLimit(req.ip);
-
-    const userId = req.user.uid;
-    const snapshot = await db
-      .collection("Notifications")
-      .where("userId", "==", userId)
-      .where("status", "==", "unread")
-      .get();
-
-    res.json({ unreadCount: snapshot.size });
-  } catch (error) {
-    console.error("❌ Errore conteggio notifiche non lette:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
-  }
-}
-// 🔔 GET: Numero notifiche non lette per tipo (es. ai o system)
-async function getUnreadNotificationsByTypeHandler(req, res) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "❌ Usa GET." });
-  }
-  try {
-    await authenticate(req);
-    await checkRateLimit(req.ip);
-
-    const userId = req.user.uid;
-    const type = req.query.type || "ai";
-
-    const snapshot = await db
-      .collection("Notifications")
-      .where("userId", "==", userId)
-      .where("status", "==", "unread")
-      .where("type", "==", type)
-      .get();
-
-    res.json({ unreadCount: snapshot.size, type });
-  } catch (error) {
-    console.error("❌ Errore conteggio notifiche per tipo:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
-  }
-}
-
-module.exports = {
-  getNotificationsHandler,
-  createNotificationHandler,
-  markNotificationAsReadHandler,
-  markAllNotificationsAsReadHandler,
-  deleteNotificationHandler,
-  getUnreadNotificationsCountHandler,
-  getUnreadNotificationsByTypeHandler, // 👈 AGGIUNTO
-};
+module.exports = router;

@@ -1,59 +1,47 @@
-const functions = require("firebase-functions");
+const express = require("express");
 const admin = require("firebase-admin");
+const { verifyToken } = require("../middlewares/verifyToken");
 
 if (!admin.apps.length) {
   admin.initializeApp();
 }
-
 const db = admin.firestore();
+const router = express.Router();
 
-// ✅ Middleware Autenticazione
-async function authenticate(req) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante" };
-  try {
-    return await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
-  }
-}
+// 📥 Log richieste
+router.use((req, res, next) => {
+  console.log(`[📊 DashboardOverview] ${req.method} ${req.originalUrl}`);
+  next();
+});
 
-// ✅ Middleware Rate Limiting avanzato
-async function checkRateLimit(ip, maxRequests, windowMs) {
-  const rateDocRef = admin.firestore().collection("RateLimits").doc(ip);
-  const rateDoc = await rateDocRef.get();
+// 🔐 Middleware: autenticazione
+router.use(verifyToken);
+
+// 🚫 Rate Limiting: max 20 richieste ogni 5 minuti per IP
+const checkRateLimit = async (req, res, next) => {
+  const ip = req.headers["x-forwarded-for"] || req.ip || "unknown_ip";
   const now = Date.now();
+  const ref = db.collection("RateLimits").doc(`dashboard_${ip}`);
+  const doc = await ref.get();
 
-  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
+  let data = doc.exists ? doc.data() : { count: 0, firstRequest: now };
 
-  if (now - data.firstRequest < windowMs) {
-    if (data.count >= maxRequests) {
-      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
+  if (now - data.firstRequest < 5 * 60 * 1000) {
+    if (data.count >= 20) {
+      return res.status(429).json({ error: "❌ Troppe richieste. Attendi." });
     }
     data.count++;
   } else {
     data = { count: 1, firstRequest: now };
   }
 
-  await rateDocRef.set(data);
-}
+  await ref.set(data);
+  next();
+};
 
-// 📌 GET - Dati Dashboard Overview
-exports.getDashboardOverview = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "❌ Usa GET." });
-  }
-
+// 📌 GET /dashboard → overview completa
+router.get("/", checkRateLimit, async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 20, 5 * 60 * 1000); // 20 richieste ogni 5 min
-
-    const db = admin.firestore();
     const [bookingsSnapshot, financesSnapshot] = await Promise.all([
       db.collection("Bookings").get(),
       db.collection("FinancialReports").get(),
@@ -65,18 +53,16 @@ exports.getDashboardOverview = functions.https.onRequest(async (req, res) => {
       0
     );
 
-    // Simulazione calcolo occupancy
-    const occupiedRooms = totalBookings * 1.5; // esempio
+    const occupiedRooms = totalBookings * 1.5; // 🔧 Simulazione esempio
     const totalRooms = 100;
     const occupancyRate = ((occupiedRooms / totalRooms) * 100).toFixed(2) + "%";
-
-    const avgRevenuePerBooking =
-      totalBookings > 0 ? (totalRevenue / totalBookings).toFixed(2) : "0.00";
 
     const dashboardData = {
       totalBookings,
       totalRevenue,
       occupancyRate,
+      avgRevenuePerBooking:
+        totalBookings > 0 ? (totalRevenue / totalBookings).toFixed(2) : "0.00",
       recentUpdate: new Date().toISOString(),
     };
 
@@ -85,30 +71,16 @@ exports.getDashboardOverview = functions.https.onRequest(async (req, res) => {
       .doc("overview")
       .set(dashboardData, { merge: true });
 
-    return res.json(dashboardData);
+    res.status(200).json(dashboardData);
   } catch (error) {
-    functions.logger.error("❌ Errore dashboard overview:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore dashboard overview:", error);
+    res.status(500).json({ error: "Errore generazione overview" });
   }
 });
 
-// 📌 POST - Richiedere aggiornamento manuale dashboard
-exports.updateDashboardData = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST." });
-  }
-
+// 📌 POST /dashboard/update → aggiorna manualmente
+router.post("/update", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 5, 5 * 60 * 1000); // Meno frequente, aggiornamenti manuali
-
-    // Possibile inserire qui logica reale o chiamare altre funzioni di aggiornamento
     await db
       .collection("Dashboard")
       .doc("overview")
@@ -116,9 +88,9 @@ exports.updateDashboardData = functions.https.onRequest(async (req, res) => {
 
     res.json({ message: "✅ Dashboard aggiornata manualmente." });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento manuale dashboard:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore update dashboard:", error);
+    res.status(500).json({ error: "Errore aggiornamento manuale" });
   }
 });
+
+module.exports = router;

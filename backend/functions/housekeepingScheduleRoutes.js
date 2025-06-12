@@ -1,4 +1,5 @@
-const functions = require("firebase-functions");
+const express = require("express");
+const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 const axios = require("axios");
 
@@ -7,17 +8,21 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
+const router = express.Router();
+router.use(express.json());
+
 const AI_BACKEND_URL = "http://127.0.0.1:8000";
 
 // ✅ Middleware autenticazione
-async function authenticate(req) {
+async function authenticate(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante" };
+  if (!token) return res.status(403).json({ error: "❌ Token mancante" });
   try {
-    return await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
+    req.user = await admin.auth().verifyIdToken(token);
+    next();
+  } catch (err) {
+    console.error("❌ Token non valido:", err);
+    res.status(401).json({ error: "❌ Token non valido" });
   }
 }
 
@@ -42,145 +47,123 @@ async function checkRateLimit(ip, maxRequests, windowMs) {
 }
 
 // 📌 GET - Generare la pianificazione ottimizzata delle pulizie
-exports.generateHousekeepingSchedule = functions.https.onRequest(
-  async (req, res) => {
-    if (req.method !== "GET") {
-      return res.status(405).json({ error: "❌ Usa GET." });
+router.get("/generate", authenticate, async (req, res) => {
+  try {
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.socket?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 30, 10 * 60 * 1000);
+
+    const bookingsSnapshot = await db.collection("Bookings").get();
+    const bookingsData = bookingsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      checkInDate: doc.data().checkInDate?.toDate().toISOString(),
+      checkOutDate: doc.data().checkOutDate?.toDate().toISOString(),
+    }));
+
+    const aiResponse = await axios.post(
+      `${AI_BACKEND_URL}/housekeeping/optimize`,
+      { bookingsData }
+    );
+
+    if (aiResponse.status !== 200 || !aiResponse.data.schedule) {
+      throw new Error("Risposta non valida dal backend AI.");
     }
 
-    try {
-      await authenticate(req);
-      const ip =
-        req.headers["x-forwarded-for"] ||
-        req.connection?.remoteAddress ||
-        "unknown_ip";
-      await checkRateLimit(ip, 30, 10 * 60 * 1000);
+    await db.collection("HousekeepingSchedules").doc("latest").set({
+      schedule: aiResponse.data.schedule,
+      generatedAt: new Date(),
+    });
 
-      const bookingsSnapshot = await db.collection("Bookings").get();
-      const bookingsData = bookingsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        checkInDate: doc.data().checkInDate?.toDate().toISOString(),
-        checkOutDate: doc.data().checkOutDate?.toDate().toISOString(),
-      }));
+    res.json({
+      message: "✅ Pianificazione pulizie generata con successo!",
+      schedule: aiResponse.data.schedule,
+    });
+  } catch (error) {
+    console.error("❌ Errore pianificazione pulizie:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
+  }
+});
 
-      const aiResponse = await axios.post(
-        `${AI_BACKEND_URL}/housekeeping/optimize`,
-        { bookingsData }
-      );
+// 📌 POST - Aggiornamento manuale pianificazione
+router.post("/update", authenticate, async (req, res) => {
+  try {
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.socket?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 20, 10 * 60 * 1000);
 
-      if (aiResponse.status !== 200 || !aiResponse.data.schedule) {
-        throw new Error("Risposta non valida dal backend AI.");
-      }
+    const bookingsSnapshot = await db.collection("Bookings").get();
+    const bookingsData = bookingsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      checkInDate: doc.data().checkInDate?.toDate().toISOString(),
+      checkOutDate: doc.data().checkOutDate?.toDate().toISOString(),
+    }));
 
-      await db.collection("HousekeepingSchedules").doc("latest").set({
-        schedule: aiResponse.data.schedule,
-        generatedAt: new Date(),
-      });
+    const aiResponse = await axios.post(
+      `${AI_BACKEND_URL}/housekeeping/optimize`,
+      { bookingsData }
+    );
 
+    if (aiResponse.status !== 200 || !aiResponse.data.schedule) {
+      throw new Error("Risposta non valida dal backend AI.");
+    }
+
+    await db.collection("HousekeepingSchedules").doc("latest").set({
+      schedule: aiResponse.data.schedule,
+      generatedAt: new Date(),
+    });
+
+    res.json({
+      message: "✅ Pianificazione pulizie aggiornata manualmente!",
+      schedule: aiResponse.data.schedule,
+    });
+  } catch (error) {
+    console.error("❌ Errore aggiornamento manuale pulizie:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
+  }
+});
+
+// 📌 GET - Recuperare ultima pianificazione salvata
+router.get("/latest", authenticate, async (req, res) => {
+  try {
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.socket?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 50, 10 * 60 * 1000);
+
+    const scheduleDoc = await db
+      .collection("HousekeepingSchedules")
+      .doc("latest")
+      .get();
+
+    if (!scheduleDoc.exists) {
       return res.json({
-        message: "✅ Pianificazione pulizie generata con successo!",
-        schedule: aiResponse.data.schedule,
+        message: "⚠️ Nessuna pianificazione trovata.",
+        schedule: null,
       });
-    } catch (error) {
-      functions.logger.error("❌ Errore pianificazione pulizie:", error);
-      return res
-        .status(error.status || 500)
-        .json({ error: error.message || "Errore interno" });
     }
+
+    const data = scheduleDoc.data();
+    res.json({
+      schedule: data.schedule,
+      generatedAt: data.generatedAt.toDate().toISOString(),
+    });
+  } catch (error) {
+    console.error("❌ Errore recupero pianificazione pulizie:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
   }
-);
+});
 
-// 📌 POST - Richiedere aggiornamento manuale pianificazione pulizie
-exports.updateHousekeepingSchedule = functions.https.onRequest(
-  async (req, res) => {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "❌ Usa POST." });
-    }
-
-    try {
-      await authenticate(req);
-      const ip =
-        req.headers["x-forwarded-for"] ||
-        req.connection?.remoteAddress ||
-        "unknown_ip";
-      await checkRateLimit(ip, 20, 10 * 60 * 1000);
-
-      const bookingsSnapshot = await db.collection("Bookings").get();
-      const bookingsData = bookingsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        checkInDate: doc.data().checkInDate?.toDate().toISOString(),
-        checkOutDate: doc.data().checkOutDate?.toDate().toISOString(),
-      }));
-
-      const aiResponse = await axios.post(
-        `${AI_BACKEND_URL}/housekeeping/optimize`,
-        { bookingsData }
-      );
-
-      if (aiResponse.status !== 200 || !aiResponse.data.schedule) {
-        throw new Error("Risposta non valida dal backend AI.");
-      }
-
-      await db.collection("HousekeepingSchedules").doc("latest").set({
-        schedule: aiResponse.data.schedule,
-        generatedAt: new Date(),
-      });
-
-      res.json({
-        message: "✅ Pianificazione pulizie aggiornata manualmente!",
-        schedule: aiResponse.data.schedule,
-      });
-    } catch (error) {
-      functions.logger.error("❌ Errore aggiornamento manuale pulizie:", error);
-      return res
-        .status(error.status || 500)
-        .json({ error: error.message || "Errore interno" });
-    }
-  }
-);
-
-// 📌 GET - Recuperare l'ultima pianificazione salvata
-exports.getLatestHousekeepingSchedule = functions.https.onRequest(
-  async (req, res) => {
-    if (req.method !== "GET") {
-      return res.status(405).json({ error: "❌ Usa GET." });
-    }
-
-    try {
-      await authenticate(req);
-      const ip =
-        req.headers["x-forwarded-for"] ||
-        req.connection?.remoteAddress ||
-        "unknown_ip";
-      await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
-      const scheduleDoc = await db
-        .collection("HousekeepingSchedules")
-        .doc("latest")
-        .get();
-
-      if (!scheduleDoc.exists) {
-        return res.json({
-          message: "⚠️ Nessuna pianificazione trovata.",
-          schedule: null,
-        });
-      }
-
-      const data = scheduleDoc.data();
-      return res.json({
-        schedule: data.schedule,
-        generatedAt: data.generatedAt.toDate().toISOString(),
-      });
-    } catch (error) {
-      functions.logger.error(
-        "❌ Errore recupero pianificazione pulizie:",
-        error
-      );
-      return res
-        .status(error.status || 500)
-        .json({ error: error.message || "Errore interno" });
-    }
-  }
-);
+module.exports = router;

@@ -1,89 +1,42 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+// 📁 functions/reportsRoutes.js
+const express = require("express");
+const { admin } = require("./firebase");
+const { verifyToken } = require("./middlewares/verifyToken");
+const withRateLimit = require("./middlewares/withRateLimit");
 
 const db = admin.firestore();
+const router = express.Router();
 
-// ✅ Middleware autenticazione
-async function authenticate(req) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante" };
+// 🔐 Middleware
+router.use(verifyToken);
+router.use(withRateLimit(60, 10 * 60 * 1000)); // Max 60 ogni 10 minuti
+
+// 📌 GET /reports → Tutti i report dell’utente
+router.get("/", async (req, res) => {
   try {
-    req.user = await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
-  }
-}
+    const snapshot = await db
+      .collection("Reports")
+      .where("userId", "==", req.userId)
+      .get();
 
-// ✅ Middleware Rate Limiting avanzato
-async function checkRateLimit(ip, maxRequests, windowMs) {
-  const rateDocRef = db.collection("RateLimits").doc(ip);
-  const rateDoc = await rateDocRef.get();
-  const now = Date.now();
-
-  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
-
-  if (now - data.firstRequest < windowMs) {
-    if (data.count >= maxRequests) {
-      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
-    }
-    data.count++;
-  } else {
-    data = { count: 1, firstRequest: now };
-  }
-
-  await rateDocRef.set(data);
-}
-
-// 📌 GET - Recupera tutti i report
-exports.getReports = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-
-  try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
-    const snapshot = await db.collection("Reports").get();
     const reports = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate().toISOString() || "N/A",
+      createdAt: doc.data().createdAt?.toDate().toISOString() || null,
+      updatedAt: doc.data().updatedAt?.toDate().toISOString() || null,
     }));
 
     res.json({ reports });
   } catch (error) {
-    functions.logger.error("❌ Errore recupero report:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore getReports:", error);
+    res.status(500).json({ error: "Errore nel recupero dei report." });
   }
 });
 
-// 📌 POST - Creare nuovo report
-exports.createReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST." });
-  }
-
+// 📌 POST /reports → Crea nuovo report
+router.post("/", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 20, 10 * 60 * 1000);
-
     const { title, type, data } = req.body;
-
     if (!title || !type || !data) {
       return res.status(400).json({ error: "❌ Campi obbligatori mancanti." });
     }
@@ -92,77 +45,57 @@ exports.createReport = functions.https.onRequest(async (req, res) => {
       title,
       type,
       data,
+      userId: req.userId,
       createdAt: new Date(),
     };
 
     const docRef = await db.collection("Reports").add(newReport);
-    return res.json({ id: docRef.id, ...newReport });
+    res.status(201).json({ id: docRef.id, ...newReport });
   } catch (error) {
-    functions.logger.error("❌ Errore creazione report:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore createReport:", error);
+    res.status(500).json({ error: "Errore nella creazione del report." });
   }
 });
 
-// 📌 PUT - Aggiornare report esistente
-exports.updateReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT") {
-    return res.status(405).json({ error: "❌ Usa PUT." });
-  }
-
+// 📌 PUT /reports/:id → Aggiorna report
+router.put("/:id", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 30, 10 * 60 * 1000);
+    const updates = req.body;
+    const docRef = db.collection("Reports").doc(req.params.id);
+    const doc = await docRef.get();
 
-    const { reportId, updates } = req.body;
-    if (!reportId || !updates) {
-      return res
-        .status(400)
-        .json({ error: "❌ reportId e updates richiesti." });
+    if (!doc.exists || doc.data().userId !== req.userId) {
+      return res.status(404).json({ error: "❌ Report non trovato." });
     }
 
-    updates.updatedAt = new Date();
-    await db.collection("Reports").doc(reportId).update(updates);
+    await docRef.update({
+      ...updates,
+      updatedAt: new Date(),
+    });
 
     res.json({ message: "✅ Report aggiornato." });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento report:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore updateReport:", error);
+    res.status(500).json({ error: "Errore nell’aggiornamento." });
   }
 });
 
-// 📌 DELETE - Eliminare report
-exports.deleteReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE") {
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-  }
-
+// 📌 DELETE /reports/:id → Elimina report
+router.delete("/:id", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 20, 10 * 60 * 1000);
+    const docRef = db.collection("Reports").doc(req.params.id);
+    const doc = await docRef.get();
 
-    const { reportId } = req.query;
-    if (!reportId) {
-      return res.status(400).json({ error: "❌ reportId richiesto." });
+    if (!doc.exists || doc.data().userId !== req.userId) {
+      return res.status(404).json({ error: "❌ Report non trovato." });
     }
 
-    await db.collection("Reports").doc(reportId).delete();
-    return res.json({ message: "✅ Report eliminato." });
+    await docRef.delete();
+    res.json({ message: "✅ Report eliminato." });
   } catch (error) {
-    functions.logger.error("❌ Errore eliminazione report:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore deleteReport:", error);
+    res.status(500).json({ error: "Errore nella cancellazione." });
   }
 });
+
+module.exports = router;

@@ -1,58 +1,35 @@
-const functions = require("firebase-functions");
+// 📁 customersReportsRoutes.js
+const express = require("express");
+const { verifyToken } = require("../middlewares/verifyToken");
+const { withCors } = require("../middlewares/withCors");
 const admin = require("firebase-admin");
+const rateLimit = require("express-rate-limit");
 
 if (!admin.apps.length) {
   admin.initializeApp();
 }
-
 const db = admin.firestore();
 
-// ✅ Middleware autenticazione riutilizzabile
-async function authenticate(req) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    throw { status: 403, message: "❌ Token mancante" };
-  }
+const router = express.Router();
+
+// 🔐 Middleware + RateLimit
+router.use(withCors);
+router.use(verifyToken);
+router.use(
+  rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 50,
+    message: "❌ Troppe richieste. Riprova più tardi.",
+  })
+);
+
+// 📌 GET - Tutti i report dell’utente autenticato
+router.get("/", async (req, res) => {
   try {
-    return await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
-  }
-}
-
-// ✅ Middleware Rate Limiting riutilizzabile
-async function checkRateLimit(ip, maxRequests, windowMs) {
-  const rateDocRef = db.collection("RateLimits").doc(ip);
-  const rateDoc = await rateDocRef.get();
-  const now = Date.now();
-
-  let requestTimestamps = rateDoc.exists ? rateDoc.data().requests || [] : [];
-  requestTimestamps = requestTimestamps.filter((ts) => now - ts < windowMs);
-
-  if (requestTimestamps.length >= maxRequests) {
-    throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
-  }
-
-  requestTimestamps.push(now);
-  await rateDocRef.set({ requests: requestTimestamps });
-}
-
-// 📌 GET - Recuperare report clienti
-exports.getCustomersReports = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "❌ Usa GET." });
-  }
-
-  try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
-    const snapshot = await db.collection("CustomersReports").get();
+    const snapshot = await db
+      .collection("CustomersReports")
+      .where("userId", "==", req.user.uid)
+      .get();
 
     const reports = snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -60,134 +37,86 @@ exports.getCustomersReports = functions.https.onRequest(async (req, res) => {
       createdAt: doc.data().createdAt?.toDate().toISOString() || "N/A",
     }));
 
-    return res.json(reports);
-  } catch (error) {
-    functions.logger.error("❌ Errore recupero report clienti:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    res.json(reports);
+  } catch (err) {
+    console.error("❌ Errore GET CustomersReports:", err);
+    res.status(500).json({ error: "Errore interno" });
   }
 });
 
-// 📌 POST - Aggiungere un nuovo report cliente
-exports.addCustomerReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST." });
-  }
-
+// 📌 POST - Aggiungi nuovo report
+router.post("/", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
     const { name, email, phone, bookings, structureId, structureType } =
       req.body;
 
     if (!name || !email || !phone || bookings === undefined) {
-      return res
-        .status(400)
-        .json({
-          error: "❌ Tutti i campi obbligatori devono essere compilati.",
-        });
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ error: "❌ Email non valida." });
-    }
-
-    if (!/^[0-9\-\+\s\(\)]{7,15}$/.test(phone)) {
-      return res
-        .status(400)
-        .json({ error: "❌ Numero di telefono non valido." });
-    }
-
-    const parsedBookings = parseInt(bookings, 10);
-    if (isNaN(parsedBookings) || parsedBookings < 0) {
-      return res
-        .status(400)
-        .json({ error: "❌ Numero di prenotazioni non valido." });
+      return res.status(400).json({ error: "❌ Dati mancanti" });
     }
 
     const newReport = {
+      userId: req.user.uid,
       name,
       email,
       phone,
-      bookings: parsedBookings,
+      bookings: parseInt(bookings),
       structureId: structureId || null,
       structureType: structureType || "Generico",
-      createdAt: new Date(),
+      createdAt: admin.firestore.Timestamp.now(),
     };
 
     const docRef = await db.collection("CustomersReports").add(newReport);
-    return res.json({ id: docRef.id, ...newReport });
-  } catch (error) {
-    functions.logger.error("❌ Errore aggiunta report cliente:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    res.json({ id: docRef.id, ...newReport });
+  } catch (err) {
+    console.error("❌ Errore POST CustomersReports:", err);
+    res.status(500).json({ error: "Errore interno" });
   }
 });
 
-// 📌 PUT - Aggiornare un report cliente
-exports.updateCustomerReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT") {
-    return res.status(405).json({ error: "❌ Usa PUT." });
-  }
-
+// 📌 PUT - Aggiorna report se appartiene all’utente
+router.put("/", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
     const { reportId, updates } = req.body;
-
     if (!reportId || !updates) {
-      return res
-        .status(400)
-        .json({ error: "❌ reportId e aggiornamenti richiesti." });
+      return res.status(400).json({ error: "❌ Parametri mancanti" });
     }
 
-    await db.collection("CustomersReports").doc(reportId).update(updates);
-    return res.json({ message: "✅ Report cliente aggiornato." });
-  } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento report cliente:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    const docRef = db.collection("CustomersReports").doc(reportId);
+    const doc = await docRef.get();
+
+    if (!doc.exists || doc.data().userId !== req.user.uid) {
+      return res.status(403).json({ error: "❌ Accesso non autorizzato" });
+    }
+
+    await docRef.update(updates);
+    res.json({ message: "✅ Report aggiornato" });
+  } catch (err) {
+    console.error("❌ Errore PUT CustomersReports:", err);
+    res.status(500).json({ error: "Errore interno" });
   }
 });
 
-// 📌 DELETE - Eliminare un report cliente
-exports.deleteCustomerReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE") {
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-  }
-
+// 📌 DELETE - Elimina report se appartiene all’utente
+router.delete("/", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
     const { reportId } = req.query;
     if (!reportId) {
-      return res.status(400).json({ error: "❌ reportId richiesto." });
+      return res.status(400).json({ error: "❌ reportId richiesto" });
     }
 
-    await db.collection("CustomersReports").doc(reportId).delete();
-    return res.json({ message: "✅ Report cliente eliminato." });
-  } catch (error) {
-    functions.logger.error("❌ Errore eliminazione report cliente:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    const docRef = db.collection("CustomersReports").doc(reportId);
+    const doc = await docRef.get();
+
+    if (!doc.exists || doc.data().userId !== req.user.uid) {
+      return res.status(403).json({ error: "❌ Accesso non autorizzato" });
+    }
+
+    await docRef.delete();
+    res.json({ message: "✅ Report eliminato" });
+  } catch (err) {
+    console.error("❌ Errore DELETE CustomersReports:", err);
+    res.status(500).json({ error: "Errore interno" });
   }
 });
+
+module.exports = router;

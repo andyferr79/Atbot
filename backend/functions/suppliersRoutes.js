@@ -1,83 +1,51 @@
-const functions = require("firebase-functions");
+const express = require("express");
 const admin = require("firebase-admin");
+const { verifyToken } = require("../middlewares/verifyToken");
 
-if (!admin.apps.length) admin.initializeApp();
+const withRateLimit = require("./middlewares/withRateLimit");
 
 const db = admin.firestore();
+const router = express.Router();
 
-// ✅ Middleware autenticazione
-async function authenticate(req) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante" };
+// 🔐 Middleware globale
+router.use(verifyToken);
+router.use(withRateLimit(60, 5 * 60 * 1000)); // 60 richieste ogni 5 min
+
+// 📌 GET /suppliers → Recupera fornitori dell'utente
+router.get("/", async (req, res) => {
   try {
-    req.user = await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
-  }
-}
+    const snapshot = await db
+      .collection("Suppliers")
+      .where("userId", "==", req.user.uid)
+      .get();
 
-// ✅ Middleware Rate Limiting
-async function checkRateLimit(ip, maxRequests = 100, windowMs = 60_000) {
-  const rateDocRef = db.collection("RateLimits").doc(ip);
-  const rateDoc = await rateDocRef.get();
-  const now = Date.now();
-
-  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
-
-  if (now - data.firstRequest < windowMs) {
-    if (data.count >= maxRequests) {
-      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
-    }
-    data.count++;
-  } else {
-    data = { count: 1, firstRequest: now };
-  }
-
-  await rateDocRef.set(data);
-}
-
-// 📌 GET - Recupera tutti i fornitori
-exports.getSuppliers = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-
-  try {
-    await authenticate(req);
-    await checkRateLimit(req.ip);
-
-    const snapshot = await db.collection("Suppliers").get();
-    const suppliers = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate().toISOString() || null,
-      updatedAt: doc.data().updatedAt?.toDate().toISOString() || null,
-    }));
+    const suppliers = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate().toISOString() || null,
+        updatedAt: data.updatedAt?.toDate().toISOString() || null,
+      };
+    });
 
     res.json({ suppliers });
   } catch (error) {
-    functions.logger.error("❌ Errore recupero fornitori:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore getSuppliers:", error);
+    res.status(500).json({ error: "Errore nel recupero fornitori." });
   }
 });
 
-// 📌 POST - Aggiunge nuovo fornitore
-exports.addSupplier = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "❌ Usa POST." });
-
+// 📌 POST /suppliers → Aggiunge nuovo fornitore
+router.post("/", async (req, res) => {
   try {
-    await authenticate(req);
-    await checkRateLimit(req.ip);
-
     const {
       name,
       category = "Generale",
       contact = {},
       status = "Attivo",
     } = req.body;
+
     if (!name || !contact.email) {
       return res.status(400).json({
         error: "❌ Nome e contatto email sono obbligatori.",
@@ -89,33 +57,28 @@ exports.addSupplier = functions.https.onRequest(async (req, res) => {
       category,
       contact,
       status,
-      createdAt: new Date(),
+      userId: req.user.uid,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
     const docRef = await db.collection("Suppliers").add(newSupplier);
     res.status(201).json({ id: docRef.id, ...newSupplier });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiunta fornitore:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore addSupplier:", error);
+    res.status(500).json({ error: "Errore durante la creazione." });
   }
 });
 
-// 📌 PUT - Aggiorna un fornitore
-exports.updateSupplier = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT")
-    return res.status(405).json({ error: "❌ Usa PUT." });
-
+// 📌 PUT /suppliers/:id → Aggiorna fornitore
+router.put("/:id", async (req, res) => {
   try {
-    await authenticate(req);
-    await checkRateLimit(req.ip);
+    const { id } = req.params;
+    const updates = req.body;
 
-    const { id, updates } = req.body;
-    if (!id || typeof updates !== "object") {
+    if (!updates || typeof updates !== "object") {
       return res
         .status(400)
-        .json({ error: "❌ ID e dati aggiornati richiesti." });
+        .json({ error: "❌ Dati aggiornati mancanti o invalidi." });
     }
 
     await db
@@ -123,36 +86,28 @@ exports.updateSupplier = functions.https.onRequest(async (req, res) => {
       .doc(id)
       .update({
         ...updates,
-        updatedAt: new Date(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-    res.json({ message: "✅ Fornitore aggiornato con successo." });
+    res.json({ message: "✅ Fornitore aggiornato." });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento fornitore:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore updateSupplier:", error);
+    res.status(500).json({ error: "Errore aggiornamento." });
   }
 });
 
-// 📌 DELETE - Elimina fornitore
-exports.deleteSupplier = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE")
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-
+// 📌 DELETE /suppliers/:id → Elimina fornitore
+router.delete("/:id", async (req, res) => {
   try {
-    await authenticate(req);
-    await checkRateLimit(req.ip);
-
-    const { id } = req.query;
-    if (!id) return res.status(400).json({ error: "❌ ID mancante." });
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "❌ ID richiesto." });
 
     await db.collection("Suppliers").doc(id).delete();
-    res.json({ message: "✅ Fornitore eliminato con successo." });
+    res.json({ message: "✅ Fornitore eliminato." });
   } catch (error) {
-    functions.logger.error("❌ Errore eliminazione fornitore:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore deleteSupplier:", error);
+    res.status(500).json({ error: "Errore eliminazione." });
   }
 });
+
+module.exports = router;

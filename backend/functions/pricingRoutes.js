@@ -1,25 +1,27 @@
-const functions = require("firebase-functions");
+/**************************************************************
+ *  StayPro / Hoxy - pricingRoutes.js (Express v2 - Node.js 20)
+ *  ✅ API Prezzi Camere - Compatibile con Cloud Functions v2
+ **************************************************************/
+
+const express = require("express");
 const admin = require("firebase-admin");
 
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
-
+const router = express.Router();
 const db = admin.firestore();
 
-// ✅ Middleware autenticazione riutilizzabile
+// ✅ Middleware Autenticazione
 async function authenticate(req) {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) throw { status: 403, message: "❌ Token mancante" };
   try {
     return await admin.auth().verifyIdToken(token);
   } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
+    console.error("❌ Token non valido:", error);
     throw { status: 401, message: "❌ Token non valido" };
   }
 }
 
-// ✅ Middleware Rate Limiting avanzato
+// ✅ Middleware Rate Limiting
 async function checkRateLimit(ip, maxRequests, windowMs) {
   const rateDocRef = db.collection("RateLimits").doc(ip);
   const rateDoc = await rateDocRef.get();
@@ -40,10 +42,7 @@ async function checkRateLimit(ip, maxRequests, windowMs) {
 }
 
 // 📌 GET - Recuperare tutte le tariffe delle camere
-exports.getRoomPricing = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-
+router.get("/", async (req, res) => {
   try {
     await authenticate(req);
     const ip =
@@ -63,7 +62,7 @@ exports.getRoomPricing = functions.https.onRequest(async (req, res) => {
 
     res.json(prices);
   } catch (error) {
-    functions.logger.error("❌ Errore recupero tariffe:", error);
+    console.error("❌ Errore recupero tariffe:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
@@ -71,10 +70,7 @@ exports.getRoomPricing = functions.https.onRequest(async (req, res) => {
 });
 
 // 📌 POST - Aggiungi nuova tariffa camera
-exports.addRoomPricing = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "❌ Usa POST." });
-
+router.post("/", async (req, res) => {
   try {
     await authenticate(req);
     const ip =
@@ -84,7 +80,6 @@ exports.addRoomPricing = functions.https.onRequest(async (req, res) => {
     await checkRateLimit(ip, 30, 10 * 60 * 1000);
 
     const { roomType, currentPrice } = req.body;
-
     if (
       !roomType ||
       !currentPrice ||
@@ -104,7 +99,7 @@ exports.addRoomPricing = functions.https.onRequest(async (req, res) => {
     const docRef = await db.collection("RoomPricing").add(newPricing);
     res.json({ id: docRef.id, ...newPricing });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiunta tariffa:", error);
+    console.error("❌ Errore aggiunta tariffa:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
@@ -112,11 +107,7 @@ exports.addRoomPricing = functions.https.onRequest(async (req, res) => {
 });
 
 // 📌 PUT - Aggiorna tariffa esistente
-exports.updateRoomPricing = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT") {
-    return res.status(405).json({ error: "❌ Usa PUT." });
-  }
-
+router.put("/", async (req, res) => {
   try {
     await authenticate(req);
     const ip =
@@ -131,11 +122,10 @@ exports.updateRoomPricing = functions.https.onRequest(async (req, res) => {
     }
 
     updates.lastUpdated = new Date();
-
     await db.collection("RoomPricing").doc(pricingId).update(updates);
     res.json({ message: "✅ Tariffa aggiornata." });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento tariffa:", error);
+    console.error("❌ Errore aggiornamento tariffa:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
@@ -143,11 +133,7 @@ exports.updateRoomPricing = functions.https.onRequest(async (req, res) => {
 });
 
 // 📌 DELETE - Eliminare una tariffa
-exports.deleteRoomPricing = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE") {
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-  }
-
+router.delete("/", async (req, res) => {
   try {
     await authenticate(req);
     const ip =
@@ -164,9 +150,11 @@ exports.deleteRoomPricing = functions.https.onRequest(async (req, res) => {
     await db.collection("RoomPricing").doc(pricingId).delete();
     return res.json({ message: "✅ Tariffa eliminata." });
   } catch (error) {
-    functions.logger.error("❌ Errore eliminazione tariffa:", error);
+    console.error("❌ Errore eliminazione tariffa:", error);
     return res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
+
+module.exports = router;

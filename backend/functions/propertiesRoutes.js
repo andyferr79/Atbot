@@ -1,12 +1,10 @@
 // 📁 propertiesRoutes.js – CRUD completo per alloggi (Properties)
-const functions = require("firebase-functions");
+const express = require("express");
 const admin = require("firebase-admin");
 
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
-
+const router = express.Router();
 const db = admin.firestore();
+router.use(express.json());
 
 // ✅ Middleware autenticazione
 async function authenticate(req) {
@@ -20,9 +18,7 @@ async function authenticate(req) {
 }
 
 // 📌 GET - Recupera tutte le proprietà
-exports.getProperties = async (req, res) => {
-  if (req.method !== "GET") return res.status(405).json({ error: "Usa GET." });
-
+router.get("/", async (req, res) => {
   try {
     await authenticate(req);
     const snapshot = await db.collection("Properties").get();
@@ -32,18 +28,15 @@ exports.getProperties = async (req, res) => {
     }));
     res.json({ properties });
   } catch (error) {
-    functions.logger.error("Errore GET properties:", error);
+    console.error("Errore GET properties:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
-};
+});
 
 // 📌 POST - Crea una nuova proprietà
-exports.createProperty = async (req, res) => {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "Usa POST." });
-
+router.post("/", async (req, res) => {
   try {
     await authenticate(req);
     const { name, price, image, operatorId } = req.body;
@@ -66,17 +59,15 @@ exports.createProperty = async (req, res) => {
     const docRef = await db.collection("Properties").add(newProperty);
     res.status(201).json({ id: docRef.id, ...newProperty });
   } catch (error) {
-    functions.logger.error("Errore POST property:", error);
+    console.error("Errore POST property:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
-};
+});
 
 // 📌 PUT - Aggiorna proprietà
-exports.updateProperty = async (req, res) => {
-  if (req.method !== "PUT") return res.status(405).json({ error: "Usa PUT." });
-
+router.put("/", async (req, res) => {
   try {
     await authenticate(req);
     const { id } = req.query;
@@ -89,18 +80,15 @@ exports.updateProperty = async (req, res) => {
     await db.collection("Properties").doc(id).update(updates);
     res.json({ message: "Proprietà aggiornata" });
   } catch (error) {
-    functions.logger.error("Errore PUT property:", error);
+    console.error("Errore PUT property:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
-};
+});
 
 // 📌 DELETE - Elimina proprietà
-exports.deleteProperty = async (req, res) => {
-  if (req.method !== "DELETE")
-    return res.status(405).json({ error: "Usa DELETE." });
-
+router.delete("/", async (req, res) => {
   try {
     await authenticate(req);
     const { id } = req.query;
@@ -109,9 +97,11 @@ exports.deleteProperty = async (req, res) => {
     await db.collection("Properties").doc(id).delete();
     res.json({ message: "Proprietà eliminata" });
   } catch (error) {
-    functions.logger.error("Errore DELETE property:", error);
+    console.error("Errore DELETE property:", error);
     res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
-};
+});
+
+module.exports = router;

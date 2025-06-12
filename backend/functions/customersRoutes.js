@@ -1,84 +1,40 @@
-const functions = require("firebase-functions");
+// 📁 functions/customersRoutes.js
+const express = require("express");
 const admin = require("firebase-admin");
+const { verifyToken } = require("../middlewares/verifyToken");
 
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
-
+const router = express.Router();
 const db = admin.firestore();
 
-// ✅ Middleware Autenticazione
-async function authenticate(req) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante" };
+router.use(verifyToken);
+
+// ✅ GET /customers → Dati clienti dell’utente
+router.get("/", async (req, res) => {
   try {
-    return await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
-  }
-}
-
-// ✅ Middleware Rate Limiting avanzato
-async function checkRateLimit(ip, maxRequests, windowMs) {
-  const rateDocRef = db.collection("RateLimits").doc(ip);
-  const rateDoc = await rateDocRef.get();
-  const now = Date.now();
-
-  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
-
-  if (now - data.firstRequest < windowMs) {
-    if (data.count >= maxRequests) {
-      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
-    }
-    data.count++;
-  } else {
-    data = { count: 1, firstRequest: now };
-  }
-
-  await rateDocRef.set(data);
-}
-
-// 📌 GET - Recuperare dati clienti
-exports.getCustomersData = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "❌ Usa GET." });
-  }
-
-  try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 10, 60 * 1000); // 10 richieste ogni 60 sec
-
-    const customersSnapshot = await db.collection("Customers").get();
+    const snapshot = await db
+      .collection("Customers")
+      .where("userId", "==", req.userId)
+      .get();
 
     let totalCustomers = 0,
       leads = 0,
       vipCustomers = 0;
     let recentCustomers = [];
 
-    customersSnapshot.forEach((doc) => {
-      const customer = doc.data();
+    snapshot.forEach((doc) => {
+      const c = doc.data();
       totalCustomers++;
-      if (customer.type === "lead") leads++;
-      if (customer.isVIP) vipCustomers++;
+      if (c.type === "lead") leads++;
+      if (c.isVIP) vipCustomers++;
 
-      const lastBooking = customer.lastBooking
-        ? typeof customer.lastBooking.toDate === "function"
-          ? customer.lastBooking.toDate().toISOString()
-          : customer.lastBooking
-        : null;
-
+      const lastBooking = c.lastBooking?.toDate?.() || null;
       if (lastBooking) {
         recentCustomers.push({
           id: doc.id,
-          name: customer.name || "N/A",
-          email: customer.email || "N/A",
-          phone: customer.phone || "N/A",
-          lastBooking,
+          name: c.name || "N/A",
+          email: c.email || "N/A",
+          phone: c.phone || "N/A",
+          lastBooking: lastBooking.toISOString(),
         });
       }
     });
@@ -87,36 +43,23 @@ exports.getCustomersData = functions.https.onRequest(async (req, res) => {
       .sort((a, b) => new Date(b.lastBooking) - new Date(a.lastBooking))
       .slice(0, 5);
 
-    return res.json({ totalCustomers, leads, vipCustomers, recentCustomers });
-  } catch (error) {
-    functions.logger.error("❌ Errore recupero clienti:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    res.json({ totalCustomers, leads, vipCustomers, recentCustomers });
+  } catch (err) {
+    console.error("❌ Errore clienti:", err);
+    res.status(500).json({ error: "Errore interno" });
   }
 });
 
-// 📌 POST - Aggiungere nuovo cliente
-exports.addCustomer = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST." });
-  }
-
+// ✅ POST /customers → Aggiungi cliente
+router.post("/", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 10, 60 * 1000);
-
     const { name, email, phone, type, isVIP, lastBooking } = req.body;
-
     if (!name || !email || !phone) {
       return res.status(400).json({ error: "❌ Campi obbligatori mancanti." });
     }
 
-    const customerData = {
+    const data = {
+      userId: req.userId,
       name,
       email,
       phone,
@@ -126,30 +69,17 @@ exports.addCustomer = functions.https.onRequest(async (req, res) => {
       createdAt: new Date(),
     };
 
-    const docRef = await db.collection("Customers").add(customerData);
-    return res.json({ id: docRef.id, ...customerData });
-  } catch (error) {
-    functions.logger.error("❌ Errore aggiunta cliente:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    const docRef = await db.collection("Customers").add(data);
+    return res.json({ id: docRef.id, ...data });
+  } catch (err) {
+    console.error("❌ Errore POST cliente:", err);
+    res.status(500).json({ error: "Errore interno" });
   }
 });
 
-// 📌 PUT - Aggiornare dati cliente
-exports.updateCustomer = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT") {
-    return res.status(405).json({ error: "❌ Usa PUT." });
-  }
-
+// ✅ PUT /customers → Aggiorna cliente
+router.put("/", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 10, 60 * 1000);
-
     const { customerId, updates } = req.body;
     if (!customerId || !updates) {
       return res
@@ -157,44 +87,47 @@ exports.updateCustomer = functions.https.onRequest(async (req, res) => {
         .json({ error: "❌ customerId e updates richiesti." });
     }
 
+    const ref = db.collection("Customers").doc(customerId);
+    const doc = await ref.get();
+    if (!doc.exists || doc.data().userId !== req.userId) {
+      return res.status(403).json({ error: "❌ Accesso non autorizzato." });
+    }
+
     if (updates.lastBooking)
       updates.lastBooking = new Date(updates.lastBooking);
 
-    await db.collection("Customers").doc(customerId).update(updates);
-    return res.json({ message: "✅ Cliente aggiornato." });
-  } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento cliente:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    await ref.update({
+      ...updates,
+      updatedAt: new Date(),
+    });
+
+    res.json({ message: "✅ Cliente aggiornato." });
+  } catch (err) {
+    console.error("❌ Errore PUT cliente:", err);
+    res.status(500).json({ error: "Errore interno" });
   }
 });
 
-// 📌 DELETE - Eliminare cliente
-exports.deleteCustomer = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE") {
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-  }
-
+// ✅ DELETE /customers → Elimina cliente
+router.delete("/", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 10, 60 * 1000);
-
     const { customerId } = req.query;
     if (!customerId) {
       return res.status(400).json({ error: "❌ customerId richiesto." });
     }
 
-    await db.collection("Customers").doc(customerId).delete();
-    return res.json({ message: "✅ Cliente eliminato." });
-  } catch (error) {
-    functions.logger.error("❌ Errore eliminazione cliente:", error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    const ref = db.collection("Customers").doc(customerId);
+    const doc = await ref.get();
+    if (!doc.exists || doc.data().userId !== req.userId) {
+      return res.status(403).json({ error: "❌ Accesso non autorizzato." });
+    }
+
+    await ref.delete();
+    res.json({ message: "✅ Cliente eliminato." });
+  } catch (err) {
+    console.error("❌ Errore DELETE cliente:", err);
+    res.status(500).json({ error: "Errore interno" });
   }
 });
+
+module.exports = router;

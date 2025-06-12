@@ -1,88 +1,53 @@
-const functions = require("firebase-functions");
+// 📁 functions/bookingsRoutes.js
+const express = require("express");
 const admin = require("firebase-admin");
-
-// Inizializzazione Firebase
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+const { verifyToken } = require("../middlewares/verifyToken");
 
 const db = admin.firestore();
+const router = express.Router();
 
-// 🔒 Middleware autenticazione
-async function authenticate(req) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante." };
+router.use(verifyToken);
+
+// ✅ GET /bookings → Tutte le prenotazioni dell’utente
+router.get("/", async (req, res) => {
   try {
-    return await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Errore autenticazione:", error);
-    throw { status: 401, message: "❌ Token non valido." };
-  }
-}
-
-// ✅ GET: Recupera tutte le prenotazioni dell'utente autenticato
-exports.getBookings = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "❌ Usa GET." });
-  }
-
-  try {
-    const user = await authenticate(req);
     const snapshot = await db
       .collection("Bookings")
-      .where("userId", "==", user.uid)
+      .where("userId", "==", req.user.uid)
       .get();
 
     const bookings = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate().toISOString(),
+      createdAt: doc.data().createdAt?.toDate().toISOString() || null,
     }));
 
     res.json({ bookings });
   } catch (error) {
-    functions.logger.error("❌ Errore getBookings:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno." });
+    console.error("❌ Errore getBookings:", error);
+    res.status(500).json({ error: "Errore nel recupero prenotazioni." });
   }
 });
 
-// ✅ GET: Ottieni singola prenotazione per ID
-exports.getBookingById = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "❌ Usa GET." });
-  }
-
+// ✅ GET /bookings/:id → Prenotazione specifica
+router.get("/:id", async (req, res) => {
   try {
-    const user = await authenticate(req);
-    const { id } = req.query;
-    if (!id) {
-      return res.status(400).json({ error: "❌ ID prenotazione mancante." });
-    }
+    const doc = await db.collection("Bookings").doc(req.params.id).get();
 
-    const doc = await db.collection("Bookings").doc(id).get();
-    if (!doc.exists || doc.data().userId !== user.uid) {
+    if (!doc.exists || doc.data().userId !== req.user.uid) {
       return res.status(404).json({ error: "❌ Prenotazione non trovata." });
     }
 
     res.json({ id: doc.id, ...doc.data() });
   } catch (error) {
-    functions.logger.error("❌ Errore getBookingById:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno." });
+    console.error("❌ Errore getBookingById:", error);
+    res.status(500).json({ error: "Errore interno." });
   }
 });
 
-// ✅ POST: Creazione nuova prenotazione
-exports.createBooking = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST." });
-  }
-
+// ✅ POST /bookings → Crea nuova prenotazione
+router.post("/", async (req, res) => {
   try {
-    const user = await authenticate(req);
     const { customerName, checkInDate, checkOutDate, amount, status } =
       req.body;
 
@@ -90,54 +55,41 @@ exports.createBooking = functions.https.onRequest(async (req, res) => {
       return res.status(400).json({ error: "❌ Tutti i campi obbligatori." });
     }
 
-    const bookingData = {
+    const booking = {
       customerName,
       checkInDate: admin.firestore.Timestamp.fromDate(new Date(checkInDate)),
       checkOutDate: admin.firestore.Timestamp.fromDate(new Date(checkOutDate)),
       amount,
       status,
-      userId: user.uid,
+      userId: req.user.uid,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
-    const bookingRef = await db.collection("Bookings").add(bookingData);
-    const savedDoc = await bookingRef.get();
-    const savedData = savedDoc.data();
+    const ref = await db.collection("Bookings").add(booking);
+    const savedDoc = await ref.get();
+    const data = savedDoc.data();
 
     res.status(201).json({
       id: savedDoc.id,
-      ...savedData,
-      checkInDate: savedData.checkInDate?.toDate().toISOString(),
-      checkOutDate: savedData.checkOutDate?.toDate().toISOString(),
-      createdAt: savedData.createdAt?.toDate().toISOString(),
+      ...data,
+      checkInDate: data.checkInDate?.toDate().toISOString(),
+      checkOutDate: data.checkOutDate?.toDate().toISOString(),
+      createdAt: data.createdAt?.toDate().toISOString(),
     });
   } catch (error) {
-    functions.logger.error("❌ Errore createBooking:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno." });
+    console.error("❌ Errore createBooking:", error);
+    res.status(500).json({ error: "Errore creazione prenotazione." });
   }
 });
 
-// ✅ PATCH: Aggiornamento prenotazione esistente
-exports.updateBooking = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PATCH") {
-    return res.status(405).json({ error: "❌ Usa PATCH." });
-  }
-
+// ✅ PATCH /bookings/:id → Aggiorna prenotazione
+router.patch("/:id", async (req, res) => {
   try {
-    const user = await authenticate(req);
-    const { id } = req.query;
-    const updates = req.body;
+    const updates = { ...req.body };
+    const docRef = db.collection("Bookings").doc(req.params.id);
+    const doc = await docRef.get();
 
-    if (!id) {
-      return res.status(400).json({ error: "❌ ID prenotazione mancante." });
-    }
-
-    const bookingRef = db.collection("Bookings").doc(id);
-    const doc = await bookingRef.get();
-
-    if (!doc.exists || doc.data().userId !== user.uid) {
+    if (!doc.exists || doc.data().userId !== req.user.uid) {
       return res.status(404).json({ error: "❌ Prenotazione non trovata." });
     }
 
@@ -150,46 +102,34 @@ exports.updateBooking = functions.https.onRequest(async (req, res) => {
         new Date(updates.checkOutDate)
       );
 
-    await bookingRef.update({
+    await docRef.update({
       ...updates,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+
     res.json({ message: "✅ Prenotazione aggiornata." });
   } catch (error) {
-    functions.logger.error("❌ Errore updateBooking:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno." });
+    console.error("❌ Errore updateBooking:", error);
+    res.status(500).json({ error: "Errore aggiornamento prenotazione." });
   }
 });
 
-// ✅ DELETE: Elimina prenotazione
-exports.deleteBooking = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE") {
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-  }
-
+// ✅ DELETE /bookings/:id → Elimina prenotazione
+router.delete("/:id", async (req, res) => {
   try {
-    const user = await authenticate(req);
-    const { id } = req.query;
+    const docRef = db.collection("Bookings").doc(req.params.id);
+    const doc = await docRef.get();
 
-    if (!id) {
-      return res.status(400).json({ error: "❌ ID prenotazione mancante." });
-    }
-
-    const bookingRef = db.collection("Bookings").doc(id);
-    const doc = await bookingRef.get();
-
-    if (!doc.exists || doc.data().userId !== user.uid) {
+    if (!doc.exists || doc.data().userId !== req.user.uid) {
       return res.status(404).json({ error: "❌ Prenotazione non trovata." });
     }
 
-    await bookingRef.delete();
+    await docRef.delete();
     res.json({ message: "✅ Prenotazione eliminata." });
   } catch (error) {
-    functions.logger.error("❌ Errore deleteBooking:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno." });
+    console.error("❌ Errore deleteBooking:", error);
+    res.status(500).json({ error: "Errore eliminazione prenotazione." });
   }
 });
+
+module.exports = router;

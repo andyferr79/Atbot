@@ -1,91 +1,50 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const express = require("express");
+const { admin } = require("./firebase");
+const { verifyToken } = require("../middlewares/verifyToken");
 
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+const withRateLimit = require("./middlewares/withRateLimit");
 
 const db = admin.firestore();
+const router = express.Router();
 
-// ✅ Middleware autenticazione
-async function authenticate(req) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante" };
+// 🔐 Middleware globale
+router.use(verifyToken);
+router.use(withRateLimit(50, 10 * 60 * 1000)); // Max 50 ogni 10 min
+
+// 📌 GET /suppliers-reports → Tutti i report fornitori
+router.get("/", async (req, res) => {
   try {
-    req.user = await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
-  }
-}
-
-// ✅ Middleware Rate Limiting
-async function checkRateLimit(ip, maxRequests, windowMs) {
-  const rateDocRef = db.collection("RateLimits").doc(ip);
-  const rateDoc = await rateDocRef.get();
-  const now = Date.now();
-
-  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
-
-  if (now - data.firstRequest < windowMs) {
-    if (data.count >= maxRequests) {
-      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
-    }
-    data.count++;
-  } else {
-    data = { count: 1, firstRequest: now };
-  }
-
-  await rateDocRef.set(data);
-}
-
-// 📌 GET - Recupera tutti i report fornitori
-exports.getSuppliersReports = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-
-  try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
     const snapshot = await db.collection("SuppliersReports").get();
-    const reports = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      supplierName: doc.data().supplierName || "N/A",
-      totalSpent: doc.data().totalSpent || 0,
-      contractStatus: doc.data().contractStatus || "unknown",
-      reportDate: doc.data().reportDate?.toDate().toISOString() || "N/A",
-      createdAt: doc.data().createdAt?.toDate().toISOString() || "N/A",
-    }));
+    const reports = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        supplierName: data.supplierName || "N/A",
+        totalSpent: data.totalSpent || 0,
+        contractStatus: data.contractStatus || "unknown",
+        reportDate: data.reportDate?.toDate().toISOString() || "N/A",
+        createdAt: data.createdAt?.toDate().toISOString() || "N/A",
+      };
+    });
 
     res.json({ reports });
   } catch (error) {
-    functions.logger.error("❌ Errore recupero report fornitori:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore getSuppliersReports:", error);
+    res.status(500).json({ error: "Errore nel recupero dei report." });
   }
 });
 
-// 📌 POST - Aggiunge un nuovo report fornitore
-exports.addSupplierReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "❌ Usa POST." });
-
+// 📌 POST /suppliers-reports → Aggiunge nuovo report
+router.post("/", async (req, res) => {
   try {
-    await authenticate(req);
     const { supplierName, totalSpent, contractStatus, reportDate } = req.body;
 
     if (!supplierName || !totalSpent || !contractStatus || !reportDate) {
       return res.status(400).json({ error: "❌ Campi obbligatori mancanti." });
     }
 
-    const parsedTotalSpent = parseFloat(totalSpent);
-    if (isNaN(parsedTotalSpent) || parsedTotalSpent <= 0) {
+    const parsedTotal = parseFloat(totalSpent);
+    if (isNaN(parsedTotal) || parsedTotal <= 0) {
       return res
         .status(400)
         .json({ error: "❌ Il totale speso deve essere positivo." });
@@ -93,7 +52,7 @@ exports.addSupplierReport = functions.https.onRequest(async (req, res) => {
 
     const newReport = {
       supplierName,
-      totalSpent: parsedTotalSpent,
+      totalSpent: parsedTotal,
       contractStatus,
       reportDate: new Date(reportDate),
       createdAt: new Date(),
@@ -102,60 +61,47 @@ exports.addSupplierReport = functions.https.onRequest(async (req, res) => {
     const docRef = await db.collection("SuppliersReports").add(newReport);
     res.json({ id: docRef.id, ...newReport });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiunta report:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore addSupplierReport:", error);
+    res.status(500).json({ error: "Errore creazione report." });
   }
 });
 
-// 📌 PUT - Aggiorna report fornitori
-exports.updateSuppliersReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT")
-    return res.status(405).json({ error: "❌ Usa PUT." });
-
+// 📌 PUT /suppliers-reports/:id → Aggiorna un report
+router.put("/:id", async (req, res) => {
   try {
-    await authenticate(req);
-    const { reportId, updates } = req.body;
-    if (!reportId || !updates) {
+    const updates = req.body;
+    if (!updates) {
       return res
         .status(400)
-        .json({ error: "❌ reportId e aggiornamenti richiesti." });
+        .json({ error: "❌ Dati aggiornamento richiesti." });
     }
 
     if (updates.reportDate) updates.reportDate = new Date(updates.reportDate);
     updates.updatedAt = new Date();
 
-    await db.collection("SuppliersReports").doc(reportId).update(updates);
+    await db.collection("SuppliersReports").doc(req.params.id).update(updates);
 
     res.json({ message: "✅ Report aggiornato con successo." });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento report fornitori:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore updateSuppliersReport:", error);
+    res.status(500).json({ error: "Errore aggiornamento report." });
   }
 });
 
-// 📌 DELETE - Elimina report fornitori
-exports.deleteSuppliersReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE")
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-
+// 📌 DELETE /suppliers-reports/:id → Elimina un report
+router.delete("/:id", async (req, res) => {
   try {
-    await authenticate(req);
-    const { reportId } = req.query;
-    if (!reportId) {
-      return res.status(400).json({ error: "❌ reportId richiesto." });
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: "❌ ID report richiesto." });
     }
 
-    await db.collection("SuppliersReports").doc(reportId).delete();
-
+    await db.collection("SuppliersReports").doc(id).delete();
     res.json({ message: "✅ Report eliminato con successo." });
   } catch (error) {
-    functions.logger.error("❌ Errore eliminazione report fornitori:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore deleteSuppliersReport:", error);
+    res.status(500).json({ error: "Errore eliminazione report." });
   }
 });
+
+module.exports = router;

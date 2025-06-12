@@ -1,11 +1,9 @@
-const functions = require("firebase-functions");
+const express = require("express");
 const admin = require("firebase-admin");
-
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+const router = express.Router();
 
 const db = admin.firestore();
+router.use(express.json());
 
 // ✅ Middleware autenticazione
 async function authenticate(req) {
@@ -14,7 +12,7 @@ async function authenticate(req) {
   try {
     return await admin.auth().verifyIdToken(token);
   } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
+    console.error("❌ Token non valido:", error);
     throw { status: 401, message: "❌ Token non valido" };
   }
 }
@@ -40,11 +38,7 @@ async function checkRateLimit(ip, maxRequests, windowMs) {
 }
 
 // 📌 GET - Recuperare tutti i report marketing
-exports.getMarketingReports = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "❌ Usa GET." });
-  }
-
+router.get("/", async (req, res) => {
   try {
     await authenticate(req);
     const ip =
@@ -62,7 +56,7 @@ exports.getMarketingReports = functions.https.onRequest(async (req, res) => {
 
     return res.json(reports);
   } catch (error) {
-    functions.logger.error("❌ Errore recupero report marketing:", error);
+    console.error("❌ Errore recupero report marketing:", error);
     return res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
@@ -70,11 +64,7 @@ exports.getMarketingReports = functions.https.onRequest(async (req, res) => {
 });
 
 // 📌 POST - Aggiungere nuovo report marketing
-exports.addMarketingReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST." });
-  }
-
+router.post("/", async (req, res) => {
   try {
     await authenticate(req);
     const ip =
@@ -112,7 +102,7 @@ exports.addMarketingReport = functions.https.onRequest(async (req, res) => {
     const docRef = await db.collection("MarketingReports").add(newReport);
     return res.json({ id: docRef.id, ...newReport });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiunta report marketing:", error);
+    console.error("❌ Errore aggiunta report marketing:", error);
     return res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
@@ -120,11 +110,7 @@ exports.addMarketingReport = functions.https.onRequest(async (req, res) => {
 });
 
 // 📌 PUT - Aggiornare report marketing
-exports.updateMarketingReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT") {
-    return res.status(405).json({ error: "❌ Usa PUT." });
-  }
-
+router.put("/", async (req, res) => {
   try {
     await authenticate(req);
     const ip =
@@ -143,7 +129,7 @@ exports.updateMarketingReport = functions.https.onRequest(async (req, res) => {
     await db.collection("MarketingReports").doc(reportId).update(updates);
     return res.json({ message: "✅ Report marketing aggiornato." });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento report marketing:", error);
+    console.error("❌ Errore aggiornamento report marketing:", error);
     return res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
@@ -151,11 +137,7 @@ exports.updateMarketingReport = functions.https.onRequest(async (req, res) => {
 });
 
 // 📌 DELETE - Eliminare report marketing
-exports.deleteMarketingReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE") {
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-  }
-
+router.delete("/", async (req, res) => {
   try {
     await authenticate(req);
     const ip =
@@ -172,9 +154,11 @@ exports.deleteMarketingReport = functions.https.onRequest(async (req, res) => {
     await db.collection("MarketingReports").doc(reportId).delete();
     return res.json({ message: "✅ Report marketing eliminato." });
   } catch (error) {
-    functions.logger.error("❌ Errore eliminazione report marketing:", error);
+    console.error("❌ Errore eliminazione report marketing:", error);
     return res
       .status(error.status || 500)
       .json({ error: error.message || "Errore interno" });
   }
 });
+
+module.exports = router;

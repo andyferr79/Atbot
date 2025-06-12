@@ -1,61 +1,23 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+// 📁 functions/reviewsRoutes.js
+const express = require("express");
+const { admin } = require("./firebase");
+const { verifyToken } = require("../middlewares/verifyToken");
+const withRateLimit = require("./middlewares/withRateLimit");
 
 const db = admin.firestore();
+const router = express.Router();
 
-// ✅ Middleware autenticazione
-async function authenticate(req) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) throw { status: 403, message: "❌ Token mancante" };
+// 🔐 Middleware
+router.use(verifyToken);
+router.use(withRateLimit(50, 10 * 60 * 1000)); // Max 50 richieste ogni 10 min
+
+// 📌 GET /reviews → Recupera tutte le recensioni
+router.get("/", async (req, res) => {
   try {
-    await admin.auth().verifyIdToken(token);
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    throw { status: 401, message: "❌ Token non valido" };
-  }
-}
-
-// ✅ Middleware Rate Limiting
-async function checkRateLimit(ip, maxRequests, windowMs) {
-  const rateDocRef = db.collection("RateLimits").doc(ip);
-  const rateDoc = await rateDocRef.get();
-  const now = Date.now();
-
-  let data = rateDoc.exists ? rateDoc.data() : { count: 0, firstRequest: now };
-
-  if (now - data.firstRequest < windowMs) {
-    if (data.count >= maxRequests) {
-      throw { status: 429, message: "❌ Troppe richieste. Riprova più tardi." };
-    }
-    data.count++;
-  } else {
-    data = { count: 1, firstRequest: now };
-  }
-
-  await rateDocRef.set(data);
-}
-
-// 📌 GET - Recupera tutte le recensioni
-exports.getReviews = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-
-  try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
-    const reviewsSnapshot = await db.collection("Reviews").get();
+    const snapshot = await db.collection("Reviews").get();
     let totalRating = 0;
 
-    const reviews = reviewsSnapshot.docs.map((doc) => {
+    const reviews = snapshot.docs.map((doc) => {
       const data = doc.data();
       totalRating += data.rating || 0;
       return {
@@ -70,31 +32,20 @@ exports.getReviews = functions.https.onRequest(async (req, res) => {
 
     const averageRating = reviews.length
       ? (totalRating / reviews.length).toFixed(2)
-      : 0;
+      : "0.00";
 
     res.json({ averageRating, reviews });
   } catch (error) {
-    functions.logger.error("❌ Errore recupero recensioni:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore GET /reviews:", error);
+    res.status(500).json({ error: "Errore nel recupero recensioni." });
   }
 });
 
-// 📌 POST - Aggiungi nuova recensione
-exports.addReview = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "❌ Usa POST." });
-
+// 📌 POST /reviews → Aggiungi nuova recensione
+router.post("/", async (req, res) => {
   try {
-    await authenticate(req);
-    const ip =
-      req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
-      "unknown_ip";
-    await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
     const { guestName, rating, comment, source } = req.body;
+
     if (!rating || isNaN(rating) || rating < 0 || rating > 5) {
       return res.status(400).json({ error: "❌ Rating non valido (0-5)." });
     }
@@ -108,57 +59,46 @@ exports.addReview = functions.https.onRequest(async (req, res) => {
     };
 
     const docRef = await db.collection("Reviews").add(newReview);
-    res.json({ id: docRef.id, ...newReview });
+    res.status(201).json({ id: docRef.id, ...newReview });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiunta recensione:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore POST /reviews:", error);
+    res.status(500).json({ error: "Errore nell'aggiunta della recensione." });
   }
 });
 
-// 📌 PUT - Aggiorna recensione esistente
-exports.updateReview = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT")
-    return res.status(405).json({ error: "❌ Usa PUT." });
-
+// 📌 PUT /reviews/:id → Aggiorna una recensione
+router.put("/:id", async (req, res) => {
   try {
-    await authenticate(req);
-    const { reviewId, updates } = req.body;
-    if (!reviewId || !updates) {
-      return res
-        .status(400)
-        .json({ error: "❌ reviewId e aggiornamenti richiesti." });
+    const updates = req.body;
+    const reviewId = req.params.id;
+
+    if (!updates || !reviewId) {
+      return res.status(400).json({ error: "❌ Dati mancanti." });
     }
 
     await db.collection("Reviews").doc(reviewId).update(updates);
     res.json({ message: "✅ Recensione aggiornata." });
   } catch (error) {
-    functions.logger.error("❌ Errore aggiornamento recensione:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore PUT /reviews/:id:", error);
+    res.status(500).json({ error: "Errore nell’aggiornamento recensione." });
   }
 });
 
-// 📌 DELETE - Eliminare recensione
-exports.deleteReview = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE")
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-
+// 📌 DELETE /reviews/:id → Elimina recensione
+router.delete("/:id", async (req, res) => {
   try {
-    await authenticate(req);
-    const { reviewId } = req.query;
+    const reviewId = req.params.id;
+
     if (!reviewId) {
-      return res.status(400).json({ error: "❌ reviewId richiesto." });
+      return res.status(400).json({ error: "❌ ID recensione richiesto." });
     }
 
     await db.collection("Reviews").doc(reviewId).delete();
     res.json({ message: "✅ Recensione eliminata." });
   } catch (error) {
-    functions.logger.error("❌ Errore eliminazione recensione:", error);
-    res
-      .status(error.status || 500)
-      .json({ error: error.message || "Errore interno" });
+    console.error("❌ Errore DELETE /reviews/:id:", error);
+    res.status(500).json({ error: "Errore nella cancellazione recensione." });
   }
 });
+
+module.exports = router;

@@ -1,187 +1,140 @@
-const functions = require("firebase-functions");
+// 📁 functions/bookingsReportsRoutes.js – Booking Reports (Gen 2)
+
+const express = require("express");
 const admin = require("firebase-admin");
+const { verifyToken } = require("../middlewares/verifyToken");
 
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
-
+if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
 
-// ✅ Middleware per verificare il token utente
-const verifyToken = async (req, res) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    res.status(403).json({ error: "❌ Token mancante" });
-    return false;
-  }
-  try {
-    req.user = await admin.auth().verifyIdToken(token);
-    return true;
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    res.status(401).json({ error: "❌ Token non valido" });
-    return false;
-  }
-};
+const router = express.Router();
 
-// ✅ Middleware per il rate limiting
-const checkRateLimit = async (req, res, windowMs = 60 * 1000) => {
-  const ip =
-    req.headers["x-forwarded-for"] ||
-    req.connection?.remoteAddress ||
-    "unknown_ip";
+// 🔐 Middleware globale: autenticazione
+router.use(verifyToken);
+
+// 🛡️ Middleware: rate limit semplice (1 richiesta/minuto per IP)
+const checkRateLimit = async (req, res, next) => {
+  const ip = req.headers["x-forwarded-for"] || req.ip || "unknown_ip";
   const now = Date.now();
-  const rateDocRef = db.collection("RateLimits").doc(ip);
-  const rateDoc = await rateDocRef.get();
+  const docRef = db.collection("RateLimits").doc(`bookings_${ip}`);
+  const doc = await docRef.get();
 
-  if (rateDoc.exists && now - rateDoc.data().lastRequest < windowMs) {
-    res
+  if (doc.exists && now - doc.data().lastRequest < 60 * 1000) {
+    return res
       .status(429)
-      .json({ error: "❌ Troppe richieste. Attendi prima di riprovare." });
-    return false;
+      .json({ error: "❌ Troppe richieste. Attendi un minuto." });
   }
 
-  await rateDocRef.set({ lastRequest: now });
-  return true;
+  await docRef.set({ lastRequest: now });
+  next();
 };
 
-// ✅ API per ottenere tutti i report delle prenotazioni (solo per l'utente loggato)
-exports.getBookingsReports = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-  if (!(await verifyToken(req, res))) return;
-  if (!(await checkRateLimit(req, res))) return;
+// 📥 Log richieste
+router.use((req, res, next) => {
+  console.log(
+    `[📊 BookingsReports] ${req.method} ${req.originalUrl} – UID: ${req.user?.uid}`
+  );
+  next();
+});
 
+// ✅ GET /reports/bookings → Elenco report utente
+router.get("/", checkRateLimit, async (req, res) => {
   try {
     const snapshot = await db
       .collection("BookingsReports")
       .where("generatedBy", "==", req.user.uid)
       .get();
 
-    if (snapshot.empty) {
-      return res.json([]);
-    }
-
     const reports = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate().toISOString() || "N/A",
+      createdAt: doc.data().createdAt?.toDate().toISOString() || null,
     }));
 
-    res.json({ reports });
+    res.status(200).json({ reports });
   } catch (error) {
-    functions.logger.error("❌ Errore nel recupero dei report:", error);
+    console.error("❌ getBookingsReports:", error);
     res.status(500).json({ error: "Errore nel recupero dei report" });
   }
 });
 
-// ✅ API per ottenere un singolo report per ID
-exports.getBookingReportById = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-  if (!(await verifyToken(req, res))) return;
-
+// ✅ GET /reports/bookings/:id → Singolo report
+router.get("/:id", async (req, res) => {
   try {
-    const { id } = req.query;
-    if (!id)
-      return res.status(400).json({ error: "❌ ID del report mancante" });
+    const { id } = req.params;
+    const ref = db.collection("BookingsReports").doc(id);
+    const doc = await ref.get();
 
-    const reportRef = db.collection("BookingsReports").doc(id);
-    const reportDoc = await reportRef.get();
-
-    if (!reportDoc.exists)
+    if (!doc.exists)
       return res.status(404).json({ error: "❌ Report non trovato" });
-
-    res.json({ id: reportDoc.id, ...reportDoc.data() });
+    res.status(200).json({ id: doc.id, ...doc.data() });
   } catch (error) {
-    functions.logger.error("❌ Errore nel recupero del report:", error);
-    res.status(500).json({ error: "Errore nel recupero del report" });
+    console.error("❌ getBookingReportById:", error);
+    res.status(500).json({ error: "Errore interno" });
   }
 });
 
-// ✅ API per creare un nuovo report di prenotazioni
-exports.createBookingReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "❌ Usa POST." });
-  if (!(await verifyToken(req, res))) return;
-
+// ✅ POST /reports/bookings → Crea nuovo report
+router.post("/", async (req, res) => {
   try {
-    const { reportData, generatedBy } = req.body;
-    if (!reportData || !generatedBy) {
-      return res
-        .status(400)
-        .json({ error: "❌ Tutti i campi sono obbligatori." });
-    }
+    const { reportData } = req.body;
+    if (!reportData)
+      return res.status(400).json({ error: "❌ Dati report mancanti" });
 
-    const newReport = {
+    const ref = await db.collection("BookingsReports").add({
       reportData,
-      generatedBy,
+      generatedBy: req.user.uid,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
+    });
 
-    const reportRef = await db.collection("BookingsReports").add(newReport);
-
-    res.json({ message: "✅ Report creato con successo!", id: reportRef.id });
+    res.status(200).json({ message: "✅ Report creato", id: ref.id });
   } catch (error) {
-    functions.logger.error("❌ Errore nella creazione del report:", error);
+    console.error("❌ createBookingReport:", error);
     res.status(500).json({ error: "Errore nella creazione del report" });
   }
 });
 
-// ✅ API per aggiornare un report di prenotazioni
-exports.updateBookingReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT")
-    return res.status(405).json({ error: "❌ Usa PUT." });
-  if (!(await verifyToken(req, res))) return;
-
+// ✅ PUT /reports/bookings/:id → Aggiorna report
+router.put("/:id", async (req, res) => {
   try {
-    const { id } = req.query;
+    const { id } = req.params;
     const { reportData } = req.body;
-
-    if (!id)
-      return res.status(400).json({ error: "❌ ID del report mancante" });
     if (!reportData)
       return res
         .status(400)
-        .json({ error: "❌ Nessun dato fornito per l'aggiornamento" });
+        .json({ error: "❌ Nessun contenuto da aggiornare" });
 
-    const reportRef = db.collection("BookingsReports").doc(id);
-    const reportDoc = await reportRef.get();
+    const ref = db.collection("BookingsReports").doc(id);
+    const doc = await ref.get();
 
-    if (!reportDoc.exists)
+    if (!doc.exists)
       return res.status(404).json({ error: "❌ Report non trovato" });
 
-    await reportRef.update({ reportData });
-
-    res.json({ message: "✅ Report aggiornato con successo!" });
+    await ref.update({ reportData });
+    res.status(200).json({ message: "✅ Report aggiornato" });
   } catch (error) {
-    functions.logger.error("❌ Errore nell'aggiornamento del report:", error);
-    res.status(500).json({ error: "Errore nell'aggiornamento del report" });
+    console.error("❌ updateBookingReport:", error);
+    res.status(500).json({ error: "Errore aggiornamento report" });
   }
 });
 
-// ✅ API per eliminare un report di prenotazioni
-exports.deleteBookingReport = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE")
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-  if (!(await verifyToken(req, res))) return;
-
+// ✅ DELETE /reports/bookings/:id → Elimina report
+router.delete("/:id", async (req, res) => {
   try {
-    const { id } = req.query;
-    if (!id)
-      return res.status(400).json({ error: "❌ ID del report mancante" });
+    const { id } = req.params;
 
-    const reportRef = db.collection("BookingsReports").doc(id);
-    const reportDoc = await reportRef.get();
+    const ref = db.collection("BookingsReports").doc(id);
+    const doc = await ref.get();
 
-    if (!reportDoc.exists)
+    if (!doc.exists)
       return res.status(404).json({ error: "❌ Report non trovato" });
 
-    await reportRef.delete();
-
-    res.json({ message: "✅ Report eliminato con successo!" });
+    await ref.delete();
+    res.status(200).json({ message: "✅ Report eliminato" });
   } catch (error) {
-    functions.logger.error("❌ Errore nell'eliminazione del report:", error);
-    res.status(500).json({ error: "Errore nell'eliminazione del report" });
+    console.error("❌ deleteBookingReport:", error);
+    res.status(500).json({ error: "Errore eliminazione report" });
   }
 });
+
+module.exports = router;

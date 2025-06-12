@@ -1,90 +1,70 @@
-const { onRequest } = require("firebase-functions/v2/https");
+// 📁 functions/aiRoutes.js – Gen 2, Sicuro, Log + Rate Limit
+
+const express = require("express");
 const admin = require("firebase-admin");
 const axios = require("axios");
-const db = admin.apps.length
-  ? admin.firestore()
-  : (() => {
-      admin.initializeApp();
-      return admin.firestore();
-    })();
+const rateLimit = require("express-rate-limit");
+const { verifyToken } = require("../middlewares/verifyToken");
 
-// URL del backend IA
+if (!admin.apps.length) admin.initializeApp();
+const db = admin.firestore();
+
+const router = express.Router();
+
+// ✅ Middleware globali
+router.use(verifyToken);
+
+// 📊 Logging richieste
+router.use((req, res, next) => {
+  console.log(`💬 [POST] /ai/chat – UID: ${req.user?.uid}, IP: ${req.ip}`);
+  next();
+});
+
+// 🛡️ Rate limiter per chat IA
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: "Troppe richieste. Riprova tra poco.",
+  keyGenerator: (req) => req.user?.uid || req.ip,
+});
+router.use(limiter);
+
+// ✅ URL backend AI FastAPI
 const AI_BACKEND_URL = "http://127.0.0.1:8000";
 
-// Middleware di verifica token
-async function verifyToken(req, res) {
-  const auth = req.headers.authorization?.split(" ")[1];
-  if (!auth) {
-    res.status(403).json({ error: "❌ Token mancante" });
-    return false;
-  }
-  try {
-    await admin.auth().verifyIdToken(auth);
-    return true;
-  } catch (e) {
-    res.status(401).json({ error: "❌ Token non valido" });
-    return false;
-  }
-}
-
-// Middleware rate limiting
-async function checkRateLimit(req, res) {
-  const ip = req.headers["x-forwarded-for"] || req.ip || "unknown";
-  const now = Date.now();
-  const doc = db.collection("RateLimits").doc(ip);
-  const snap = await doc.get();
-  if (snap.exists && now - snap.data().lastRequest < 10 * 60 * 1000) {
-    res.status(429).json({ error: "❌ Troppe richieste" });
-    return false;
-  }
-  await doc.set({ lastRequest: now });
-  return true;
-}
-
-// Wrapper comune per tutte le funzioni protette
-function secureFunction(handler) {
-  return onRequest(async (req, res) => {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "❌ Usa POST." });
-    }
-    if (!(await verifyToken(req, res))) return;
-    if (!(await checkRateLimit(req, res))) return;
-    try {
-      await handler(req, res);
-    } catch (err) {
-      console.error("❌ Errore interno:", err);
-      res.status(500).json({ error: err.message });
-    }
-  });
-}
-
-// 📌 Handler vero e proprio
-async function _chatWithAI(req, res) {
+// 🤖 POST /ai/chat → inoltra richiesta al backend FastAPI
+router.post("/chat", async (req, res) => {
   const { user_message, session_id } = req.body;
+
   if (!user_message || !session_id) {
-    return res
-      .status(400)
-      .json({ error: "❌ user_message e session_id obbligatori." });
+    return res.status(400).json({
+      error: "❌ user_message e session_id obbligatori",
+    });
   }
+
   try {
-    const { data } = await axios.post(
+    const response = await axios.post(
       `${AI_BACKEND_URL}/chat`,
       { user_message, session_id },
       { timeout: 10000 }
     );
-    res.json(data);
-  } catch (error) {
-    if (error.response) {
-      res
-        .status(error.response.status)
-        .json({ error: "Errore backend AI", details: error.response.data });
-    } else if (error.code === "ECONNABORTED") {
-      res.status(504).json({ error: "❌ Timeout comunicazione AI" });
-    } else {
-      res.status(500).json({ error: error.message });
-    }
-  }
-}
 
-// 📡 Esportazione della funzione
-exports.chatWithAI = secureFunction(_chatWithAI);
+    return res.status(200).json(response.data);
+  } catch (err) {
+    console.error("❌ Errore /ai/chat →", err?.response?.data || err.message);
+
+    if (err.response) {
+      return res
+        .status(err.response.status)
+        .json({ error: "Errore backend AI", details: err.response.data });
+    }
+
+    if (err.code === "ECONNABORTED") {
+      return res.status(504).json({ error: "❌ Timeout backend AI" });
+    }
+
+    return res.status(500).json({ error: "Errore interno comunicazione AI" });
+  }
+});
+
+module.exports = router;

@@ -1,27 +1,26 @@
-const functions = require("firebase-functions");
+// 📁 functions/pricingRecommendationsRoutes.js
+
+const express = require("express");
 const admin = require("firebase-admin");
 const axios = require("axios");
 
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
-
+const router = express.Router();
 const db = admin.firestore();
 const AI_BACKEND_URL = "http://127.0.0.1:8000";
 
-// ✅ Middleware autenticazione riutilizzabile
+// ✅ Middleware autenticazione
 const authenticate = async (req) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) throw { status: 403, message: "❌ Token mancante" };
   try {
     await admin.auth().verifyIdToken(token);
   } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
+    console.error("❌ Token non valido:", error);
     throw { status: 401, message: "❌ Token non valido" };
   }
 };
 
-// ✅ Middleware Rate Limiting riutilizzabile
+// ✅ Middleware rate limiting
 const checkRateLimit = async (ip, maxRequests, windowMs) => {
   const rateDocRef = db.collection("RateLimits").doc(ip);
   const rateDoc = await rateDocRef.get();
@@ -41,124 +40,102 @@ const checkRateLimit = async (ip, maxRequests, windowMs) => {
   await rateDocRef.set(data);
 };
 
-// 📌 GET - Ottiene raccomandazioni prezzi AI
-exports.getPricingRecommendations = functions.https.onRequest(
-  async (req, res) => {
-    if (req.method !== "GET") {
-      return res.status(405).json({ error: "❌ Usa GET." });
+// 📌 GET /pricing/recommendations
+router.get("/recommendations", async (req, res) => {
+  try {
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 50, 10 * 60 * 1000);
+
+    const pricingSnapshot = await db.collection("RoomPricing").get();
+    const pricingData = pricingSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    const aiResponse = await axios.post(`${AI_BACKEND_URL}/pricing/optimize`, {
+      pricingData,
+    });
+    if (aiResponse.status !== 200 || !aiResponse.data) {
+      throw { status: 500, message: "❌ Risposta non valida dal backend AI." };
     }
 
-    try {
-      await authenticate(req);
-      const ip =
-        req.headers["x-forwarded-for"] ||
-        req.connection?.remoteAddress ||
-        "unknown_ip";
-      await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
-      const pricingSnapshot = await db.collection("RoomPricing").get();
-      const pricingData = pricingSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      const aiResponse = await axios.post(
-        `${AI_BACKEND_URL}/pricing/optimize`,
-        { pricingData }
-      );
-
-      if (aiResponse.status !== 200 || !aiResponse.data) {
-        throw {
-          status: 500,
-          message: "❌ Risposta non valida dal backend AI.",
-        };
-      }
-
-      res.json({
-        message: "✅ Raccomandazioni di prezzo ottenute!",
-        recommendations: aiResponse.data.recommendations,
-        generatedAt: new Date().toISOString(),
-      });
-    } catch (error) {
-      functions.logger.error("❌ Errore raccomandazioni pricing:", error);
-      res
-        .status(error.status || 500)
-        .json({ error: error.message || "Errore interno" });
-    }
+    res.json({
+      message: "✅ Raccomandazioni di prezzo ottenute!",
+      recommendations: aiResponse.data.recommendations,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("❌ Errore raccomandazioni pricing:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
   }
-);
+});
 
-// 📌 POST - Salva manualmente le raccomandazioni di pricing in Firestore
-exports.savePricingRecommendations = functions.https.onRequest(
-  async (req, res) => {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "❌ Usa POST." });
+// 📌 POST /pricing/recommendations
+router.post("/recommendations", async (req, res) => {
+  try {
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 30, 10 * 60 * 1000);
+
+    const { recommendations } = req.body;
+    if (!recommendations) {
+      return res.status(400).json({ error: "❌ recommendations richieste." });
     }
 
-    try {
-      await authenticate(req);
-      const ip =
-        req.headers["x-forwarded-for"] ||
-        req.connection?.remoteAddress ||
-        "unknown_ip";
-      await checkRateLimit(ip, 30, 10 * 60 * 1000);
+    await db.collection("PricingRecommendations").doc("latest").set({
+      recommendations,
+      savedAt: new Date(),
+    });
 
-      const { recommendations } = req.body;
-      if (!recommendations) {
-        return res.status(400).json({ error: "❌ recommendations richieste." });
-      }
-
-      await db.collection("PricingRecommendations").doc("latest").set({
-        recommendations,
-        savedAt: new Date(),
-      });
-
-      res.json({ message: "✅ Raccomandazioni prezzi salvate con successo." });
-    } catch (error) {
-      functions.logger.error("❌ Errore salvataggio raccomandazioni:", error);
-      res
-        .status(error.status || 500)
-        .json({ error: error.message || "Errore interno" });
-    }
+    res.json({ message: "✅ Raccomandazioni prezzi salvate con successo." });
+  } catch (error) {
+    console.error("❌ Errore salvataggio raccomandazioni:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
   }
-);
+});
 
-// 📌 GET - Recupera ultime raccomandazioni salvate
-exports.getLatestPricingRecommendations = functions.https.onRequest(
-  async (req, res) => {
-    if (req.method !== "GET") {
-      return res.status(405).json({ error: "❌ Usa GET." });
+// 📌 GET /pricing/recommendations/latest
+router.get("/recommendations/latest", async (req, res) => {
+  try {
+    await authenticate(req);
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.connection?.remoteAddress ||
+      "unknown_ip";
+    await checkRateLimit(ip, 50, 10 * 60 * 1000);
+
+    const doc = await db
+      .collection("PricingRecommendations")
+      .doc("latest")
+      .get();
+    if (!doc.exists) {
+      return res
+        .status(404)
+        .json({ error: "⚠️ Nessuna raccomandazione trovata." });
     }
 
-    try {
-      await authenticate(req);
-      const ip =
-        req.headers["x-forwarded-for"] ||
-        req.connection?.remoteAddress ||
-        "unknown_ip";
-      await checkRateLimit(ip, 50, 10 * 60 * 1000);
-
-      const recommendationsDoc = await db
-        .collection("PricingRecommendations")
-        .doc("latest")
-        .get();
-
-      if (!recommendationsDoc.exists) {
-        return res
-          .status(404)
-          .json({ error: "⚠️ Nessuna raccomandazione trovata." });
-      }
-
-      const data = recommendationsDoc.data();
-      res.json({
-        recommendations: data.recommendations,
-        generatedAt: data.generatedAt?.toDate().toISOString() || "N/A",
-      });
-    } catch (error) {
-      functions.logger.error("❌ Errore recupero raccomandazioni:", error);
-      res
-        .status(error.status || 500)
-        .json({ error: error.message || "Errore interno" });
-    }
+    const data = doc.data();
+    res.json({
+      recommendations: data.recommendations,
+      generatedAt: data.generatedAt?.toDate().toISOString() || "N/A",
+    });
+  } catch (error) {
+    console.error("❌ Errore recupero raccomandazioni:", error);
+    res
+      .status(error.status || 500)
+      .json({ error: error.message || "Errore interno" });
   }
-);
+});
+
+module.exports = router;

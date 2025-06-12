@@ -1,24 +1,28 @@
 // 📁 functions/marketingAssistant.js
 
+const express = require("express");
 const admin = require("firebase-admin");
-const { onRequest } = require("firebase-functions/v1").https;
+const { verifyToken } = require("./middlewares/verifyToken");
+const withRateLimit = require("./middlewares/withRateLimit");
 const { trackIAUsage } = require("./usageTracker");
 const { sendNotification } = require("./lib/sendNotification");
+
 const db = admin.firestore();
+const router = express.Router();
+router.use(express.json());
 
-// ✅ POST /agent/marketing/analyzePresence
-exports.analyzePresence = onRequest(async (req, res) => {
-  if (req.method !== "POST") return res.status(405).send("Usa POST");
+// 🔐 Middleware
+router.use(verifyToken);
+router.use(withRateLimit(10, 60 * 1000)); // max 10 richieste al minuto
 
+// 📌 POST /agent/marketing/analyzePresence
+router.post("/analyzePresence", async (req, res) => {
   try {
-    const body = req.body || req.rawBody.toString();
-    const data = typeof body === "string" ? JSON.parse(body) : body;
-    const { userId, structureName, links = [] } = data;
+    const userId = req.user.uid;
+    const { structureName, links = [] } = req.body || {};
 
-    if (!userId || !structureName) {
-      return res
-        .status(400)
-        .json({ error: "❌ userId e structureName obbligatori" });
+    if (!structureName) {
+      return res.status(400).json({ error: "❌ structureName è obbligatorio" });
     }
 
     // 🔐 Piano GOLD obbligatorio
@@ -72,11 +76,14 @@ exports.analyzePresence = onRequest(async (req, res) => {
       type: "ai",
     });
 
-    res
-      .status(200)
-      .json({ message: "✅ Analisi marketing completata", feedback });
+    res.status(200).json({
+      message: "✅ Analisi marketing completata",
+      feedback,
+    });
   } catch (err) {
     console.error("❌ Errore analyzePresence:", err);
     res.status(500).json({ error: "Errore analisi marketing IA" });
   }
 });
+
+module.exports = router;

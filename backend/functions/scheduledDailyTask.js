@@ -1,23 +1,28 @@
 // 📁 functions/scheduledDailyTask.js
-
-const admin = require("firebase-admin");
+const express = require("express");
 const moment = require("moment-timezone");
-const db = admin.firestore();
+const { admin } = require("./firebase");
+const { verifyToken } = require("../middlewares/verifyToken");
+const withRateLimit = require("../middlewares/withRateLimit");
 const { sendNotification } = require("./lib/sendNotification");
 
-async function runSchedulerNowHandler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "❌ Usa POST" });
-  }
+const db = admin.firestore();
+const router = express.Router();
 
+// 🔐 Middleware per sicurezza
+router.use(verifyToken);
+router.use(withRateLimit(10, 60 * 1000)); // Max 10 al minuto
+
+// 📌 POST /scheduler/run-now → triggera scheduler giornaliero IA
+router.post("/run-now", async (req, res) => {
   try {
-    const usersSnapshot = await db.collection("users").get();
     const now = new Date();
+    const usersSnapshot = await db.collection("users").get();
 
     for (const doc of usersSnapshot.docs) {
       const user = doc.data();
       const userId = doc.id;
-      const timezone = user.timezone || "Europe/Rome"; // fallback 🇮🇹
+      const timezone = user.timezone || "Europe/Rome";
 
       const userHour = moment.tz(now, timezone).hour();
 
@@ -49,10 +54,10 @@ async function runSchedulerNowHandler(req, res) {
     res.status(200).json({
       message: "✅ Scheduler IA eseguito per gli utenti attivi alle 5:00",
     });
-  } catch (err) {
-    console.error("❌ Errore runSchedulerNowHandler:", err);
+  } catch (error) {
+    console.error("❌ Errore runSchedulerNowHandler:", error);
     res.status(500).json({ error: "Errore esecuzione scheduler IA" });
   }
-}
+});
 
-module.exports = { runSchedulerNowHandler };
+module.exports = router;

@@ -58,13 +58,15 @@ const KPICards = () => {
         <h3>Stato Sistema</h3>
         <p
           className={`kpi-value ${
-            systemStatus.status?.includes("✅") ? "success" : "danger"
+            systemStatus && systemStatus.status?.includes("✅")
+              ? "success"
+              : "danger"
           }`}
         >
-          {systemStatus.status || "—"}
+          {systemStatus?.status || "—"}
         </p>
         <span className="kpi-label">
-          Ultimo backup: {systemStatus.lastBackup || "—"}
+          Ultimo backup: {systemStatus?.lastBackup || "—"}
         </span>
       </div>
     </div>

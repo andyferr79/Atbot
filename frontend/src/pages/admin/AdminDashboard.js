@@ -12,6 +12,7 @@ import BenchmarkStats from "../../components/admin/BenchmarkStats";
 import UserTimelineModal from "../../components/admin/UserTimelineModal";
 import LogsPanel from "../../components/admin/LogsPanel";
 import AdminAlertPanel from "./AdminAlertPanel";
+import GPTSpendChart from "../../components/admin/GPTSpendChart"; // ✅ Nuovo componente
 
 import api from "../../services/api";
 
@@ -63,6 +64,12 @@ const AdminDashboard = () => {
       <section className="dashboard-section">
         <h2>KPI in tempo reale</h2>
         <KPICards />
+      </section>
+
+      {/* 🔹 Spesa GPT giornaliera */}
+      <section className="dashboard-section">
+        <h2>Spesa GPT giornaliera</h2>
+        <GPTSpendChart />
       </section>
 
       {/* 🔹 Annunci */}

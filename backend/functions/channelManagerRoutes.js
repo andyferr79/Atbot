@@ -1,31 +1,14 @@
-const functions = require("firebase-functions");
+// 📁 functions/channelManagerRoutes.js
+const express = require("express");
 const admin = require("firebase-admin");
-
-// ✅ Inizializza Firebase Admin se non è già attivo
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+const { verifyToken } = require("../middlewares/verifyToken");
 
 const db = admin.firestore();
+const router = express.Router();
 
-// 📌 Middleware per verifica token
-const verifyToken = async (req, res) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    res.status(403).json({ error: "❌ Token mancante" });
-    return false;
-  }
-  try {
-    req.user = await admin.auth().verifyIdToken(token);
-    return true;
-  } catch (error) {
-    functions.logger.error("❌ Token non valido:", error);
-    res.status(401).json({ error: "❌ Token non valido" });
-    return false;
-  }
-};
+router.use(verifyToken);
 
-// 📌 Middleware per Rate Limiting con Firestore
+// 📌 Rate limit Firestore
 const checkRateLimit = async (req, res, windowMs = 10 * 60 * 1000) => {
   const ip =
     req.headers["x-forwarded-for"] ||
@@ -36,95 +19,74 @@ const checkRateLimit = async (req, res, windowMs = 10 * 60 * 1000) => {
   const rateDoc = await rateDocRef.get();
 
   if (rateDoc.exists && now - rateDoc.data().lastRequest < windowMs) {
-    res.status(429).json({ error: "❌ Troppe richieste. Riprova più tardi." });
-    return false;
+    return res
+      .status(429)
+      .json({ error: "❌ Troppe richieste. Riprova più tardi." });
   }
 
   await rateDocRef.set({ lastRequest: now });
   return true;
 };
 
-// 📌 Logging centralizzato
+// 📌 Log centralizzato
 const createLog = async (userId, log) => {
-  const logRef = db
+  const ref = db
     .collection("ChannelManager")
     .doc(userId)
     .collection("logs")
     .doc();
-  await logRef.set({
-    ...log,
-    timestamp: admin.firestore.Timestamp.now(),
-  });
+  await ref.set({ ...log, timestamp: admin.firestore.Timestamp.now() });
 };
 
-// 📌 1️⃣ GET /api/channel-manager
-exports.getChannelManager = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-  if (!(await verifyToken(req, res))) return;
+// 1️⃣ GET /channel-manager → Elenco canali
+router.get("/", async (req, res) => {
   if (!(await checkRateLimit(req, res))) return;
 
   try {
     const snapshot = await db.collection("ChannelManager").get();
-    if (snapshot.empty) return res.json({ channels: [] });
-
     const channels = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      lastSync: doc.data().lastSync
-        ? doc.data().lastSync.toDate().toISOString()
-        : "N/A",
+      lastSync: doc.data().lastSync?.toDate().toISOString() || "N/A",
     }));
 
     res.json({ channels });
-  } catch (error) {
-    functions.logger.error("❌ Errore nel recupero dei canali OTA:", error);
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error("❌ Errore getChannelManager:", err);
+    res.status(500).json({ error: "Errore nel recupero canali." });
   }
 });
 
-// 📌 2️⃣ GET /api/channel-manager/:id
-exports.getSingleChannel = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "GET")
-    return res.status(405).json({ error: "❌ Usa GET." });
-  if (!(await verifyToken(req, res))) return;
-
-  const { id } = req.query;
-  if (!id) return res.status(400).json({ error: "❌ ID del canale mancante." });
-
+// 2️⃣ GET /channel-manager/:id → Singolo canale
+router.get("/:id", async (req, res) => {
   try {
-    const channelDoc = await db.collection("ChannelManager").doc(id).get();
-    if (!channelDoc.exists)
+    const doc = await db.collection("ChannelManager").doc(req.params.id).get();
+    if (!doc.exists)
       return res.status(404).json({ error: "❌ Canale non trovato." });
 
-    res.json({ id: channelDoc.id, ...channelDoc.data() });
-  } catch (error) {
-    functions.logger.error("❌ Errore nel recupero del canale OTA:", error);
-    res.status(500).json({ error: error.message });
+    res.json({ id: doc.id, ...doc.data() });
+  } catch (err) {
+    console.error("❌ Errore getSingleChannel:", err);
+    res.status(500).json({ error: "Errore nel recupero canale." });
   }
 });
 
-// 📌 3️⃣ POST /api/channel-manager/sync
-exports.syncChannelManager = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "❌ Usa POST." });
-  if (!(await verifyToken(req, res))) return;
+// 3️⃣ POST /channel-manager/sync → Avvia sync canale
+router.post("/sync", async (req, res) => {
   if (!(await checkRateLimit(req, res))) return;
 
   const { channelName } = req.body;
   if (!channelName)
-    return res
-      .status(400)
-      .json({ error: "❌ Il nome del canale è obbligatorio." });
+    return res.status(400).json({ error: "❌ Nome canale obbligatorio." });
 
   try {
-    const newSync = {
+    const newDoc = {
       name: channelName,
       status: "syncing",
-      lastSync: admin.firestore.Timestamp.fromDate(new Date()),
+      lastSync: admin.firestore.Timestamp.now(),
     };
 
-    const docRef = await db.collection("ChannelManager").add(newSync);
+    const ref = await db.collection("ChannelManager").add(newDoc);
 
     await createLog(req.user.uid, {
       action: "syncChannelManager",
@@ -132,37 +94,25 @@ exports.syncChannelManager = functions.https.onRequest(async (req, res) => {
       action_by: "user",
     });
 
-    res.json({
-      message: "✅ Sincronizzazione avviata con successo",
-      id: docRef.id,
-    });
-  } catch (error) {
-    functions.logger.error(
-      "❌ Errore nella sincronizzazione con le OTA:",
-      error
-    );
-    res.status(500).json({ error: error.message });
+    res.json({ message: "✅ Sync avviata", id: ref.id });
+  } catch (err) {
+    console.error("❌ Errore syncChannel:", err);
+    res.status(500).json({ error: "Errore sincronizzazione." });
   }
 });
 
-// 📌 4️⃣ PUT /api/channel-manager/:id
-exports.updateChannel = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "PUT")
-    return res.status(405).json({ error: "❌ Usa PUT." });
-  if (!(await verifyToken(req, res))) return;
-
-  const { id } = req.query;
+// 4️⃣ PUT /channel-manager/:id → Aggiorna canale
+router.put("/:id", async (req, res) => {
   const { name, status } = req.body;
-
-  if (!id || !name || !status)
-    return res.status(400).json({ error: "❌ ID, nome e stato obbligatori." });
+  if (!name || !status)
+    return res.status(400).json({ error: "❌ Nome e stato obbligatori." });
 
   try {
-    const channelRef = db.collection("ChannelManager").doc(id);
-    await channelRef.update({
+    const ref = db.collection("ChannelManager").doc(req.params.id);
+    await ref.update({
       name,
       status,
-      lastSync: admin.firestore.Timestamp.fromDate(new Date()),
+      lastSync: admin.firestore.Timestamp.now(),
     });
 
     await createLog(req.user.uid, {
@@ -171,94 +121,70 @@ exports.updateChannel = functions.https.onRequest(async (req, res) => {
       action_by: "user",
     });
 
-    res.json({ message: "✅ Canale aggiornato con successo." });
-  } catch (error) {
-    functions.logger.error(
-      "❌ Errore nell'aggiornamento del canale OTA:",
-      error
-    );
-    res.status(500).json({ error: error.message });
+    res.json({ message: "✅ Canale aggiornato." });
+  } catch (err) {
+    console.error("❌ Errore updateChannel:", err);
+    res.status(500).json({ error: "Errore aggiornamento canale." });
   }
 });
 
-// 📌 5️⃣ DELETE /api/channel-manager/:id
-exports.deleteChannel = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "DELETE")
-    return res.status(405).json({ error: "❌ Usa DELETE." });
-  if (!(await verifyToken(req, res))) return;
-
-  const { id } = req.query;
-  if (!id) return res.status(400).json({ error: "❌ ID del canale mancante." });
-
+// 5️⃣ DELETE /channel-manager/:id → Elimina canale
+router.delete("/:id", async (req, res) => {
   try {
-    const channelRef = db.collection("ChannelManager").doc(id);
-    await channelRef.delete();
+    const ref = db.collection("ChannelManager").doc(req.params.id);
+    await ref.delete();
 
     await createLog(req.user.uid, {
       action: "deleteChannel",
-      details: `Canale ${id} eliminato`,
+      details: `Canale ${req.params.id} eliminato`,
       action_by: "user",
     });
 
-    res.json({ message: "✅ Canale eliminato con successo." });
-  } catch (error) {
-    functions.logger.error(
-      "❌ Errore nell'eliminazione del canale OTA:",
-      error
-    );
-    res.status(500).json({ error: error.message });
+    res.json({ message: "✅ Canale eliminato." });
+  } catch (err) {
+    console.error("❌ Errore deleteChannel:", err);
+    res.status(500).json({ error: "Errore eliminazione canale." });
   }
 });
 
-// 📌 6️⃣ POST /api/channel-manager/map-rooms
-exports.mapRooms = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "❌ Usa POST." });
-  if (!(await verifyToken(req, res))) return;
-
-  const userId = req.user.uid;
+// 6️⃣ POST /channel-manager/map-rooms → Mappa camere
+router.post("/map-rooms", async (req, res) => {
   const { mappings } = req.body;
-
-  if (!mappings || typeof mappings !== "object")
+  if (!mappings || typeof mappings !== "object") {
     return res.status(400).json({ error: "❌ Mappatura non valida." });
+  }
 
   try {
     await db
       .collection("ChannelManager")
-      .doc(userId)
+      .doc(req.user.uid)
       .collection("room_mappings")
       .doc("map")
       .set({ mappings }, { merge: true });
 
-    await createLog(userId, {
+    await createLog(req.user.uid, {
       action: "mapRooms",
       details: "Mappatura camere aggiornata",
       action_by: "user",
     });
 
-    res.json({ message: "✅ Mappatura aggiornata con successo." });
-  } catch (error) {
-    functions.logger.error("❌ Errore nella mappatura delle camere:", error);
-    res.status(500).json({ error: error.message });
+    res.json({ message: "✅ Mappatura aggiornata." });
+  } catch (err) {
+    console.error("❌ Errore mapRooms:", err);
+    res.status(500).json({ error: "Errore mappatura camere." });
   }
 });
 
-// 📌 7️⃣ POST /api/channel-manager/push-rates
-exports.pushRates = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "❌ Usa POST." });
-  if (!(await verifyToken(req, res))) return;
-
-  const userId = req.user.uid;
+// 7️⃣ POST /channel-manager/push-rates → Invia tariffe
+router.post("/push-rates", async (req, res) => {
   const { roomId, rate, ota, origin = "user" } = req.body;
-
   if (!roomId || !rate || !ota)
     return res.status(400).json({ error: "❌ Dati mancanti." });
 
   try {
     await db
       .collection("ChannelManager")
-      .doc(userId)
+      .doc(req.user.uid)
       .collection("pricing_updates")
       .add({
         roomId,
@@ -268,29 +194,21 @@ exports.pushRates = functions.https.onRequest(async (req, res) => {
         updatedAt: admin.firestore.Timestamp.now(),
       });
 
-    await createLog(userId, {
+    await createLog(req.user.uid, {
       action: "pushRates",
       details: `Tariffa aggiornata per ${ota}: ${rate}€`,
       action_by: origin,
     });
 
-    res.json({ message: "✅ Tariffa sincronizzata con successo." });
-  } catch (error) {
-    functions.logger.error(
-      "❌ Errore nella sincronizzazione delle tariffe:",
-      error
-    );
-    res.status(500).json({ error: error.message });
+    res.json({ message: "✅ Tariffa sincronizzata." });
+  } catch (err) {
+    console.error("❌ Errore pushRates:", err);
+    res.status(500).json({ error: "Errore sincronizzazione tariffe." });
   }
 });
 
-// 📌 8️⃣ POST /api/channel-manager/pull-bookings
-exports.pullBookings = functions.https.onRequest(async (req, res) => {
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "❌ Usa POST." });
-  if (!(await verifyToken(req, res))) return;
-
-  const userId = req.user.uid;
+// 8️⃣ POST /channel-manager/pull-bookings → Recupera prenotazioni (mock)
+router.post("/pull-bookings", async (req, res) => {
   const { mock = false } = req.body;
 
   try {
@@ -311,15 +229,17 @@ exports.pullBookings = functions.https.onRequest(async (req, res) => {
         ]
       : [];
 
-    await createLog(userId, {
+    await createLog(req.user.uid, {
       action: "pullBookings",
       details: `Prenotazioni recuperate: ${bookings.length}`,
       action_by: "system",
     });
 
     res.json({ bookings });
-  } catch (error) {
-    functions.logger.error("❌ Errore nel recupero delle prenotazioni:", error);
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error("❌ Errore pullBookings:", err);
+    res.status(500).json({ error: "Errore recupero prenotazioni." });
   }
 });
+
+module.exports = router;
