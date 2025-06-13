@@ -9,7 +9,7 @@ const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
 const { onRequest } = require("firebase-functions/v2/https");
-const { rateLimiter } = require("./middlewares/rateLimiter");
+const rateLimit = require("express-rate-limit");
 const loginRoutes = require("./loginRoutes");
 
 if (!admin.apps.length) admin.initializeApp();
@@ -21,25 +21,29 @@ app.use(cors({ origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Middleware log richieste
+// ✅ Log richieste
 app.use((req, res, next) => {
   console.log(`📥 [${req.method}] ${req.originalUrl}`);
   next();
 });
 
 // ✅ LoginLimiter corretto
-const loginLimiter = rateLimiter({
+const loginLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: 10,
+  message: {
+    error: "❌ Troppe richieste di login. Riprova tra qualche minuto.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
-// ✅ Lista rotte modulari
+// ✅ Caricamento dinamico delle rotte
 const routes = [
   ["bookings", "./bookingsRoutes"],
   ["reports/bookings", "./bookingsReportsRoutes"],
   ["backup", "./backupRoutes"],
   ["customers", "./customersRoutes"],
-  // ["reports/customers", "./reportsCustomersRoutes"], // ⏳ Da creare se necessario
   ["reports-export", "./reportsExportRoutes"],
   ["reports", "./reportsRoutes"],
   ["reports-stats", "./reportsStatsRoutes"],
@@ -67,7 +71,6 @@ const routes = [
   ["admin", "./adminRoutes"],
   ["admin-users", "./adminUserRoutes"],
   ["automation", "./automationTasksRoutes"],
-  // ["stripe", "./stripeRoutes"], // ⏳ In attesa chiave STRIPE
   ["agent-summary", "./agentSummaryRoutes"],
   ["ai/reminders", "./aiRemindersRoutes"],
   ["guests", "./guestsRoutes"],
@@ -77,9 +80,9 @@ const routes = [
   ["cleaning-reports", "./cleaningReportsRoutes"],
   ["scheduler", "./scheduledDailyTask"],
   ["seo-strategy", "./seoStrategy"],
+  ["userinfo", "./userInfoRoutes"],
 ];
 
-// ✅ Caricamento dinamico delle rotte
 routes.forEach(([path, file]) => {
   try {
     const route = require(file);
@@ -91,15 +94,12 @@ routes.forEach(([path, file]) => {
   }
 });
 
-// ✅ Login con protezione e logging
-loginRoutes.setApiKey(process.env.FIREBASE_API_KEY);
-
-app.post("/login", loginLimiter, async (req, res) => {
-  const { email } = req.body;
-  try {
-    await loginRoutes.login(req, res);
-  } catch (error) {
+// ✅ LOGIN con API key privata da .env
+loginRoutes.setApiKey(process.env.PRIVATE_FIREBASE_API_KEY);
+app.post("/login", loginLimiter, (req, res) => {
+  loginRoutes.login(req, res).catch(async (error) => {
     const ip = req.headers["x-forwarded-for"] || req.ip || "unknown";
+    const { email } = req.body;
     await db.collection("LoginFailures").add({
       email: email || "unknown",
       ip,
@@ -110,16 +110,16 @@ app.post("/login", loginLimiter, async (req, res) => {
     return res.status(401).json({
       error: "❌ Credenziali non valide o utente inesistente.",
     });
-  }
+  });
 });
 console.log("✅ Loaded route /login → loginRoutes.js (protetta + logging)");
 
-// 🔁 Catch-all per rotte non trovate
+// 🔁 Rotta non trovata
 app.use((req, res) => {
   res.status(404).json({ error: "❌ Rotta non trovata." });
 });
 
-// 🔥 Gestione errori non gestiti
+// 🔥 Errori globali
 app.use((err, req, res, next) => {
   console.error("❌ Errore globale:", err);
   res.status(500).json({ error: "Errore interno" });
@@ -130,7 +130,7 @@ exports.api = onRequest(
   {
     timeoutSeconds: 60,
     memory: "512MiB",
-    region: "europe-west1", // 🇪🇺 Ottimizzato per EU
+    region: "europe-west1",
   },
   app
 );

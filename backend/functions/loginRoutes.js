@@ -1,30 +1,13 @@
 const axios = require("axios");
 const admin = require("firebase-admin");
-const rateLimit = require("express-rate-limit");
 
-const FIREBASE_AUTH_URL =
-  "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword";
+let API_KEY = process.env.PRIVATE_FIREBASE_API_KEY;
 
-// 🔧 Verrà settata da index.js
-let API_KEY = "";
-
-// ✅ Metodo per ricevere la chiave API da index.js
-exports.setApiKey = (key) => {
+function setApiKey(key) {
   API_KEY = key;
-};
+}
 
-// ✅ Middleware rate limiter login (5 richieste / 5 minuti per IP)
-exports.loginLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minuti
-  max: 5,
-  message: {
-    error: "❌ Troppe richieste di login. Riprova tra qualche minuto.",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-exports.login = async (req, res) => {
+async function login(req, res) {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -32,11 +15,14 @@ exports.login = async (req, res) => {
   }
 
   try {
-    const response = await axios.post(`${FIREBASE_AUTH_URL}?key=${API_KEY}`, {
-      email,
-      password,
-      returnSecureToken: true,
-    });
+    const response = await axios.post(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`,
+      {
+        email,
+        password,
+        returnSecureToken: true,
+      }
+    );
 
     const { idToken, localId } = response.data;
     const userRecord = await admin.auth().getUser(localId);
@@ -70,7 +56,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       ...userData,
       token: idToken,
       message: "✅ Login avvenuto con successo.",
@@ -80,9 +66,14 @@ exports.login = async (req, res) => {
       "❌ Errore nel login:",
       error.response?.data || error.message
     );
-    res.status(401).json({
+    return res.status(401).json({
       error: "❌ Credenziali non valide o utente inesistente.",
       details: error.response?.data || error.message,
     });
   }
+}
+
+module.exports = {
+  setApiKey,
+  login,
 };
