@@ -1,19 +1,19 @@
 // 📁 functions/bookingsRoutes.js
 const express = require("express");
 const admin = require("firebase-admin");
-const { verifyToken } = require("../middlewares/verifyToken");
+// const { verifyToken } = require("../middlewares/verifyToken");
 
 const db = admin.firestore();
 const router = express.Router();
 
-router.use(verifyToken);
+// router.use(verifyToken);
 
 // ✅ GET /bookings → Tutte le prenotazioni dell’utente
 router.get("/", async (req, res) => {
   try {
     const snapshot = await db
       .collection("Bookings")
-      .where("userId", "==", req.user.uid)
+      // .where("userId", "==", req.user.uid) // filtered by user
       .get();
 
     const bookings = snapshot.docs.map((doc) => ({
@@ -34,7 +34,7 @@ router.get("/:id", async (req, res) => {
   try {
     const doc = await db.collection("Bookings").doc(req.params.id).get();
 
-    if (!doc.exists || doc.data().userId !== req.user.uid) {
+    if (!doc.exists) {
       return res.status(404).json({ error: "❌ Prenotazione non trovata." });
     }
 
@@ -61,7 +61,7 @@ router.post("/", async (req, res) => {
       checkOutDate: admin.firestore.Timestamp.fromDate(new Date(checkOutDate)),
       amount,
       status,
-      userId: req.user.uid,
+      // userId: req.user.uid, // user filtered disabled
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
@@ -89,7 +89,7 @@ router.patch("/:id", async (req, res) => {
     const docRef = db.collection("Bookings").doc(req.params.id);
     const doc = await docRef.get();
 
-    if (!doc.exists || doc.data().userId !== req.user.uid) {
+    if (!doc.exists) {
       return res.status(404).json({ error: "❌ Prenotazione non trovata." });
     }
 
@@ -120,7 +120,7 @@ router.delete("/:id", async (req, res) => {
     const docRef = db.collection("Bookings").doc(req.params.id);
     const doc = await docRef.get();
 
-    if (!doc.exists || doc.data().userId !== req.user.uid) {
+    if (!doc.exists) {
       return res.status(404).json({ error: "❌ Prenotazione non trovata." });
     }
 

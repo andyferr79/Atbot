@@ -38,7 +38,7 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// ✅ Caricamento dinamico delle rotte
+// ✅ Caricamento dinamico delle rotte senza prefisso duplicato
 const routes = [
   ["bookings", "./bookingsRoutes"],
   ["reports/bookings", "./bookingsReportsRoutes"],
@@ -78,15 +78,21 @@ const routes = [
   ["feedback", "./feedbackRoutes"],
   ["agent", "./agentRoutes"],
   ["cleaning-reports", "./cleaningReportsRoutes"],
-  ["scheduler", "./scheduledDailyTask"],
-  ["seo-strategy", "./seoStrategy"],
   ["userinfo", "./userInfoRoutes"],
 ];
 
 routes.forEach(([path, file]) => {
   try {
     const route = require(file);
-    app.use(`/${path}`, route);
+    console.log(`📦 Carico route /${path} da ${file}`);
+    app.use(
+      `/${path}`,
+      (req, res, next) => {
+        console.log(`➡️  [${req.method}] /${path}`);
+        next();
+      },
+      route
+    );
     console.log(`✅ Loaded route /${path} → ${file}`);
   } catch (error) {
     console.error(`❌ Failed to load route /${path} → ${file}`);
@@ -94,7 +100,7 @@ routes.forEach(([path, file]) => {
   }
 });
 
-// ✅ LOGIN con API key privata da .env
+// ✅ LOGIN con API key privata
 loginRoutes.setApiKey(process.env.PRIVATE_FIREBASE_API_KEY);
 app.post("/login", loginLimiter, (req, res) => {
   loginRoutes.login(req, res).catch(async (error) => {
@@ -116,6 +122,7 @@ console.log("✅ Loaded route /login → loginRoutes.js (protetta + logging)");
 
 // 🔁 Rotta non trovata
 app.use((req, res) => {
+  console.warn(`⚠️  Rotta non trovata: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ error: "❌ Rotta non trovata." });
 });
 
@@ -125,7 +132,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Errore interno" });
 });
 
-// ✅ Esportazione finale
+// ✅ Esportazione con NOME FUNZIONE "api"
 exports.api = onRequest(
   {
     timeoutSeconds: 60,
