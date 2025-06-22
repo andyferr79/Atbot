@@ -1,6 +1,13 @@
-// Integrations.js - Gestione Integrazioni
-import React, { useState } from "react";
-import "../../../styles/Integrations.css";
+// ✅ Integrations.js - Gestione Integrazioni con salvataggio Firestore
+import React, { useState, useEffect, useCallback } from "react";
+
+import {
+  getIntegrations,
+  addIntegration,
+  removeIntegration,
+} from "../../services/api"; // ✅ PATH CORRETTO
+
+import "../../styles/Integrations.css";
 
 const Integrations = () => {
   const [integrations, setIntegrations] = useState([]);
@@ -9,6 +16,8 @@ const Integrations = () => {
     apiKey: "",
     additionalInfo: "",
   });
+
+  const userId = localStorage.getItem("user_id");
 
   const availablePlatforms = [
     { name: "Facebook", type: "social" },
@@ -27,26 +36,49 @@ const Integrations = () => {
     { name: "Xero", type: "accounting" },
   ];
 
+  const fetchIntegrations = useCallback(async () => {
+    try {
+      const data = await getIntegrations(userId);
+      setIntegrations(data);
+    } catch (err) {
+      console.error("❌ Errore nel caricamento delle integrazioni:", err);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) fetchIntegrations();
+  }, [userId, fetchIntegrations]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewIntegration((prev) => ({ ...prev, [name]: value }));
   };
 
-  const addIntegration = () => {
-    if (newIntegration.platform && newIntegration.apiKey) {
-      setIntegrations([...integrations, { ...newIntegration, id: Date.now() }]);
+  const handleAddIntegration = async () => {
+    if (!newIntegration.platform || !newIntegration.apiKey) {
+      alert("❌ Compila tutti i campi richiesti.");
+      return;
+    }
+
+    try {
+      const integrationWithUid = { ...newIntegration, uid: userId };
+      const added = await addIntegration(integrationWithUid);
+      setIntegrations((prev) => [...prev, added]);
       setNewIntegration({ platform: "", apiKey: "", additionalInfo: "" });
-      alert("Integrazione aggiunta con successo!");
-    } else {
-      alert("Compila tutti i campi richiesti.");
+      alert("✅ Integrazione aggiunta con successo!");
+    } catch (err) {
+      alert("❌ Errore durante l'aggiunta dell'integrazione.");
     }
   };
 
-  const removeIntegration = (id) => {
-    setIntegrations(
-      integrations.filter((integration) => integration.id !== id)
-    );
-    alert("Integrazione rimossa con successo!");
+  const handleRemoveIntegration = async (id) => {
+    try {
+      await removeIntegration(id, userId);
+      setIntegrations((prev) => prev.filter((i) => i.id !== id));
+      alert("✅ Integrazione rimossa con successo!");
+    } catch (err) {
+      alert("❌ Errore durante la rimozione.");
+    }
   };
 
   return (
@@ -57,7 +89,7 @@ const Integrations = () => {
         terze parti.
       </p>
 
-      {/* Aggiungi Nuova Integrazione */}
+      {/* 🔧 Aggiungi Nuova Integrazione */}
       <div className="add-integration-section">
         <h3>Aggiungi Nuova Integrazione</h3>
         <label>
@@ -68,13 +100,14 @@ const Integrations = () => {
             onChange={handleInputChange}
           >
             <option value="">Seleziona una piattaforma</option>
-            {availablePlatforms.map((platform) => (
-              <option key={platform.name} value={platform.name}>
-                {platform.name} ({platform.type})
+            {availablePlatforms.map((p) => (
+              <option key={p.name} value={p.name}>
+                {p.name} ({p.type})
               </option>
             ))}
           </select>
         </label>
+
         <label>
           API Key:
           <input
@@ -85,6 +118,7 @@ const Integrations = () => {
             placeholder="Inserisci la chiave API"
           />
         </label>
+
         <label>
           Informazioni aggiuntive:
           <textarea
@@ -92,14 +126,15 @@ const Integrations = () => {
             value={newIntegration.additionalInfo}
             onChange={handleInputChange}
             placeholder="Inserisci informazioni aggiuntive se necessarie"
-          ></textarea>
+          />
         </label>
-        <button className="add-button" onClick={addIntegration}>
-          Aggiungi Integrazione
+
+        <button className="add-button" onClick={handleAddIntegration}>
+          ➕ Aggiungi Integrazione
         </button>
       </div>
 
-      {/* Elenco Integrazioni */}
+      {/* 📋 Elenco Integrazioni Attive */}
       <div className="integrations-list">
         <h3>Integrazioni Attive</h3>
         {integrations.length > 0 ? (
@@ -108,7 +143,7 @@ const Integrations = () => {
               <tr>
                 <th>Piattaforma</th>
                 <th>API Key</th>
-                <th>Informazioni Aggiuntive</th>
+                <th>Info Aggiuntive</th>
                 <th>Azioni</th>
               </tr>
             </thead>
@@ -121,9 +156,9 @@ const Integrations = () => {
                   <td>
                     <button
                       className="remove-button"
-                      onClick={() => removeIntegration(integration.id)}
+                      onClick={() => handleRemoveIntegration(integration.id)}
                     >
-                      Rimuovi
+                      🗑️ Rimuovi
                     </button>
                   </td>
                 </tr>

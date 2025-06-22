@@ -1,5 +1,5 @@
 // 📌 suppliersReportApi.js - API per il Report Fornitori con Firebase Functions
-import api from "../api"; // Importa l'istanza API principale
+import api from "./api"; // ✅ CORRETTO all’interno di services/
 
 // ✅ Recupera i dati del report fornitori
 export const getSuppliersReportData = async () => {

@@ -1,3 +1,5 @@
+// 📂 E:/ATBot/frontend/src/components/admin/KPICards.js
+
 import React, { useEffect, useState } from "react";
 import api from "../../services/api";
 import "../../styles/AdminDashboard.css";
@@ -15,10 +17,10 @@ const KPICards = () => {
   const fetchKPI = async () => {
     try {
       const [revRes, usersRes, churnRes, statusRes] = await Promise.all([
-        api.get("/getRevenueKPI"),
-        api.get("/getActiveSubscriptions"),
-        api.get("/getChurnRate"),
-        api.get("/getSystemStatus"),
+        api.get("/api/admin/kpi/revenue"),
+        api.get("/api/admin/kpi/active-users"),
+        api.get("/api/admin/kpi/churn-rate"),
+        api.get("/api/admin/kpi/system-status"),
       ]);
 
       setRevenue(revRes.data.monthlyRevenue || 0);

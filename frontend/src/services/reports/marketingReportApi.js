@@ -1,5 +1,5 @@
 // 📌 marketingReportApi.js - API per il Report Marketing con Firebase Functions
-import api from "../api"; // Importa l'istanza API principale
+import api from "./api"; // ✅ CORRETTO all’interno di services/
 
 // ✅ Recupera i dati del report marketing
 export const getMarketingReportData = async () => {

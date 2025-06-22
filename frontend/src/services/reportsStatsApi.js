@@ -1,4 +1,5 @@
-import api from "../api"; // Usa l'istanza Firebase aggiornata
+import api from "./api"; // ✅ CORRETTO all’interno di services/
+
 import { db } from "../firebase"; // Firestore per aggiornamenti in tempo reale
 import { collection, onSnapshot } from "firebase/firestore";
 

@@ -1,7 +1,7 @@
-// 📄 GPTSpendChart.js
+// 📂 E:/ATBot/frontend/src/components/admin/GPTSpendChart.js
 
 import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "../ui/card"; // ✅ IMPORT CORRETTO
+import { Card, CardContent } from "../ui/card";
 import { Bar } from "react-chartjs-2";
 import "chart.js/auto";
 import api from "../../services/api";
@@ -12,10 +12,7 @@ const GPTSpendChart = () => {
   useEffect(() => {
     const fetchSpending = async () => {
       try {
-        const token = localStorage.getItem("firebaseToken");
-        const res = await api.get("/admin/ia/spending-today", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get("/api/admin/ia/spending-today"); // ✅ rotta corretta
         setData(res.data);
       } catch (err) {
         console.error("❌ Errore nel recupero spesa GPT:", err);

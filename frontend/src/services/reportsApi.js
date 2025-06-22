@@ -1,4 +1,4 @@
-import api from "./api"; // Usa l'istanza Firebase aggiornata
+import api from "./api"; // ✅ CORRETTO all’interno di services/
 
 // 📊 Recupera le impostazioni dei report
 export const getReportSettings = () => api.get("/getReportSettings");

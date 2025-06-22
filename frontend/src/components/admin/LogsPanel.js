@@ -1,3 +1,5 @@
+// 📂 E:/ATBot/frontend/src/components/admin/LogsPanel.js
+
 import React, { useEffect, useState } from "react";
 import api from "../../services/api";
 import "../../styles/AdminDashboard.css";
@@ -9,7 +11,7 @@ const LogsPanel = () => {
 
   const fetchLogs = async () => {
     try {
-      const res = await api.get("/admin/system-logs");
+      const res = await api.get("/api/admin/system-logs");
       const sortedLogs = res.data.sort(
         (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
       );
@@ -21,7 +23,7 @@ const LogsPanel = () => {
 
   const fetchBackupStatus = async () => {
     try {
-      const res = await api.get("/admin/backup-status");
+      const res = await api.get("/api/admin/backup-status");
       setBackupStatus(res.data.status);
     } catch (err) {
       console.error("Errore stato backup:", err);
@@ -30,7 +32,7 @@ const LogsPanel = () => {
 
   const triggerBackup = async () => {
     try {
-      await api.post("/admin/start-backup");
+      await api.post("/api/admin/start-backup");
       setBackupStatus("Backup avviato...");
     } catch (err) {
       console.error("Errore avvio backup:", err);

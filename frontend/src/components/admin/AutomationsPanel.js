@@ -1,3 +1,5 @@
+// 📂 E:/ATBot/frontend/src/components/admin/AutomationsPanel.js
+
 import React, { useEffect, useState } from "react";
 import api from "../../services/api";
 import "../../styles/AdminDashboard.css";
@@ -7,10 +9,10 @@ const AutomationsPanel = () => {
 
   const fetchAutomations = async () => {
     try {
-      const res = await api.get("/admin/automations");
+      const res = await api.get("/api/admin/automations"); // ✅ aggiornato con /api
       setAutomations(res.data);
     } catch (err) {
-      console.error("Errore caricamento automazioni:", err);
+      console.error("❌ Errore caricamento automazioni:", err);
     }
   };
 

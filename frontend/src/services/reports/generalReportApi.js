@@ -1,5 +1,5 @@
 // 📌 generalReportApi.js - API per il Report Generale con Firebase Functions
-import api from "../api"; // Importa l'istanza API principale
+import api from "./api"; // ✅ CORRETTO all’interno di services/
 
 // ✅ Recupera i dati generali del report
 export const getGeneralReportData = async () => {

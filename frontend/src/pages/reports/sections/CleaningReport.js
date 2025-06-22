@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getCleaningReport } from "../../../services/reportsApi";
+import { getCleaningReport } from "../../services/reportsApi";
 import "../../../styles/CleaningReport.css";
 
 const CleaningReport = () => {

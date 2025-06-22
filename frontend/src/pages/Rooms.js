@@ -1,9 +1,8 @@
-// ✅ Rooms.js - versione migliorata, con layout a due colonne, feedback e lista stanze (senza warning ESLint)
-
+// ✅ Rooms.js - versione migliorata con edit modal + operatorId dinamico
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import "../styles/Rooms.css";
-import { FaEdit, FaTrash, FaPlus, FaSync } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaSync, FaSave } from "react-icons/fa";
 
 const Rooms = () => {
   const [rooms, setRooms] = useState([]);
@@ -12,14 +11,17 @@ const Rooms = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showDemoData, setShowDemoData] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const userId = localStorage.getItem("user_id");
 
   const [newRoom, setNewRoom] = useState({
     name: "",
     type: "room",
     price: "",
     image: "",
-    operatorId: "12345",
+    operatorId: userId || "default-uid",
   });
+
+  const [editRoom, setEditRoom] = useState(null);
 
   useEffect(() => {
     fetchRooms();
@@ -63,12 +65,28 @@ const Rooms = () => {
         type: "room",
         price: "",
         image: "",
-        operatorId: "12345",
+        operatorId: userId || "default-uid",
       });
       setSuccessMessage("✅ Struttura creata con successo!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Errore nell'aggiunta:", error);
+    }
+  };
+
+  const handleEditRoom = (room) => {
+    setEditRoom({ ...room });
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await api.put(`/rooms/${editRoom.id}`, editRoom);
+      await fetchRooms();
+      setEditRoom(null);
+      setSuccessMessage("✅ Modifica salvata con successo!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      console.error("Errore nella modifica:", error);
     }
   };
 
@@ -106,12 +124,9 @@ const Rooms = () => {
           <h2>
             <FaPlus /> Aggiungi Nuova Struttura
           </h2>
-          <p className="form-hint">
-            Inserisci i dati per creare una nuova stanza o alloggio
-          </p>
           <input
             type="text"
-            placeholder="Nome (es. Camera 101)"
+            placeholder="Nome"
             value={newRoom.name}
             onChange={(e) => setNewRoom({ ...newRoom, name: e.target.value })}
           />
@@ -124,13 +139,13 @@ const Rooms = () => {
           </select>
           <input
             type="number"
-            placeholder="Prezzo per notte"
+            placeholder="Prezzo"
             value={newRoom.price}
             onChange={(e) => setNewRoom({ ...newRoom, price: e.target.value })}
           />
           <input
             type="text"
-            placeholder="URL Immagine (opzionale)"
+            placeholder="URL Immagine"
             value={newRoom.image}
             onChange={(e) => setNewRoom({ ...newRoom, image: e.target.value })}
           />
@@ -169,10 +184,6 @@ const Rooms = () => {
             <div className="onboarding-container">
               <img src="/no-data.png" alt="Nessun Dato" />
               <h2>Benvenuto nella Gestione Strutture!</h2>
-              <p>
-                Non hai ancora aggiunto strutture. Puoi caricare un esempio o
-                iniziare subito.
-              </p>
               <button onClick={handleLoadDemo}>
                 <FaPlus /> Carica Dati Demo
               </button>
@@ -193,7 +204,7 @@ const Rooms = () => {
                         <p>{room.type}</p>
                         <p>{room.price}€/notte</p>
                         <div className="actions">
-                          <button>
+                          <button onClick={() => handleEditRoom(room)}>
                             <FaEdit />
                           </button>
                           <button onClick={() => handleDeleteRoom(room.id)}>
@@ -209,6 +220,42 @@ const Rooms = () => {
           )}
         </div>
       </div>
+
+      {/* MODAL MODIFICA STANZA */}
+      {editRoom && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <h3>Modifica Stanza</h3>
+            <input
+              type="text"
+              value={editRoom.name}
+              onChange={(e) =>
+                setEditRoom({ ...editRoom, name: e.target.value })
+              }
+            />
+            <input
+              type="number"
+              value={editRoom.price}
+              onChange={(e) =>
+                setEditRoom({ ...editRoom, price: e.target.value })
+              }
+            />
+            <input
+              type="text"
+              value={editRoom.image}
+              onChange={(e) =>
+                setEditRoom({ ...editRoom, image: e.target.value })
+              }
+            />
+            <div className="modal-actions">
+              <button onClick={handleSaveEdit}>
+                <FaSave /> Salva
+              </button>
+              <button onClick={() => setEditRoom(null)}>Annulla</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

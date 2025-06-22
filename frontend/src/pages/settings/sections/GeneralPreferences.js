@@ -1,9 +1,51 @@
-// GeneralPreferences.js - Preferenze Generali
-import React from "react";
+// GeneralPreferences.js - Preferenze Generali con salvataggio backend
+import React, { useState, useEffect } from "react";
+import api from "../../services/api";
 import "../../../styles/GeneralPreferences.css";
-// Stile specifico
 
 const GeneralPreferences = () => {
+  const [language, setLanguage] = useState("it");
+  const [timezone, setTimezone] = useState("CET");
+  const [currency, setCurrency] = useState("EUR");
+  const [loading, setLoading] = useState(false);
+  const userId = localStorage.getItem("user_id");
+
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        const res = await api.get(`/getPreferences?uid=${userId}`);
+        const { language, timezone, currency } = res.data;
+        if (language) setLanguage(language);
+        if (timezone) setTimezone(timezone);
+        if (currency) setCurrency(currency);
+      } catch (err) {
+        console.error("Errore nel caricamento delle preferenze:", err);
+      }
+    };
+    if (userId) fetchPreferences();
+  }, [userId]);
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      await api.put("/updatePreferences", {
+        uid: userId,
+        language,
+        timezone,
+        currency,
+      });
+      alert("✅ Preferenze aggiornate con successo");
+    } catch (err) {
+      alert("❌ Errore durante il salvataggio delle preferenze");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    window.location.reload();
+  };
+
   return (
     <div className="general-preferences">
       <h2 className="section-title">Preferenze Generali</h2>
@@ -14,7 +56,11 @@ const GeneralPreferences = () => {
       <div className="preferences-section">
         <label className="preferences-label">
           Lingua:
-          <select className="preferences-select">
+          <select
+            className="preferences-select"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+          >
             <option value="it">Italiano</option>
             <option value="en">Inglese</option>
             <option value="es">Spagnolo</option>
@@ -29,7 +75,11 @@ const GeneralPreferences = () => {
       <div className="preferences-section">
         <label className="preferences-label">
           Fuso orario:
-          <select className="preferences-select">
+          <select
+            className="preferences-select"
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+          >
             <option value="CET">CET (Central European Time)</option>
             <option value="UTC">UTC (Coordinated Universal Time)</option>
             <option value="PST">PST (Pacific Standard Time)</option>
@@ -46,7 +96,11 @@ const GeneralPreferences = () => {
       <div className="preferences-section">
         <label className="preferences-label">
           Valuta preferita:
-          <select className="preferences-select">
+          <select
+            className="preferences-select"
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+          >
             <option value="EUR">Euro (€)</option>
             <option value="USD">Dollaro ($)</option>
             <option value="GBP">Sterlina (£)</option>
@@ -67,8 +121,12 @@ const GeneralPreferences = () => {
       </div>
 
       <div className="preferences-buttons">
-        <button className="save-button">Salva</button>
-        <button className="cancel-button">Annulla</button>
+        <button className="save-button" onClick={handleSave} disabled={loading}>
+          Salva
+        </button>
+        <button className="cancel-button" onClick={handleCancel}>
+          Annulla
+        </button>
       </div>
     </div>
   );

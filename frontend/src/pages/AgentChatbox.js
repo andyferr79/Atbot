@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Bot, Send } from "lucide-react";
 import "../styles/AgentChatbox.css";
+import api from "../services/api";
 
 const AgentChatbox = ({ onStartThinking, onStopThinking }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,18 +17,13 @@ const AgentChatbox = ({ onStartThinking, onStopThinking }) => {
 
   const createSession = async () => {
     try {
-      const res = await fetch("http://localhost:8000/chat/start-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          title: "Interazione Agente",
-        }),
+      const res = await api.post("/chat/start-session", {
+        user_id: userId,
+        title: "Interazione Agente",
       });
-      const data = await res.json();
-      localStorage.setItem("chat_session_id", data.sessionId);
-      setSessionId(data.sessionId);
-      console.log("📌 Nuova sessione:", data.sessionId);
+      localStorage.setItem("chat_session_id", res.data.sessionId);
+      setSessionId(res.data.sessionId);
+      console.log("📌 Nuova sessione:", res.data.sessionId);
     } catch (err) {
       console.error("❌ Errore creazione sessione:", err);
     }
@@ -35,18 +31,13 @@ const AgentChatbox = ({ onStartThinking, onStopThinking }) => {
 
   const trackAction = async (type, context = {}) => {
     try {
-      const res = await fetch("http://localhost:8000/agent/track-action", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          type,
-          context,
-        }),
+      const res = await api.post("/agent/track-action", {
+        user_id: userId,
+        type,
+        context,
       });
-      const data = await res.json();
-      console.log("🧠 Azione IA tracciata:", data.actionId);
-      setActionId(data.actionId);
+      setActionId(res.data.actionId);
+      console.log("🧠 Azione IA tracciata:", res.data.actionId);
     } catch (err) {
       console.error("❌ Errore tracking IA:", err);
     }
@@ -54,17 +45,12 @@ const AgentChatbox = ({ onStartThinking, onStopThinking }) => {
 
   const uploadReport = async (sessionId, userId, content) => {
     try {
-      const res = await fetch("http://localhost:8000/agent/upload-report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: sessionId,
-          user_id: userId,
-          content,
-        }),
+      const res = await api.post("/agent/upload-report", {
+        session_id: sessionId,
+        user_id: userId,
+        content,
       });
-      const data = await res.json();
-      console.log("📎 Report salvato:", data);
+      console.log("📎 Report salvato:", res.data);
     } catch (err) {
       console.error("❌ Errore upload report:", err);
     }
@@ -73,13 +59,9 @@ const AgentChatbox = ({ onStartThinking, onStopThinking }) => {
   const updateAction = async (output = {}) => {
     if (!actionId) return;
     try {
-      await fetch(`http://localhost:8000/agent/actions/${userId}/${actionId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "completed",
-          output,
-        }),
+      await api.patch(`/agent/actions/${userId}/${actionId}`, {
+        status: "completed",
+        output,
       });
     } catch (err) {
       console.error("❌ Errore update azione:", err);
@@ -102,18 +84,13 @@ const AgentChatbox = ({ onStartThinking, onStopThinking }) => {
     onStartThinking && onStartThinking();
 
     try {
-      const res = await fetch("http://localhost:8000/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_message: input,
-          session_id: localStorage.getItem("chat_session_id"),
-          user_id: userId,
-        }),
+      const res = await api.post("/chat", {
+        user_message: input,
+        session_id: sessionId,
+        user_id: userId,
       });
-      const data = await res.json();
 
-      const responseText = data.response;
+      const responseText = res.data.response;
       const newBotMessage = {
         sender: "agent",
         text: responseText,

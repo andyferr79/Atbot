@@ -1,5 +1,5 @@
 // 📌 customersReportApi.js - API per il Report Clienti con Firebase Functions
-import api from "../api"; // Importa l'istanza API principale
+import api from "./api"; // ✅ CORRETTO all’interno di services/
 
 // ✅ Recupera i dati dei clienti per il report
 export const getCustomersReportData = async () => {

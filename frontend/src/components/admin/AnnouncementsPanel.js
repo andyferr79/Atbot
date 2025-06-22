@@ -1,3 +1,5 @@
+// 📂 E:/ATBot/frontend/src/components/admin/AnnouncementsPanel.js
+
 import React, { useEffect, useState } from "react";
 import api from "../../services/api";
 import "../../styles/AdminDashboard.css";
@@ -10,7 +12,7 @@ const AnnouncementsPanel = () => {
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await api.get("/getOfficialAnnouncements");
+      const res = await api.get("/api/admin/announcements");
       setAnnouncements(res.data);
     } catch (err) {
       console.error("Errore nel recupero annunci:", err);
@@ -24,7 +26,7 @@ const AnnouncementsPanel = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/createOfficialAnnouncement", {
+      await api.post("/api/admin/announcements", {
         title,
         message,
         pinned: false,

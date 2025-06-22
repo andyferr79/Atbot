@@ -1,3 +1,5 @@
+// 📂 E:/ATBot/frontend/src/components/admin/UserTimelineModal.js
+
 import React, { useState, useEffect } from "react";
 import api from "../../services/api";
 import "../../styles/AdminDashboard.css";
@@ -8,12 +10,12 @@ const UserTimelineModal = () => {
   const [timeline, setTimeline] = useState([]);
 
   useEffect(() => {
-    api.get("/admin/users").then((res) => setUsers(res.data));
+    api.get("/api/admin/users").then((res) => setUsers(res.data));
   }, []);
 
   const fetchTimeline = async (userId) => {
     try {
-      const res = await api.get(`/admin/user-timeline?userId=${userId}`);
+      const res = await api.get(`/api/admin/user-timeline?userId=${userId}`);
       setTimeline(res.data);
     } catch (err) {
       console.error("Errore caricamento timeline:", err);

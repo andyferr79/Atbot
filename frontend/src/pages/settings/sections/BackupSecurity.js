@@ -1,6 +1,6 @@
 // ✅ BackupSecurity.js - Collegato al backend reale e multi-utente
 import React, { useEffect, useState, useCallback } from "react";
-import api from "../../../services/api";
+import api from "../../services/api";
 import "../../../styles/BackupSecurity.css";
 
 const BackupSecurity = () => {

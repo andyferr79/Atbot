@@ -37,6 +37,7 @@ import AgentHub from "./pages/AgentHub";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AgentAccess from "./pages/AgentAccess"; // ✅ Sfera IA
+import DevApiTest from "./pages/DevApiTest"; // ✅ TEST API
 
 import "./App.css";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -92,6 +93,8 @@ function App() {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/subscribe" element={<Subscribe />} />{" "}
             {/* ✅ Onboarding Pagamento */}
+            <Route path="/dev/api-test" element={<DevApiTest />} />{" "}
+            {/* ✅ Test API pubblica */}
             {/* Protette */}
             <Route
               path="/"

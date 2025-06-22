@@ -1,8 +1,9 @@
 // 📂 E:/ATBot/frontend/src/pages/admin/AdminAlertPanel.js
 
 import React, { useEffect, useState } from "react";
-import { db } from "../../firebaseConfig";
-import "./AdminAlertPanel.css"; // ✅ verrà creato subito dopo
+import { getSystemAlerts as getAdminSystemAlerts } from "../../services/api";
+
+import "./AdminAlertPanel.css";
 
 const AdminAlertPanel = ({ enableFilters = true, groupByType = false }) => {
   const [alerts, setAlerts] = useState([]);
@@ -11,14 +12,8 @@ const AdminAlertPanel = ({ enableFilters = true, groupByType = false }) => {
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        const snapshot = await db
-          .collection("system_logs")
-          .orderBy("timestamp", "desc")
-          .limit(50)
-          .get();
-
-        const data = snapshot.docs.map((doc) => doc.data());
-        setAlerts(data);
+        const response = await getAdminSystemAlerts(); // 🔁 via API Express
+        setAlerts(response.data || []);
       } catch (error) {
         console.error("❌ Errore nel recupero alert:", error);
       }
@@ -65,7 +60,7 @@ const AdminAlertPanel = ({ enableFilters = true, groupByType = false }) => {
                 >
                   <strong>{alert.type}</strong>: {alert.message}{" "}
                   <span className="timestamp">
-                    {new Date(alert.timestamp.toDate()).toLocaleString()}
+                    {new Date(alert.timestamp._seconds * 1000).toLocaleString()}
                   </span>
                 </div>
               ))}
@@ -75,7 +70,7 @@ const AdminAlertPanel = ({ enableFilters = true, groupByType = false }) => {
             <div key={idx} className={`alert-box ${alert.type.toLowerCase()}`}>
               <strong>{alert.type}</strong>: {alert.message}{" "}
               <span className="timestamp">
-                {new Date(alert.timestamp.toDate()).toLocaleString()}
+                {new Date(alert.timestamp._seconds * 1000).toLocaleString()}
               </span>
             </div>
           ))}

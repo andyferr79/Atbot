@@ -1,5 +1,5 @@
 // 📌 financialReportApi.js - API per il Report Finanziario con Firebase Functions
-import api from "../api"; // Importa l'istanza API principale
+import api from "./api"; // ✅ CORRETTO all’interno di services/
 
 // ✅ Recupera i dati finanziari del report
 export const getFinancialReportData = async () => {

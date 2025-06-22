@@ -1,4 +1,4 @@
-import api from "../api"; // Usa l'istanza Firebase aggiornata
+import api from "./api"; // ✅ CORRETTO all’interno di services/
 
 // **Preferenze Generali**
 export const getPreferences = () => api.get("/getPreferences");

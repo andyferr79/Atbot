@@ -8,20 +8,18 @@ const { withCors } = require("../middlewares/withCors");
 const router = express.Router();
 const db = admin.firestore();
 
-// ✅ Middleware globali
+// 📌 Debug ping per verificare che /admin sia montato (NO AUTENTICAZIONE)
+router.get("/_ping", (req, res) => {
+  console.log("🏓 Ricevuto ping su /admin/_ping");
+  res.json({ pong: true });
+});
+
+// ✅ Middleware globali (dopo ping)
 router.use(withCors);
 router.use(verifyToken);
 
-// ✅ Middleware: solo admin
-const requireAdmin = (req, res, next) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ error: "⛔ Solo admin autorizzati." });
-  }
-  next();
-};
-
 // 📌 1. Entrate mensili
-router.get("/revenue", requireAdmin, async (req, res) => {
+router.get("/revenue", async (req, res) => {
   try {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -47,7 +45,7 @@ router.get("/revenue", requireAdmin, async (req, res) => {
 });
 
 // 📌 2. Abbonamenti attivi
-router.get("/subscriptions", requireAdmin, async (req, res) => {
+router.get("/subscriptions", async (req, res) => {
   try {
     const usersSnap = await db
       .collection("users")
@@ -62,7 +60,7 @@ router.get("/subscriptions", requireAdmin, async (req, res) => {
 });
 
 // 📌 3. Tasso abbandono (churn)
-router.get("/churn", requireAdmin, async (req, res) => {
+router.get("/churn", async (req, res) => {
   try {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -83,7 +81,7 @@ router.get("/churn", requireAdmin, async (req, res) => {
 });
 
 // 📌 4. Stato sistema
-router.get("/status", requireAdmin, (req, res) => {
+router.get("/status", (req, res) => {
   res.json({
     apiUptime: "99.98%",
     lastBackup: "Oggi alle 02:30",
@@ -95,7 +93,7 @@ router.get("/status", requireAdmin, (req, res) => {
 // 📌 5. Info utente autenticato
 router.get("/me", async (req, res) => {
   try {
-    const uid = req.userId;
+    const uid = req.user.uid;
     const doc = await db.collection("users").doc(uid).get();
     if (!doc.exists) {
       return res.status(404).json({ message: "Utente non trovato" });
@@ -115,7 +113,7 @@ router.get("/me", async (req, res) => {
 });
 
 // 📌 6. Statistiche utilizzo IA
-router.get("/ai-usage", requireAdmin, (req, res) => {
+router.get("/ai-usage", (req, res) => {
   res.json({
     totalRequests: 835,
     avgResponseTime: "1.2s",
@@ -124,7 +122,7 @@ router.get("/ai-usage", requireAdmin, (req, res) => {
 });
 
 // 📌 7. Log di sistema
-router.get("/logs", requireAdmin, (req, res) => {
+router.get("/logs", (req, res) => {
   res.json([
     {
       type: "INFO",
@@ -145,12 +143,12 @@ router.get("/logs", requireAdmin, (req, res) => {
 });
 
 // 📌 8. Stato backup
-router.get("/backup-status", requireAdmin, (req, res) => {
+router.get("/backup-status", (req, res) => {
   res.json({ status: "Ultimo backup: oggi alle 02:30" });
 });
 
 // 📌 9. Avvia backup manuale
-router.post("/backup", requireAdmin, (req, res) => {
+router.post("/backup", (req, res) => {
   res.status(200).json({ message: "Backup manuale avviato." });
 });
 

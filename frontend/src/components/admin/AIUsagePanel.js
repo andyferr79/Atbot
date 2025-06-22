@@ -1,3 +1,5 @@
+// 📂 E:/ATBot/frontend/src/components/admin/AIUsagePanel.js
+
 import React, { useEffect, useState } from "react";
 import api from "../../services/api";
 import "../../styles/AdminDashboard.css";
@@ -7,10 +9,10 @@ const AIUsagePanel = () => {
 
   const fetchStats = async () => {
     try {
-      const res = await api.get("/admin/ai-usage");
+      const res = await api.get("/api/admin/ai-usage"); // ✅ Rotta aggiornata
       setStats(res.data);
     } catch (err) {
-      console.error("Errore nel recupero statistiche IA:", err);
+      console.error("❌ Errore nel recupero statistiche IA:", err);
     }
   };
 

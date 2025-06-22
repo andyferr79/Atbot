@@ -1,3 +1,5 @@
+// 📂 E:/ATBot/frontend/src/components/admin/BenchmarkStats.js
+
 import React, { useEffect, useState } from "react";
 import api from "../../services/api";
 import "../../styles/AdminDashboard.css";
@@ -7,10 +9,10 @@ const BenchmarkStats = () => {
 
   const fetchBenchmark = async () => {
     try {
-      const res = await api.get("/admin/benchmark-stats");
+      const res = await api.get("/api/admin/benchmark-stats"); // ✅ rotta aggiornata
       setStats(res.data);
     } catch (err) {
-      console.error("Errore recupero benchmark:", err);
+      console.error("❌ Errore recupero benchmark:", err);
     }
   };
 

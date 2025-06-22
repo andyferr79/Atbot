@@ -11,6 +11,7 @@ const admin = require("firebase-admin");
 const { onRequest } = require("firebase-functions/v2/https");
 const rateLimit = require("express-rate-limit");
 const loginRoutes = require("./loginRoutes");
+const listEndpoints = require("express-list-endpoints");
 
 if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
@@ -27,18 +28,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ LoginLimiter corretto
+// ✅ LoginLimiter
 const loginLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: 10,
-  message: {
-    error: "❌ Troppe richieste di login. Riprova tra qualche minuto.",
-  },
+  message: { error: "❌ Troppe richieste di login. Riprova più tardi." },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// ✅ Caricamento dinamico delle rotte senza prefisso duplicato
+// ✅ Rotte dinamiche (sia /path che /api/path)
 const routes = [
   ["bookings", "./bookingsRoutes"],
   ["reports/bookings", "./bookingsReportsRoutes"],
@@ -84,23 +83,16 @@ const routes = [
 routes.forEach(([path, file]) => {
   try {
     const route = require(file);
-    console.log(`📦 Carico route /${path} da ${file}`);
-    app.use(
-      `/${path}`,
-      (req, res, next) => {
-        console.log(`➡️  [${req.method}] /${path}`);
-        next();
-      },
-      route
-    );
-    console.log(`✅ Loaded route /${path} → ${file}`);
-  } catch (error) {
-    console.error(`❌ Failed to load route /${path} → ${file}`);
-    console.error(error);
+    // monta su /<path>
+    app.use(`/${path}`, route);
+    // monta su /api/<path>
+    app.use(`/api/${path}`, route);
+  } catch (err) {
+    console.error(`❌ Errore loading /${path} → ${file}`, err);
   }
 });
 
-// ✅ LOGIN con API key privata
+// ✅ Login
 loginRoutes.setApiKey(process.env.PRIVATE_FIREBASE_API_KEY);
 app.post("/login", loginLimiter, (req, res) => {
   loginRoutes.login(req, res).catch(async (error) => {
@@ -109,20 +101,23 @@ app.post("/login", loginLimiter, (req, res) => {
     await db.collection("LoginFailures").add({
       email: email || "unknown",
       ip,
-      reason: error.message || "Errore login",
+      reason: error.message,
       timestamp: new Date(),
     });
-    console.error("❌ Tentativo login fallito:", email, error.message);
-    return res.status(401).json({
-      error: "❌ Credenziali non valide o utente inesistente.",
-    });
+    res.status(401).json({ error: "❌ Credenziali non valide." });
   });
 });
-console.log("✅ Loaded route /login → loginRoutes.js (protetta + logging)");
 
-// 🔁 Rotta non trovata
+// ─────── LISTA ENDPOINTS ───────
+// Deve trovarsi **prima** del middleware 404
+console.log("📑 Elenco endpoint:", JSON.stringify(listEndpoints(app), null, 2));
+app.get("/routes", (req, res) => {
+  res.json(listEndpoints(app));
+});
+// ────────────────────────────────
+
+// 🔁 Fallback 404 (ultima definizione)
 app.use((req, res) => {
-  console.warn(`⚠️  Rotta non trovata: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ error: "❌ Rotta non trovata." });
 });
 
@@ -132,12 +127,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Errore interno" });
 });
 
-// ✅ Esportazione con NOME FUNZIONE "api"
+// ✅ Esporta funzione “api”
 exports.api = onRequest(
-  {
-    timeoutSeconds: 60,
-    memory: "512MiB",
-    region: "europe-west1",
-  },
+  { timeoutSeconds: 60, memory: "512MiB", region: "europe-west1" },
   app
 );
