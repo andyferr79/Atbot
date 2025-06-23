@@ -44,10 +44,11 @@ api.interceptors.response.use(
     const { response, config } = error;
 
     if (response) {
-      const msg = `❌ API ERROR ${
-        response.status
-      } on ${config.method?.toUpperCase()} ${config.url}`;
-      console.error(msg);
+      console.error(
+        `❌ API ERROR ${response.status} on ${config.method?.toUpperCase()} ${
+          config.url
+        }`
+      );
     } else if (error.request) {
       console.error(`❌ API ERROR – Nessuna risposta da ${config.url}`);
     } else {
@@ -58,53 +59,54 @@ api.interceptors.response.use(
   }
 );
 
-/* ------- Test / Utilities ----------------------------------- */
+// ✅ Modifiche Cody già applicate sotto
+
 export const getTestFirebase = () => api.get("/api/test");
 
-/* ------- Chat IA ------------------------------------------- */
+// Chat IA
 export const sendMessageToAI = (message, sessionId) =>
   api.post("/api/chat", { user_message: message, session_id: sessionId });
 
-/* ------- Suppliers ------------------------------------------ */
+// Suppliers
 export const getSuppliers = () => api.get("/api/suppliers");
 export const addSupplier = (data) => api.post("/api/suppliers", data);
 export const updateSupplier = (id, data) =>
   api.put(`/api/suppliers/${id}`, data);
 export const deleteSupplier = (id) => api.delete(`/api/suppliers/${id}`);
 
-// 🔐 Privacy & GDPR
+// Privacy & GDPR
 export const getConsents = (uid) => api.get(`/privacy/consents?uid=${uid}`);
 export const saveConsents = (uid, consents) =>
   api.post(`/privacy/consents`, { uid, consents });
 export const getGDPRRequests = (uid) => api.get(`/privacy/requests?uid=${uid}`);
 export const createGDPRRequest = (data) => api.post(`/privacy/requests`, data);
 
-/* ------- Guests -------------------------------------------- */
+// Guests
 export const getGuests = () => api.get("/api/guests");
 export const addGuest = (data) => api.post("/api/guests", data);
 export const updateGuest = (id, data) => api.put(`/api/guests/${id}`, data);
 export const deleteGuest = (id) => api.delete(`/api/guests/${id}`);
 
-/* ------- Rooms --------------------------------------------- */
+// Rooms
 export const getRooms = () => api.get("/api/rooms");
 export const addRoom = (data) => api.post("/api/rooms", data);
 export const updateRoom = (id, data) => api.put(`/api/rooms/${id}`, data);
 export const deleteRoom = (id) => api.delete(`/api/rooms/${id}`);
 
-/* ------- Settings ------------------------------------------ */
+// Settings
 export const getPreferencesSettings = () =>
   api.get("/api/settings/preferences");
 export const updatePreferencesSettings = (data) =>
   api.put("/api/settings/preferences", data);
 
-// 📦 Configurazione della Struttura
+// ✅ FIX 3: /structure/settings → /api/agent/profile
 export const getStructureSettings = async (uid) => {
-  const res = await api.get(`/structure/settings?uid=${uid}`);
+  const res = await api.get(`/api/agent/profile?uid=${uid}`);
   return res.data;
 };
 
 export const saveStructureSettings = async (uid, settings) => {
-  const res = await api.post("/structure/settings", { uid, ...settings });
+  const res = await api.post("/api/agent/profile", { uid, ...settings });
   return res.data;
 };
 
@@ -112,7 +114,7 @@ export const getSecuritySettings = () => api.get("/api/settings/security");
 export const updateSecuritySettings = (data) =>
   api.put("/api/settings/security", data);
 
-// 🔌 Integrazioni
+// Integrazioni
 export const getIntegrations = async (uid) => {
   const res = await api.get(`/integrations?uid=${uid}`);
   return res.data;
@@ -126,13 +128,13 @@ export const removeIntegration = async (id, uid) => {
   return res.data;
 };
 
-/* ------- Reviews ------------------------------------------- */
+// Reviews
 export const getReviews = () => api.get("/api/reviews");
 export const addReview = (data) => api.post("/api/reviews", data);
 export const updateReview = (data) => api.put("/api/reviews", data);
 export const deleteReview = (id) => api.delete(`/api/reviews?reviewId=${id}`);
 
-/* ------- Suppliers Reports --------------------------------- */
+// Suppliers Reports
 export const getSuppliersReports = () => api.get("/api/suppliers-reports");
 export const addSupplierReport = (data) =>
   api.post("/api/suppliers-reports", data);
@@ -141,23 +143,26 @@ export const updateSuppliersReport = (data) =>
 export const deleteSuppliersReport = (id) =>
   api.delete(`/api/suppliers-reports?reportId=${id}`);
 
-/* ------- SEO Strategy -------------------------------------- */
+// SEO Strategy
 export const runSEOStrategy = (data) => api.post("/api/ai/seo-strategy", data);
 
-/* ------- Scheduler Manuale -------------------------------- */
+// Scheduler Manuale
 export const runDailyScheduler = () => api.post("/api/ai/run-scheduler");
 
-/* ------- Dashboard ----------------------------------------- */
+// Dashboard
 export const getDashboardOverview = () => api.get("/api/dashboard");
 
-/* ------- Admin Logs ---------------------------------------- */
+// Admin Logs
 export const getSystemAlerts = () => api.get("/api/admin/system-alerts");
-export const getUserInfo = () => api.get("/api/getUserInfo");
+
+// ✅ FIX 1: /api/getUserInfo → /api/userinfo
+export const getUserInfo = () => api.get("/api/userinfo");
+
 export const getAdminAIUsage = () => api.get("/api/admin/ai-usage");
 export const getGPTSpendingToday = () =>
   api.get("/api/admin/ia/spending-today");
 
-/* ------- Admin: Annunci ------------------------------------ */
+// Admin: Annunci
 export const getAdminAnnouncements = () => api.get("/api/admin/announcements");
 export const createAdminAnnouncement = (data) =>
   api.post("/api/admin/announcements", data);
@@ -165,40 +170,41 @@ export const getAdminAutomations = () => api.get("/api/admin/automations");
 export const getAdminBenchmarkStats = () =>
   api.get("/api/admin/benchmark-stats");
 
-/* ------- Admin: KPI ---------------------------------------- */
+// Admin: KPI
 export const getKPIRevenue = () => api.get("/api/admin/kpi/revenue");
 export const getKPIActiveUsers = () => api.get("/api/admin/kpi/active-users");
 export const getKPIChurnRate = () => api.get("/api/admin/kpi/churn-rate");
 export const getKPISystemStatus = () => api.get("/api/admin/kpi/system-status");
 
-/* ------- Admin: Logs & Backup ------------------------------ */
+// Admin: Logs & Backup
 export const getSystemLogs = () => api.get("/api/admin/system-logs");
-export const getBackupStatus = () => api.get("/api/admin/backup-status");
-export const startManualBackup = () => api.post("/api/admin/start-backup");
 
-/* ------- Admin: Reports ------------------------------------ */
+// ✅ FIX 2: /api/admin/start-backup → /api/admin/backup
+export const startManualBackup = () => api.post("/api/admin/backup");
+
+export const getBackupStatus = () => api.get("/api/admin/backup-status");
+
+// Admin: Reports
 export const downloadAdminReport = () =>
   api.get("/api/admin/reports/export", { responseType: "blob" });
 export const sendLatestReport = () =>
   api.post("/api/admin/reports/send-latest");
 export const getReportHistory = () => api.get("/api/admin/reports/history");
 
-/* ------- Admin: Cronologia utenti -------------------------- */
+// Admin: Cronologia utenti
 export const getAllAdminUsers = () => api.get("/api/admin/users");
 export const getUserTimeline = (userId) =>
   api.get(`/api/admin/user-timeline?userId=${userId}`);
 
-// 🔔 Notifiche
+// Notifiche
 export const getNotifications = (uid) => api.get(`/notifications?uid=${uid}`);
 export const saveNotifications = (data) => api.post(`/notifications`, data);
 
-// 📦 Abbonamento
+// Abbonamento
 export const getSubscription = () => api.get("/api/user/subscription");
 export const updateSubscription = (data) =>
   api.put("/api/user/subscription", data);
-
 export const getInvoices = () => api.get("/api/user/invoices");
-
 export const getAccountant = () => api.get("/api/user/accountant");
 export const updateAccountant = (data) => api.put("/api/user/accountant", data);
 
